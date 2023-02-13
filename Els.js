@@ -73,7 +73,7 @@ class Els_text_id extends Els_text {
 	constructor ( config, id )
 	{
 		super( config, id );
-		this._els.innerHTML = createEls ( config.text_id, "lang_HMI_" );
+		this._els.innerHTML = createEls ( config.text_id, config.prefix );
 	}
 }
 
@@ -123,7 +123,7 @@ class Els_io extends Els_Back {
 		}
 		if ( config.labelId )
 		{
-			divLabel.innerHTML = ccreateEls ( config.labelId, "lang_HMI_" );
+			divLabel.innerHTML = ccreateEls ( config.labelId, config.prefix );
 		}
 
 		// data
