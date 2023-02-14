@@ -1,5 +1,5 @@
 class Config {
-	constructor ( config, id, callback )
+	constructor ( config, id )
 	{
 		if ( ( undefined == config )
 			|| ( undefined == id ) )
@@ -7,8 +7,7 @@ class Config {
 			return;
 		}
 
-		this.callbacksFunctions = [];
-		this.extCallback = callback;
+		this._callbacksFunctions = [];
 
 		for ( let [i,ds] of config.dataset.entries() )
 		{
@@ -28,20 +27,20 @@ class Config {
 
 				ds.el.appendChild ( entry.dom );
 
-				this.callbacksFunctions.push ( ...entry.callbacks );
+				this._callbacksFunctions.push ( ...entry.callbacks );
 			}
 		}
 	}
 
 	get callbacks ( )
 	{
-		return this.callbacksFunctions || [];
+		return this._callbacksFunctions || [];
 	}
 
 	setIO ( )
 	{
 		let list = {};
-		for ( let c of this.callbacksFunctions )
+		for ( let c of this._callbacksFunctions )
 		{
 			list[ c.channel ] = c.periode;
 			socket.on(c.channel,c.f);
