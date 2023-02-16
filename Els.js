@@ -11,6 +11,25 @@ class Els_Back {
 		this._domEl.style = config.style;
 	}
 
+	update ( config )
+	{
+	}
+
+	_update ( config )
+	{
+		for ( let k of Object.keys ( config ) )
+		{
+			switch ( k )
+			{
+				case "style":
+				{
+					this._domEl.style = config.style;
+					break;
+				}
+			}
+		}
+	}
+
 	get callbacks ( )
 	{
 		return this._callArgs || [];
@@ -24,6 +43,54 @@ class Els_Back {
 	get _els ( )
 	{
 		return this._elList;
+	}
+
+	get config ( )
+	{
+		return this._config || {};
+	}
+
+	static canCreateNew ( )
+	{
+		return false;
+	}
+
+	static new ( id = {} )
+	{
+		return new Promise((ok,ko)=>{ko("not available for this type")});
+	}
+
+	static _newOut ( params, json )
+	{
+		try // out
+		{
+			let outDiv = document.getElementById ( params.outDiv );
+
+			let newChild = new Els[ json.type ]( json );
+			newChild.dom.id = "newEl_"+params.index;
+
+			let replaced = false;
+			for ( let oldChild of outDiv.childNodes )
+			{
+				if ( oldChild.id == "newEl_"+params.index )
+				{
+					outDiv.replaceChild ( newChild.dom, oldChild );
+					replaced = true;
+					break;
+				}
+			}
+
+			if ( !replaced )
+			{
+				outDiv.appendChild ( newChild.dom );
+			}
+
+			return newChild;
+		}
+		catch ( e )
+		{
+			throw "no out el available";
+		}
 	}
 }
 
