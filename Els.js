@@ -424,6 +424,11 @@ class Els_text_id extends Els_text {
 		super( config, id );
 		this._els.innerHTML = createEls ( config.text_id, config.prefix );
 	}
+
+	static canCreateNew ( )
+	{
+		return false;
+	}
 }
 
 class Els_unit_id extends Els_Back {
