@@ -103,6 +103,98 @@ class Els_title extends Els_Back {
 		this._domEl.appendChild ( this._elList );
 		this._elList.innerHTML = config.text;
 	}
+
+	update ( config )
+	{
+		this._update ( config );
+
+		for ( let k of Object.keys ( config ) )
+		{
+			switch ( k )
+			{
+				case "text":
+				{
+					this._elList.innerHTML = config.text;
+					break;
+				}
+			}
+		}
+	}
+
+	static canCreateNew ( )
+	{
+		return true;
+	}
+
+	static new ( params = {}, config = undefined )
+	{
+		return new Promise((ok,ko)=>{
+			let configDiv = undefined;
+			let outDiv = undefined;
+			let jsonDiv = undefined;
+
+			if ( undefined == params.id )
+			{
+				params.id = Math.random ( );
+			}
+
+			let json = {
+				type:"title",
+				text:"",
+			}
+
+			let validate = ()=>{ok(json);}
+			let cancel = ()=>{ko();}
+
+			if ( undefined != config )
+			{
+				json = JSON.parse ( JSON.stringify ( config ) );
+			}
+
+			try // config
+			{
+				configDiv = document.getElementById ( params.configDiv );
+				let title = document.createElement ( "input" );
+				title.type = "text";
+				title.onchange = (ev)=>{
+					json.text=ev.target.value;
+					jsonDiv.value = JSON.stringify ( json, null, 4 );
+					outDiv.update ( json );
+				}
+
+				while ( configDiv.firstChild )
+				{
+					configDiv.removeChild ( configDiv.firstChild );	
+				}
+				configDiv.appendChild ( title );
+
+				document.getElementById ( params.okButton ).addEventListener( "click", validate );
+				document.getElementById ( params.cancelButton ).addEventListener( "click", cancel );
+
+				let jsonDiv = document.getElementById ( params.jsonDiv );
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				jsonDiv.onchange = (ev)=>{
+					try
+					{
+						json = JSON.parse ( ev.target.value );
+						jsonDiv.style.backgroundColor = "";
+						title.value = json.text;
+						outDiv.update ( json );
+					}
+					catch ( e )
+					{
+						jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
+					}
+				}
+
+				outDiv = Els_title._newOut ( params, json );
+			}
+			catch ( e )
+			{
+				ko ( e );
+			}
+		});
+	}
 }
 
 class Els_text extends Els_Back {
