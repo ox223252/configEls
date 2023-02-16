@@ -920,26 +920,25 @@ class Els_graph extends Els_Back {
 
 					if ( !chartZ )
 					{
-						chartZ = new Chart ( canvasZ.getContext('2d'), chartZConf );
+						chartZ = new Chart ( canvasZ.getContext('2d'), this.chartZConf );
 					}
 					else if ( chartZ.width == 0 )
 					{
 						chartZ.destroy ( );
-						chartZ = new Chart ( canvasZ.getContext('2d'), chartZConf );
+						chartZ = new Chart ( canvasZ.getContext('2d'), this.chartZConf );
 					}
 					else
 					{
 						chartZ.update();
 					}
 
-					chartZConf.options.scales.x.ticks.color = color;
-					chartZConf.options.scales.y.ticks.color = color;
+					this.chartZConf.options.scales.x.ticks.color = color;
+					this.chartZConf.options.scales.y.ticks.color = color;
 				}
 			});
 		}
 	}
 }
-
 
 const Els = {
 	title: Els_title,
