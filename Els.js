@@ -1218,3 +1218,74 @@ const Els = {
 	svg: Els_svg,
 	graph: Els_graph,
 };
+
+function _createSelectChannel ( channels = [] )
+{
+	let div = document.createElement ( "div" );
+	div.style.display = "flex";
+
+	let label = document.createElement ( "label" );
+	label.innerHTML = "Data : ";
+
+	let select = document.createElement ( "select" );
+
+	for ( let c of channels )
+	{
+		let option = document.createElement ( "option" );
+		option.value = c;
+		option.innerHTML = c;
+		select.appendChild ( option );
+	}
+
+	div.appendChild ( label );
+	div.appendChild ( select );
+
+	return [div,select];
+}
+
+function _createSelectPeriode ( )
+{
+	let periodes = [
+		{label:"event",value:0},
+		{label:"1 s",value:1},
+		{label:"2 s",value:2},
+		{label:"10 s",value:3},
+	];
+
+	let div = document.createElement ( "div" );
+	div.style.display = "flex";
+
+	let label = document.createElement ( "label" );
+	label.innerHTML = "Timming : ";
+
+	let select = document.createElement ( "select" );
+
+	for ( let p of periodes )
+	{
+		let option = document.createElement ( "option" );
+		option.value = p.value;
+		option.innerHTML = p.label;
+		select.appendChild ( option );
+	}
+
+	div.appendChild ( label );
+	div.appendChild ( select );
+
+	return [div,select];
+}
+
+function _createInput ( inLabel )
+{
+	let div = document.createElement ( "div" );
+	div.style.display = "flex";
+
+	let label = document.createElement ( "label" );
+	label.innerHTML = inLabel+" : ";
+
+	let input = document.createElement ( "input" );
+
+	div.appendChild ( label );
+	div.appendChild ( input );
+
+	return [div,input];
+}
