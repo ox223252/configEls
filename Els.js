@@ -3,6 +3,7 @@ class Els_Back {
 	{
 		this.data = [];
 		this._callArgs = [];
+		this._config = config;
 
 		this._domEl = document.createElement ( "div" );
 		this._domEl.className = config.type;
@@ -59,13 +60,105 @@ class Els_img extends Els_Back {
 		this._elList.style.maxWidth = "100%";
 		this._elList.style.maxHeight = "100%";
 	}
+
+	update ( config )
+	{
+		this._update ( config );
+
+		for ( let k of Object.keys ( config ) )
+		{
+			switch ( k )
+			{
+				case "src":
+				{
+					this._elList.src = config.src;
+					break;
+				}
+			}
+		}
+	}
+
+	static canCreateNew ( )
+	{
+		return true;
+	}
+
+	static new ( params = {}, config = undefined )
+	{
+		return new Promise((ok,ko)=>{
+			let configDiv = undefined;
+			let outDiv = undefined;
+			let jsonDiv = undefined;
+
+			if ( undefined == params.id )
+			{
+				params.id = Math.random ( );
+			}
+
+			let json = {
+				type:"img",
+				src:"",
+			}
+
+			let validate = ()=>{ok(json);}
+			let cancel = ()=>{ko();}
+
+			if ( undefined != config )
+			{
+				json = JSON.parse ( JSON.stringify ( config ) );
+			}
+
+			try // config
+			{
+				configDiv = document.getElementById ( params.configDiv );
+				let imgSrc = document.createElement ( "input" );
+				imgSrc.type = "text";
+				imgSrc.onchange = (ev)=>{
+					json.src=ev.target.value;
+					jsonDiv.value = JSON.stringify ( json, null, 4 );
+					outDiv.update ( json );
+				}
+
+				while ( configDiv.firstChild )
+				{
+					configDiv.removeChild ( configDiv.firstChild );	
+				}
+				configDiv.appendChild ( imgSrc );
+
+				document.getElementById ( params.okButton ).addEventListener( "click", validate );
+				document.getElementById ( params.cancelButton ).addEventListener( "click", cancel );
+
+				let jsonDiv = document.getElementById ( params.jsonDiv );
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				jsonDiv.onchange = (ev)=>{
+					try
+					{
+						json = JSON.parse ( ev.target.value );
+						jsonDiv.style.backgroundColor = "";
+						imgSrc.value = json.src;
+						outDiv.update ( json );
+					}
+					catch ( e )
+					{
+						jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
+					}
+				}
+
+				outDiv = Els_img._newOut ( params, json );
+			}
+			catch ( e )
+			{
+				ko ( e );
+			}
+		});
+	}
 }
 
 class Els_title_id extends Els_title {
 	constructor ( config, id )
 	{
 		super( config, id );
-		this._els.innerHTML = createEls ( config.text_id, "lang_HMI_" );
+		this._els.innerHTML = createEls ( config.text_id, config.prefix );
 	}
 }
 
@@ -84,7 +177,7 @@ class Els_unit_id extends Els_Back {
 
 		this._elList = document.createElement("div");
 		this._domEl.appendChild ( this._elList );
-		this._els.innerHTML = creatSpansFromOptions ( config.text_id, "lang_HMI_" );
+		this._els.innerHTML = creatSpansFromOptions ( config.text_id, config.prefix );
 	}
 }
 
@@ -114,28 +207,28 @@ class Els_io extends Els_Back {
 		super( config, id );
 
 		// label if neeted
-		let divLabel = document.createElement ( "div" );
-		this._domEl.appendChild ( divLabel );
-		divLabel.className = "label";
+		this.divLabel = document.createElement ( "div" );
+		this._domEl.appendChild ( this.divLabel );
+		this.divLabel.className = "label";
 		if ( config.label )
 		{
-			divLabel.innerHTML = config.label;
+			this.divLabel.innerHTML = config.label;
 		}
 		if ( config.labelId )
 		{
-			divLabel.innerHTML = ccreateEls ( config.labelId, config.prefix );
+			this.divLabel.innerHTML = ccreateEls ( config.labelId, config.prefix );
 		}
 
 		// data
-		let divData = document.createElement ( "div" );
-		this._domEl.appendChild ( divData );
-		divData.className = "data";
-		divData.innerHTML = config.default || "...";
+		this.divData = document.createElement ( "div" );
+		this._domEl.appendChild ( this.divData );
+		this.divData.className = "data";
+		this.divData.innerHTML = config.default || "...";
 
 		// unit
-		let divUnit = document.createElement ( "div" );
-		this._domEl.appendChild ( divUnit );
-		divUnit.className = "unit";
+		this.divUnit = document.createElement ( "div" );
+		this._domEl.appendChild ( this.divUnit );
+		this.divUnit.className = "unit";
 		
 		let cb = {
 			periode: config.periode || 0,
@@ -147,45 +240,45 @@ class Els_io extends Els_Back {
 		{
 			case "volume":
 			{
-				cb.f = function(msg){
-					divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.volume, "m3" ), "v_"+unit.volume );
-					divUnit.innerHTML = unit.volume || "?";
+				cb.f = (msg)=>{
+					this.divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.volume, "m3" ), "v_"+unit.volume );
+					this.divUnit.innerHTML = unit.volume || "?";
 				};
 				break;
 			}
 			case "flow":
 			{
-				cb.f = function(msg){
-					divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.flow_v, "m3" ) / timeConvert ( 1, unit.flow_t, "s" ), 1 );
-					divUnit.innerHTML = (unit.flow_v || "?") + "/" +(unit.flow_t || "?");
+				cb.f = (msg)=>{
+					this.divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.flow_v, "m3" ) / timeConvert ( 1, unit.flow_t, "s" ), 1 );
+					this.divUnit.innerHTML = (unit.flow_v || "?") + "/" +(unit.flow_t || "?");
 				}
 				break;
 			}
 			case "temp":
 			{
-				cb.f = function(msg){
-					divData.innerHTML = refactor ( temperatureConvert ( msg.value, unit.temperature, "C" ), "T_"+unit.temperature );
-					divUnit.innerHTML = "°" + unit.temperature;
+				cb.f = (msg)=>{
+					this.divData.innerHTML = refactor ( temperatureConvert ( msg.value, unit.temperature, "C" ), "T_"+unit.temperature );
+					this.divUnit.innerHTML = "°" + unit.temperature;
 				}
 				break;
 			}
 			default:
 			{
-				cb.f = function(msg){
+				cb.f = (msg)=>{
 					msg.value *= config.coef || 1;
 					let a = config.valueType;
 					if ( a == undefined )
 					{
 						a = 1;
 					}
-					divData.innerHTML = refactor ( msg.value, a );
+					this.divData.innerHTML = refactor ( msg.value, a );
 					if ( config.unit )
 					{
-						divUnit.innerHTML =  config.unit;
+						this.divUnit.innerHTML =  config.unit;
 					}
 					else
 					{
-						divUnit.style.display = "none"
+						this.divUnit.style.display = "none"
 					}
 				}
 				break;
@@ -201,31 +294,31 @@ class Els_bin extends Els_Back {
 	{
 		super( config, id );
 
-		let div = document.createElement ( "p" );
-		div.className = "status"
-		this._domEl.appendChild ( div );
-		div.innerHTML = config.text;
+		this.div = document.createElement ( "p" );
+		this.div.className = "status"
+		this._domEl.appendChild ( this.div );
+		this.div.innerHTML = config.text;
 
 
 		let cb = {
 			periode: config.periode || 0,
 			channel: config.channel,
-			f: function f(msg){
+			f: (msg)=>{
 				switch ( msg.value )
 				{
 					case 0:
 					{
-						div.style="--status-color:red";
+						this.div.style="--status-color:red";
 						break
 					}
 					case 1:
 					{
-						div.style="--status-color:green";
+						this.div.style="--status-color:green";
 						break
 					}
 					default:
 					{
-						div.style="";
+						this.div.style="";
 						break;
 					}
 				}
@@ -241,17 +334,17 @@ class Els_multi extends Els_Back {
 	{
 		super( config, id );
 
-		let div = document.createElement ( "p" );
-		div.className = "status"
-		this._domEl.appendChild ( div );
-		div.innerHTML = config.text;
+		this.div = document.createElement ( "p" );
+		this.div.className = "status"
+		this._domEl.appendChild ( this.div );
+		this.div.innerHTML = config.text;
 
 
 		let cb = {
 			periode: config.periode || 0,
 			channel: config.channel,
 			f: function f(msg){
-				div.style = "--status-color:"+config.color[ 0 ];
+				this.div.style = "--status-color:"+config.color[ 0 ];
 				for ( let i = 0; i < config.seuil.length; i++ )
 				{
 					if ( msg.value <= config.seuil[ i ] )
@@ -259,7 +352,7 @@ class Els_multi extends Els_Back {
 						break;
 					}
 
-					div.style = "--status-color:"+(config.color[ i+1 ] || "red");
+					this.div.style = "--status-color:"+(config.color[ i+1 ] || "red");
 				}
 			}
 		};
@@ -299,72 +392,71 @@ class Els_gauge extends Els_Back {
 		}
 
 		// create gauge itself
-		let gauge = new Gauge( canvas )
+		this.gauge = new Gauge( canvas )
 			.setOptions(opt)
 			.setOptions(config.options);
 
-		gauge.config = {
-			radiusScale: gauge.options.radiusScale,
-			lineWidth: gauge.options.lineWidth,
+		this.gauge.config = {
+			radiusScale: this.gauge.options.radiusScale,
+			lineWidth: this.gauge.options.lineWidth,
 			baseLabels: [],
 		}
 
 
 		// add all static labels to the graph
-		function addMinMaxLabel ( c )
+		function addMinMaxLabel ( c, array )
 		{
 			for ( let  label of ["min","max"] )
 			{
 				if ( undefined != c[ label ]
-					&& !gauge.config.baseLabels.includes ( c[ label ] ) )
+					&& !array.includes ( c[ label ] ) )
 				{
-					gauge.config.baseLabels.push ( c[ label ] );
+					array.push ( c[ label ] );
 				}
 			}
 		}
 
-		addMinMaxLabel ( config );
+		addMinMaxLabel ( config, this.gauge.config.baseLabels );
 
 		if ( config.options
 			&& config.options.staticZones )
 		{
 			for ( let s of config.options.staticZones )
 			{
-					addMinMaxLabel ( s );
+					addMinMaxLabel ( s, this.gauge.config.baseLabels );
 			}
 		}
 
-		gauge.config.baseLabels.sort();
+		this.gauge.config.baseLabels.sort();
 
-		function calcLabels ( )
-		{
+		let calcLabels = ( )=>{
 			let coef = 1;
-			opt.staticLabels.labels = gauge.config.baseLabels.map((v)=>{return v*coef;});
+			opt.staticLabels.labels = this.gauge.config.baseLabels.map((v)=>{return v*coef;});
 
-			gauge.minValue = coef * (( undefined != config.min ) ? config.min : opt.staticLabels.labels[ 0 ]);
-			gauge.maxValue = coef * (( undefined != config.max ) ? config.max : opt.staticLabels.labels[ opt.staticLabels.labels - 1 ]);
+			this.gauge.minValue = coef * (( undefined != config.min ) ? config.min : opt.staticLabels.labels[ 0 ]);
+			this.gauge.maxValue = coef * (( undefined != config.max ) ? config.max : opt.staticLabels.labels[ opt.staticLabels.labels - 1 ]);
 		}
 
 		let cb = {
 			periode: config.periode || 0,
 			channel: config.channel,
-			f: function(msg){
-				if ( ( gauge.canvas.width == 0 )
-					|| ( gauge.canvas.height == 0 ) )
+			f: (msg)=>{
+				if ( ( this.gauge.canvas.width == 0 )
+					|| ( this.gauge.canvas.height == 0 ) )
 				{
 					// corect size of the gauge if needed
-					gauge.calcSize ( );
-					let coef = Math.min ( gauge.canvas.width, 400 ) / 400;
+					this.gauge.calcSize ( );
+					let coef = Math.min ( this.gauge.canvas.width, 400 ) / 400;
 
-					gauge.canvas.height = Math.min ( gauge.canvas.height, gauge.canvas.width / 2);
-					gauge.availableHeight = gauge.canvas.height * 0.8;
-					gauge.options.radiusScale = gauge.config.radiusScale * coef;
-					gauge.options.lineWidth = gauge.config.lineWidth * coef;
+					this.gauge.canvas.height = Math.min ( this.gauge.canvas.height, this.gauge.canvas.width / 2);
+					this.gauge.availableHeight = this.gauge.canvas.height * 0.8;
+					this.gauge.options.radiusScale = this.gauge.config.radiusScale * coef;
+					this.gauge.options.lineWidth = this.gauge.config.lineWidth * coef;
 				}
 
-				gauge.options.staticLabels.color = getComputedStyle(gauge.canvas).getPropertyValue("--main-text") || "#000";
+				this.gauge.options.staticLabels.color = getComputedStyle(this.gauge.canvas).getPropertyValue("--main-text") || "#000";
 				calcLabels ( );
-				gauge.set(msg.value);
+				this.gauge.set(msg.value);
 			}
 		};
 		
@@ -377,8 +469,8 @@ class Els_table extends Els_Back {
 	{
 		super( config, id );
 
-		let table = document.createElement ( "table" );
-		this._domEl.appendChild ( table );
+		this.table = document.createElement ( "table" );
+		this._domEl.appendChild ( this.table );
 
 		for ( let [i,row] of config.dataset.entries() )
 		{
@@ -393,7 +485,7 @@ class Els_table extends Els_Back {
 				td.appendChild ( entry.dom );
 				tr.appendChild ( td );
 			}
-			table.appendChild ( tr );
+			this.table.appendChild ( tr );
 		}
 	}
 }
@@ -402,24 +494,24 @@ class Els_log extends Els_Back {
 	constructor ( config, id )
 	{
 		super( config, id );
-		let p = document.createElement("p");
+		this.p = document.createElement("p");
 
 		fetch ( "imgs/trash_icon.svg" )
 			.then(r=>r.text())
 			.then(text=>{
 				let svg = new DOMParser().parseFromString(text, 'text/html').querySelector('svg');
 				this._domEl.appendChild ( svg );
-				svg.onclick = ()=>{p.innerHTML=""};
+				svg.onclick = ()=>{this.p.innerHTML=""};
 			})
 			.catch(console.log)
 
-		this._domEl.appendChild ( p );
+		this._domEl.appendChild ( this.p );
 
 		let cb = {
 			periode: config.periode || 0,
 			channel: config.channel,
-			f: function f(msg){
-				p.innerHTML = msg.value + "<br>" + p.innerHTML;
+			f: (msg)=>{
+				this.p.innerHTML = msg.value + "<br>" + p.innerHTML;
 			}
 		};
 
@@ -440,15 +532,15 @@ class Els_svg extends Els_Back {
 		fetch ( config.src )
 			.then(r=>r.text())
 			.then(t=>{
-				let svg = new DOMParser().parseFromString(t, 'text/html').querySelector('svg');
-				img.replaceWith(svg);
+				this.svg = new DOMParser().parseFromString(t, 'text/html').querySelector('svg');
+				img.replaceWith(this.svg);
 
 				if ( undefined != config.backImg )
 				{
 					let backImg = '<image href="'+config.backImg+'" '
-					backImg += 'width="'+svg.viewBox.baseVal.width+'" '
-					backImg += 'height="'+svg.viewBox.baseVal.height+'" />';
-					svg.innerHTML = backImg + svg.innerHTML;
+					backImg += 'width="'+this.svg.viewBox.baseVal.width+'" '
+					backImg += 'height="'+this.svg.viewBox.baseVal.height+'" />';
+					this.svg.innerHTML = backImg + this.svg.innerHTML;
 				}
 			})
 			.catch(console.log)
@@ -470,16 +562,14 @@ class Els_svg extends Els_Back {
 			{
 				case "bin":
 				{
-					cb.f = function(msg)
-					{
+					cb.f = (msg)=>{
 						style.innerHTML = "#"+d.id+"{fill:"+((msg.value)?"green":"red")+"}";
 					}
 					break;
 				}
 				case "multi":
 				{
-					cb.f = function(msg)
-					{
+					cb.f = (msg)=>{
 						let color = d.color[0] || "rgba(0,0,0,0)"
 						for ( let i = 0; i < d.step.length; i++ )
 						{
@@ -504,18 +594,18 @@ class Els_graph extends Els_Back {
 	{
 		super( config, id );
 		
-		let divMain = document.createElement("div");
-		this._domEl.appendChild( divMain );
-		divMain.className = "main";
+		this.divMain = document.createElement("div");
+		this._domEl.appendChild( this.divMain );
+		this.divMain.className = "main";
 
 		let canvas = document.createElement("canvas");
-		divMain.appendChild( canvas );
+		this.divMain.appendChild( canvas );
 		let canvasZ = undefined;
 
 		let chart = null; // base graph
 		let chartZ = null; // zoom overview graph
 
-		let chartConf = {
+		this.chartConf = {
 			options: {
 				maintainAspectRatio: false,
 				animation: false,
@@ -535,7 +625,7 @@ class Els_graph extends Els_Back {
 			},
 			plugins:[]
 		}; // conf for base graph
-		let chartZConf = undefined; // conf of zoom graph
+		this.chartZConf = undefined; // conf of zoom graph
 
 		let data = {
 			zoom:false,
@@ -553,21 +643,21 @@ class Els_graph extends Els_Back {
 		// defined base config of the graphs signal, sync or async
 		if ( config.subType == "sync" )
 		{ // in case of sync graph set the X axis data input
-			chartConf.type = 'line';
-			chartConf.data = {
+			this.chartConf.type = 'line';
+			this.chartConf.data = {
 				labels:[],
 				datasets:[]
 			};
 			let cb = {
 				periode: config.periode || 0,
 				channel: config.channel,
-				f: function(msg){
-					chartConf.data.labels.push ( msg.value );
-					if ( chartConf.data.labels.length > config.deep  )
+				f: (msg)=>{
+					this.chartConf.data.labels.push ( msg.value );
+					if ( this.chartConf.data.labels.length > config.deep  )
 					{
-						let rm = chartConf.data.labels.length - config.deep
-						chartConf.data.labels.splice( 0, rm );
-						for ( let d of chartConf.data.datasets )
+						let rm = this.chartConf.data.labels.length - config.deep
+						this.chartConf.data.labels.splice( 0, rm );
+						for ( let d of this.chartConf.data.datasets )
 						{
 							d.data.splice ( 0, rm );
 						}
@@ -575,12 +665,12 @@ class Els_graph extends Els_Back {
 
 					if ( !chart )
 					{
-						chart = new Chart ( canvas.getContext('2d'), chartConf );
+						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
 					}
 					else if ( chart.width == 0 )
 					{
 						chart.destroy ( );
-						chart = new Chart ( canvas.getContext('2d'), chartConf );
+						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
 					}
 					else if ( ( data.zoom == false )
 						&& ( data.update == true ) )
@@ -593,8 +683,8 @@ class Els_graph extends Els_Back {
 		}
 		else
 		{ // async/signal case
-			chartConf.type = 'scatter',
-			chartConf.data = {
+			this.chartConf.type = 'scatter',
+			this.chartConf.data = {
 				datasets:[]
 			};
 		}
@@ -602,12 +692,12 @@ class Els_graph extends Els_Back {
 		// init config of zoom overview graph
 		if ( true == config.zoom )
 		{
-			let divZoom = document.createElement("div");
-			divZoom.className = "zoom";
-			this._domEl.appendChild( divZoom );
+			this.divZoom = document.createElement("div");
+			this.divZoom.className = "zoom";
+			this._domEl.appendChild( this.divZoom );
 
 			canvasZ = document.createElement( "canvas" );
-			divZoom.appendChild( canvasZ );
+			this.divZoom.appendChild( canvasZ );
 			canvasZ.addEventListener ( "dblclick", ()=>{
 				data = chart.getInitialScaleBounds ( );
 				data.zoom = false;
@@ -616,9 +706,9 @@ class Els_graph extends Els_Back {
 				chartZ.update ( );
 			});
 
-			chartZConf = {
-				type: chartConf.type,
-				data: chartConf.data,
+			this.chartZConf = {
+				type: this.chartConf.type,
+				data: this.chartConf.data,
 				options: {
 					maintainAspectRatio: false,
 					animation: false,
@@ -635,10 +725,10 @@ class Els_graph extends Els_Back {
 						}
 					}
 				},
-				plugins: chartConf.plugins
+				plugins: this.chartConf.plugins
 			};
 
-			chartZConf.plugins.push ({
+			this.chartZConf.plugins.push ({
 				id: 'quadrants',
 				beforeDraw(chart, args, opt) {
 					const {ctx, scales: {x, y}} = chart;
@@ -655,7 +745,7 @@ class Els_graph extends Els_Back {
 				}
 			});
 
-			chartConf.options.plugins.zoom = {
+			this.chartConf.options.plugins.zoom = {
 				pan: {
 					enabled: true,
 					mode: 'xy',
@@ -714,18 +804,18 @@ class Els_graph extends Els_Back {
 		{
 			if ( undefined == config[ label ] ) continue;
 			
-			chartConf.options.scales.y[ "suggeste"+cFL( label ) ] = config[ label ];
+			this.chartConf.options.scales.y[ "suggeste"+cFL( label ) ] = config[ label ];
 
 			if ( true != config.zoom ) continue;
 		
-			chartZConf.options.scales.y[ "suggeste"+cFL( label ) ] = config[ label ];
+			this.chartZConf.options.scales.y[ "suggeste"+cFL( label ) ] = config[ label ];
 		}
 
 		for ( let [i,c] of config.curve.entries() )
 		{
-			let index = chartConf.data.datasets.length;
+			let index = this.chartConf.data.datasets.length;
 
-			chartConf.data.datasets[index] = {
+			this.chartConf.data.datasets[index] = {
 				label:c.name,
 				data:[],
 				borderColor:c.color,
@@ -737,43 +827,43 @@ class Els_graph extends Els_Back {
 
 			if ( c.fill != undefined )
 			{
-				chartConf.data.datasets[index].fill = c.fill - i + "";
-				chartConf.data.datasets[index].fillBetweenSet = 0;
+				this.chartConf.data.datasets[index].fill = c.fill - i + "";
+				this.chartConf.data.datasets[index].fillBetweenSet = 0;
 			}
 
 			this._callArgs.push ({
 				channel: c.channel,
 				periode: c.periode || 0,
-				f: function(msg){
+				f: (msg)=>{
 					switch ( config.subType )
 					{
 						case "signal":
 						{
-							chartConf.data.datasets[ index ].data = JSON.parse ( msg.value );
+							this.chartConf.data.datasets[ index ].data = JSON.parse ( msg.value );
 							break;
 						}
 						case "sync":
 						{
-							if ( chartConf.data.datasets[ index ].data.length < chartConf.data.labels.length  )
+							if ( this.chartConf.data.datasets[ index ].data.length < this.chartConf.data.labels.length  )
 							{ // add data only if we add a label for this data
 								// add the data to the last label
-								chartConf.data.datasets[ index ].data[ chartConf.data.labels.length - 1 ] = msg.value;
+								this.chartConf.data.datasets[ index ].data[ this.chartConf.data.labels.length - 1 ] = msg.value;
 							}
 							break;
 						}
 						case "async":
 						{
-							chartConf.data.datasets[ index ].data.push ( msg.value );
+							this.chartConf.data.datasets[ index ].data.push ( msg.value );
 							let deep = c.deep || config.deep;
 							if ( ( undefined != deep )
-								&& ( chartConf.data.datasets[ index ].data.length > deep ) )
+								&& ( this.chartConf.data.datasets[ index ].data.length > deep ) )
 							{
-								chartConf.data.datasets[ index ].data.splice( 0, chartConf.data.datasets[ index ].data.length - deep )
+								this.chartConf.data.datasets[ index ].data.splice( 0, this.chartConf.data.datasets[ index ].data.length - deep )
 							}
 
 							let min  = [];
 							let max  = [];
-							for ( let d of chartConf.data.datasets )
+							for ( let d of this.chartConf.data.datasets )
 							{
 								min.push ( Math.min( ...d.data.map((p)=>{return p.x;}) ) );
 								max.push ( Math.max( ...d.data.map((p)=>{return p.x;}) ) );
@@ -782,14 +872,14 @@ class Els_graph extends Els_Back {
 							if ( ( data.zoom == false )
 								&& ( data.update == true ) )
 							{
-								chartConf.options.scales.x.min = Math.min ( ...min );
-								chartConf.options.scales.x.max = Math.max ( ...max );
+								this.chartConf.options.scales.x.min = Math.min ( ...min );
+								this.chartConf.options.scales.x.max = Math.max ( ...max );
 							}
 
 							if ( true == config.zoom )
 							{
-								chartZConf.options.scales.x.min = Math.min ( ...min );
-								chartZConf.options.scales.x.max = Math.max ( ...max );
+								this.chartZConf.options.scales.x.min = Math.min ( ...min );
+								this.chartZConf.options.scales.x.max = Math.max ( ...max );
 							}
 							break;
 						}
@@ -797,12 +887,12 @@ class Els_graph extends Els_Back {
 
 					if ( !chart )
 					{
-						chart = new Chart ( canvas.getContext('2d'), chartConf );
+						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
 					}
 					else if ( chart.width == 0 )
 					{
 						chart.destroy ( );
-						chart = new Chart ( canvas.getContext('2d'), chartConf );
+						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
 					}
 					else if ( ( data.zoom == false )
 						&& ( data.update == true ) )
@@ -820,8 +910,8 @@ class Els_graph extends Els_Back {
 
 					let color = getComputedStyle(chart.canvas).getPropertyValue("--main-text")
 					
-					chartConf.options.scales.x.ticks.color = color;
-					chartConf.options.scales.y.ticks.color = color;
+					this.chartConf.options.scales.x.ticks.color = color;
+					this.chartConf.options.scales.y.ticks.color = color;
 
 					if ( true != config.zoom )
 					{
