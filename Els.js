@@ -548,6 +548,160 @@ class Els_io extends Els_Back {
 
 		this._callArgs.push ( cb );
 	}
+
+	update ( config )
+	{
+		this._update ( config );
+
+		for ( let k of Object.keys ( config ) )
+		{
+			switch ( k )
+			{
+				case "label":
+				{
+					this.divLabel.innerHTML = config.label;
+					break;
+				}
+				case "default":
+				{
+					this.divData.innerHTML = config.default;
+					break;
+				}
+				case "unit":
+				{
+					this.divUnit.innerHTML = config.unit;
+					break;
+				}
+				case "valueType":
+				// {
+				// 	this._config.periode = config.periode;
+				// 	break;
+				// }
+				case "channel":
+				case "prefix":
+				case "label_id":
+				{
+					break;
+				}
+			}
+		}
+	}
+
+	static canCreateNew ( )
+	{
+		return true;
+	}
+
+	static new ( params = {}, config = undefined )
+	{
+		return new Promise ((ok,ko)=>{
+			let configDiv = undefined;
+			let outDiv = undefined;
+			let jsonDiv = undefined;
+
+			if ( undefined == params.id )
+			{
+				params.id = Math.random ( );
+			}
+
+			let json = {
+				type:"io",
+				channel:"WEBSOCKET CHANNEL",
+				periode:0,
+			}
+
+			let validate = ()=>{ok(json);}
+			let cancel = ()=>{ko();}
+
+			if ( undefined != config )
+			{
+				json = JSON.parse ( JSON.stringify ( config ) );
+			}
+
+			try // config
+			{
+				configDiv = document.getElementById ( params.configDiv );
+				let [divCha,sCha] = _createSelectChannel ( params.channels );
+				json.channel = sCha.value;
+				sCha.onchange = (ev)=>{
+					json.channel = ev.target.value;
+					jsonDiv.value = JSON.stringify ( json, null, 4 );
+				}
+
+				let [divPer,sPer] = _createSelectPeriode ( )
+				json.periode = parseInt(sPer.value);
+				sPer.onchange = (ev)=>{
+					json.periode = parseInt(ev.target.value);
+					jsonDiv.value = JSON.stringify ( json, null, 4 );
+				}
+
+				let [divLab,inLab] = _createInput ( "label" );
+				inLab.onchange = (ev)=>{
+					json.label = ev.target.value;
+					jsonDiv.value = JSON.stringify ( json, null, 4 );
+					outDiv.update ( json );
+				}
+
+				let [divDef,inDef] = _createInput ( "default value" );
+				inDef.onchange = (ev)=>{
+					json.default = ev.target.value;
+					jsonDiv.value = JSON.stringify ( json, null, 4 );
+					outDiv.update ( json );
+				}
+
+				let [divTyp,inTyp] = _createInput ( "value type" );
+				inTyp.onchange = (ev)=>{
+					json.valueType = ev.target.value;
+					jsonDiv.value = JSON.stringify ( json, null, 4 );
+					outDiv.update ( json );
+				}
+
+				let [divUni,inUni] = _createInput ( "unit" );
+				inUni.onchange = (ev)=>{
+					json.unit = ev.target.value;
+					jsonDiv.value = JSON.stringify ( json, null, 4 );
+					outDiv.update ( json );
+				}
+
+
+				while ( configDiv.firstChild )
+				{
+					configDiv.removeChild ( configDiv.firstChild );
+				}
+				configDiv.appendChild ( divCha );
+				configDiv.appendChild ( divPer );
+				configDiv.appendChild ( divLab );
+				configDiv.appendChild ( divDef );
+				configDiv.appendChild ( divTyp );
+				configDiv.appendChild ( divUni );
+
+				document.getElementById ( params.okButton ).addEventListener( "click", validate );
+				document.getElementById ( params.cancelButton ).addEventListener( "click", cancel );
+
+				let jsonDiv = document.getElementById ( params.jsonDiv );
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				jsonDiv.onchange = (ev)=>{
+					try
+					{
+						json = JSON.parse ( ev.target.value );
+						jsonDiv.style.backgroundColor = "";
+						title.value = json.text;
+						outDiv.update ( json );
+					}
+					catch ( e )
+					{
+						jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
+					}
+				}
+
+				outDiv = Els_io._newOut ( params, json );
+			}
+			catch ( e )
+			{
+				ko ( e );
+			}
+		});
+	}
 }
 
 class Els_bin extends Els_Back {
