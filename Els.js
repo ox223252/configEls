@@ -1219,11 +1219,11 @@ class Els_graph extends Els_Back {
 		{
 			if ( undefined == config[ label ] ) continue;
 			
-			this.chartConf.options.scales.y[ "suggeste"+cFL( label ) ] = config[ label ];
+			this.chartConf.options.scales.y[ "suggested"+cFL( label ) ] = config[ label ];
 
 			if ( true != config.zoom ) continue;
 		
-			this.chartZConf.options.scales.y[ "suggeste"+cFL( label ) ] = config[ label ];
+			this.chartZConf.options.scales.y[ "suggested"+cFL( label ) ] = config[ label ];
 		}
 
 		for ( let [i,c] of config.curve.entries() )
