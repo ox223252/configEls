@@ -87,11 +87,17 @@ class Config {
 		for ( let c of this._callbacksFunctions )
 		{
 			list[ c.channel ] = c.periode;
-			socket.on(c.channel,c.f);
+			if ( undefined != socket.on )
+			{ // if we-re using socket.io
+				socket.on ( c.channel, c.f );
+			}
+			else
+			{ // if we're using basics websockets
+				socket.addEventListener ( c.channel, c.f );
+			}
 		}
 
-		socket.emit ( "list-clean" );
-		socket.emit ( "list-set", JSON.stringify(list) );
+		return list;
 	}
 
 	update ( )
