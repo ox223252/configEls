@@ -416,11 +416,13 @@ L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les do
 		clean:true, // affiche un bouton de RAZ du CSV
 		last:true // affiche un bouton permetant de limiter le nombre de lignes a generé
 	},
+	prompt: false, // demande le nom du fichier de sortie
+	file: undefined, // nom du fichier de sortie
 	channel:{
-		synchro:"TICK", // channel de synchro (horodatage)
+		synchro:"CHANNEL TIME", // channel de synchro (horodatage)
 		title:"chrono", // titre de la colone de synchro dans le CSV
-		data:["TAB","TBA","DPZ","DC"], // channels de donnés
-		titles:["T_ab","T_ba","D_pz","D_c"] // titres des colonnes dans le CSV
+		data:["DATA_1","DATA_2"], // channels de donnés
+		titles:["TItle 1","Title 1"] // titres des colonnes dans le CSV
 	}
 }
 ````

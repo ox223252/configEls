@@ -1535,12 +1535,28 @@ class Els_csv extends Els_Back {
 				keys += this.config.channel.data.join ( this.config.separator );
 			}
 			out.unshift ( keys );
-			
+
 			out = out.join ( "\n" );
 
 			let downloadLink = document.createElement ( "a" );
 			downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURI( out );
-			downloadLink.download = name+'.csv'
+			if ( true == this.config.prompt )
+			{
+				downloadLink.download = prompt ( "nom du fichier ?", this.config.file || "CSV_"+new Date().toISOString() )
+
+				if ( "null" == downloadLink.download )
+				{
+					return;
+				}
+			}
+			else if ( this.config.file )
+			{
+				downloadLink.download = this.config.file+'.csv'
+			}
+			else
+			{
+				downloadLink.download = "CSV_"+new Date().toISOString();
+			}
 
 			document.body.appendChild(downloadLink);
 			downloadLink.click();
