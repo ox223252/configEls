@@ -402,3 +402,25 @@ Attention les données a transmettre ne sont pas les même en fonction des types
 - sync :` WEBSOCKET CHANNEL X` et `WEBSOCKET CHANNEL Y` sont de simple données numériques,
 - async : `WEBSOCKET CHANNEL XY` est un objet au format : `{x: 2, y: 1.3}`,
 - signal : `WEBSOCKET CHANNEL SIGNAL` est un table d'objets : `[{x: 1, y: 1.3},{x: 2, y: 1.6},{x: 3, y: 1.7},...]`
+
+
+### csv:
+L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les donnés puis les mettre a disposition pour le telecahrgement.
+
+```javascript
+{
+	type:"csv",
+	separator:",", // sparateur utilisé pour la génération du CSV
+	display:{
+		entries:true, // affiche ou nonle nombre de lignes du fichier
+		clean:true, // affiche un bouton de RAZ du CSV
+		last:true // affiche un bouton permetant de limiter le nombre de lignes a generé
+	},
+	channel:{
+		synchro:"TICK", // channel de synchro (horodatage)
+		title:"chrono", // titre de la colone de synchro dans le CSV
+		data:["TAB","TBA","DPZ","DC"], // channels de donnés
+		titles:["T_ab","T_ba","D_pz","D_c"] // titres des colonnes dans le CSV
+	}
+}
+````

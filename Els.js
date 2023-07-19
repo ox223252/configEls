@@ -1355,6 +1355,188 @@ class Els_graph extends Els_Back {
 	}
 }
 
+class Els_csv extends Els_Back {
+	constructor ( config, id )
+	{
+		super( config, id );
+
+		this.config.separator ||= ',';
+
+		this.title = document.createElement ( "h3" );
+		this._domEl.appendChild ( this.title );
+		this.title.innerHTML = config.title || 'Download CSV';
+
+		[this.divEntries,this.entries] = _createInput ( "Nb Entries" );
+		this._domEl.appendChild ( this.divEntries );
+		this.entries.disabled = true;
+		this.entries.value = 0;
+
+		[this.divLast,this.last] = _createInput ( "Save Last" );
+		this._domEl.appendChild ( this.divLast );
+		this.last.value = 0;
+
+		[this.divDownload,this.download] = _createIconButton ( "Download", "download" );
+		this._domEl.appendChild ( this.divDownload );
+
+		[this.divClean,this.clean] = _createIconButton ( "Clean log", "trash" );
+		this._domEl.appendChild ( this.divClean );
+
+		if ( this.config.display )
+		{
+			if ( false == this.config.display.entries )
+			{
+				this.divEntries.style.display = "none";
+			}
+			if ( false == this.config.display.last )
+			{
+				this.divLast.style.display = "none";
+			}
+			if ( false == this.config.display.clean )
+			{
+				this.divClean.style.display = "none";
+			}
+			
+			console.log ( false == this.config.display.clean );
+		}
+
+		this.csv = undefined;
+		this.mode = undefined;
+		this.lastIndex = undefined;
+
+		if ( config.channel )
+		{
+			if ( config.channel.synchro )
+			{
+				this.csv = {};
+				this.mode = "obj";
+				
+				let cb = {
+					periode: config.periode || 0,
+					channel: config.channel.synchro,
+					f: (msg)=>{
+						this.csv[ msg.value ] = [];
+						this.lastIndex = msg.value;
+
+						let nb = Object.keys ( this.csv ).length
+						if ( this.last.value == this.entries.value )
+						{
+							this.last.value = nb;
+						}
+						this.entries.value = nb;
+					}
+				};
+
+				this._callArgs.push ( cb );
+			}
+			else
+			{
+				this.csv = [];
+				this.mode = "array";
+			}
+
+			for ( let [i,c] of config.channel.data.entries() )
+			{
+				let cb = {
+					periode: config.periode || 0,
+					channel: c,
+					f: (msg)=>{
+						if ( "array" == this.mode )
+						{
+							if ( undefined == this.csv[ i ] )
+							{
+								this.csv[ i ] = [];
+							}
+							this.csv[ i ].push ( msg.value );
+
+							if ( this.entries.value < this.csv[ i ].length )
+							{
+								if ( this.last.value == this.entries.value )
+								{
+									this.last.value = this.csv[ i ].length;
+								}
+								this.entries.value = this.csv[ i ].length;
+							}
+						}
+						else if ( undefined != this.lastIndex )
+						{
+							this.csv[ this.lastIndex ][ i ] = msg.value;
+						}
+					}
+				};
+
+				this._callArgs.push ( cb );
+			}
+		}
+
+		this.clean.addEventListener ('click', ()=>{
+			console.log( "clean")
+			if ( "obj" == this.mode )
+			{
+				this.csv = {};
+				this.lastIndex = undefined;
+			}
+			else if ( "array" == this.mode )
+			{
+				this.csv = [];
+			}
+			this.entries.value = 0;
+			this.last.value = 0;
+		});
+
+		let keys = "";
+		this.download.addEventListener ('click', ()=>{
+			let out = [];
+			if ( "obj" == this.mode )
+			{
+				keys = (this.config.channel.title || this.config.channel.synchro) + this.config.separator + this.config.channel.titles.join ( this.config.separator ) || this.config.channel.data.join ( this.config.separator );
+				for ( let k in this.csv )
+				{
+					out.push ( k+this.config.separator+this.csv[ k ].join ( this.config.separator ) );
+				}
+			}
+			else if ( "array" == this.mode )
+			{
+				for ( let data of this.csv )
+				{
+					for ( let i = 0; i < this.entries.value; i++ )
+					{
+						if ( undefined == out[ i ] )
+						{
+							out[ i ] = "";
+						}
+						
+						if ( ( undefined == data )
+							|| ( undefined == data[ i ] ) )
+						{
+							out[ i ] += this.config.separator;
+						}
+						else
+						{
+							out[ i ] += data[ i ]+this.config.separator;
+						}
+					}
+				}
+				keys = this.config.channel.titles.join ( this.config.separator ) || this.config.channel.data.join ( this.config.separator );
+			}
+			while ( out.length > ( this.last.value ) )
+			{
+				out.shift ( );
+			}
+			out.unshift ( keys );
+			out = out.join ( "\n" );
+			console.log ( out );	
+
+			let downloadLink = document.createElement ( "a" );
+			downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURI( out );
+			downloadLink.download = name+'.csv'
+
+			document.body.appendChild(downloadLink);
+			downloadLink.click();
+			document.body.removeChild(downloadLink);
+		});
+	}
+}
+
 const Els = {
 	title: Els_title,
 	text: Els_text,
@@ -1371,6 +1553,7 @@ const Els = {
 	log: Els_log,
 	svg: Els_svg,
 	graph: Els_graph,
+	csv: Els_csv,
 };
 
 function _createSelectChannel ( channels = [] )
@@ -1435,6 +1618,7 @@ function _createInput ( inLabel )
 
 	let label = document.createElement ( "label" );
 	label.innerHTML = inLabel+" : ";
+	label.style.flexGrow = 1;
 
 	let input = document.createElement ( "input" );
 
@@ -1442,4 +1626,24 @@ function _createInput ( inLabel )
 	div.appendChild ( input );
 
 	return [div,input];
+}
+
+function _createIconButton ( inLabel, iconName )
+{
+	let div = document.createElement ( "div" );
+	div.style.display = "flex";
+
+	let label = document.createElement ( "label" );
+	label.innerHTML = inLabel+" : ";
+	label.style.flexGrow = 1;
+
+	button = document.createElement("button");
+	button.classList.add ( "fa" );
+	button.classList.add ( "fa-"+iconName );
+	button.style.minWidth = "1.5em";
+
+	div.appendChild ( label );
+	div.appendChild ( button );
+
+	return [div,button];
 }
