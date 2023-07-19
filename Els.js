@@ -1483,16 +1483,17 @@ class Els_csv extends Els_Back {
 			this.last.value = 0;
 		});
 
-		let keys = "";
 		this.download.addEventListener ('click', ()=>{
+			let keys = "";
 			let out = [];
 			if ( "obj" == this.mode )
 			{
-				keys = (this.config.channel.title || this.config.channel.synchro) + this.config.separator + this.config.channel.titles.join ( this.config.separator ) || this.config.channel.data.join ( this.config.separator );
 				for ( let k in this.csv )
 				{
 					out.push ( k+this.config.separator+this.csv[ k ].join ( this.config.separator ) );
 				}
+
+				keys = (this.config.channel.title || this.config.channel.synchro) + this.config.separator;
 			}
 			else if ( "array" == this.mode )
 			{
@@ -1516,15 +1517,26 @@ class Els_csv extends Els_Back {
 						}
 					}
 				}
-				keys = this.config.channel.titles.join ( this.config.separator ) || this.config.channel.data.join ( this.config.separator );
 			}
+
+			// reduce the number of line following the "x last" value
 			while ( out.length > ( this.last.value ) )
 			{
 				out.shift ( );
 			}
+
+			// create the columnt headers
+			if ( this.config.channel.titles )
+			{
+				keys += this.config.channel.titles.join ( this.config.separator )
+			}
+			else
+			{
+				keys += this.config.channel.data.join ( this.config.separator );
+			}
 			out.unshift ( keys );
+			
 			out = out.join ( "\n" );
-			console.log ( out );	
 
 			let downloadLink = document.createElement ( "a" );
 			downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURI( out );
