@@ -81,8 +81,13 @@ class Config {
 		return conf;
 	}
 
-	setIO ( )
+	setIO ( socket )
 	{
+		if ( undefined == socket )
+		{
+			return [];
+		}
+
 		let list = {};
 		for ( let c of this._callbacksFunctions )
 		{
