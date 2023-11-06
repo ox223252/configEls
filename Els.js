@@ -128,6 +128,7 @@ class Els_title extends Els_Back {
 		{
 			let configDiv = document.createElement ( "div" );
 			let title = document.createElement ( "input" );
+			configDiv.appendChild ( title );
 			title.type = "text";
 			title.placeholder = "title"
 			title.onchange = (ev)=>{
@@ -135,12 +136,6 @@ class Els_title extends Els_Back {
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
 				outDiv.update ( json );
 			}
-
-			while ( configDiv.firstChild )
-			{
-				configDiv.removeChild ( configDiv.firstChild );	
-			}
-			configDiv.appendChild ( title );
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -222,18 +217,13 @@ class Els_text extends Els_Back {
 		{
 			let configDiv = document.createElement ( "div" );
 			let text = document.createElement ( "input" );
+			configDiv.appendChild ( text );
 			text.type = "text";
 			text.onchange = (ev)=>{
 				json.text=ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
 				outDiv.update ( json );
 			}
-
-			while ( configDiv.firstChild )
-			{
-				configDiv.removeChild ( configDiv.firstChild );	
-			}
-			configDiv.appendChild ( text );
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -317,18 +307,13 @@ class Els_img extends Els_Back {
 		{
 			let configDiv = document.createElement ( "div" );
 			let imgSrc = document.createElement ( "input" );
+			configDiv.appendChild ( imgSrc );
 			imgSrc.type = "text";
 			imgSrc.onchange = (ev)=>{
 				json.src=ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
 				outDiv.update ( json );
 			}
-
-			while ( configDiv.firstChild )
-			{
-				configDiv.removeChild ( configDiv.firstChild );	
-			}
-			configDiv.appendChild ( imgSrc );
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -363,6 +348,11 @@ class Els_title_id extends Els_title {
 		super( config, id );
 		this._els.innerHTML = createEls ( config.text_id, config.prefix );
 	}
+
+	static canCreateNew ( )
+	{
+		return false;
+	}
 }
 
 class Els_text_id extends Els_text {
@@ -370,6 +360,11 @@ class Els_text_id extends Els_text {
 	{
 		super( config, id );
 		this._els.innerHTML = createEls ( config.text_id, config.prefix );
+	}
+
+	static canCreateNew ( )
+	{
+		return false;
 	}
 }
 
@@ -456,8 +451,7 @@ class Els_map extends Els_Back {
 			let configDiv = document.createElement ( "div" );
 
 			let [divLa,iLa] = _createInput ( "Latitude (N/S)" );
-			let [divLo,iLo] = _createInput ( "Longitude (E/W)" );
-
+			configDiv.appendChild ( divLa );
 			iLa.type = "number";
 			iLa.onchange = (ev)=>{
 				json.gps[0].a = ev.target.value;
@@ -467,6 +461,8 @@ class Els_map extends Els_Back {
 				outDiv.update ( json );
 			}
 
+			let [divLo,iLo] = _createInput ( "Longitude (E/W)" );
+			configDiv.appendChild ( divLo );
 			iLo.type = "number";
 			iLo.onchange = (ev)=>{
 				json.gps[0].b = ev.target.value;
@@ -476,12 +472,6 @@ class Els_map extends Els_Back {
 				outDiv.update ( json );
 			}
 
-			while ( configDiv.firstChild )
-			{
-				configDiv.removeChild ( configDiv.firstChild );	
-			}
-			configDiv.appendChild ( divLa );
-			configDiv.appendChild ( divLo );
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -662,6 +652,7 @@ class Els_io extends Els_Back {
 		{
 			let configDiv = document.createElement ( "div" );
 			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
+			configDiv.appendChild ( divCha );
 			json.channel = sCha.value;
 			sCha.onchange = (ev)=>{
 				json.channel = ev.target.value;
@@ -669,6 +660,7 @@ class Els_io extends Els_Back {
 			}
 
 			let [divPer,sPer] = _createSelectPeriode ( )
+			configDiv.appendChild ( divPer );
 			json.periode = parseInt(sPer.value);
 			sPer.onchange = (ev)=>{
 				json.periode = parseInt(ev.target.value);
@@ -676,6 +668,7 @@ class Els_io extends Els_Back {
 			}
 
 			let [divLab,inLab] = _createInput ( "label" );
+			configDiv.appendChild ( divLab );
 			inLab.onchange = (ev)=>{
 				json.label = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -683,6 +676,7 @@ class Els_io extends Els_Back {
 			}
 
 			let [divDef,inDef] = _createInput ( "default value" );
+			configDiv.appendChild ( divDef );
 			inDef.onchange = (ev)=>{
 				json.default = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -690,6 +684,7 @@ class Els_io extends Els_Back {
 			}
 
 			let [divTyp,inTyp] = _createInput ( "nb digits" );
+			configDiv.appendChild ( divTyp );
 			inTyp.onchange = (ev)=>{
 				json.valueType = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -697,23 +692,13 @@ class Els_io extends Els_Back {
 			}
 
 			let [divUni,inUni] = _createInput ( "unit" );
+			configDiv.appendChild ( divUni );
 			inUni.onchange = (ev)=>{
 				json.unit = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
 				outDiv.update ( json );
 			}
 
-
-			while ( configDiv.firstChild )
-			{
-				configDiv.removeChild ( configDiv.firstChild );
-			}
-			configDiv.appendChild ( divCha );
-			configDiv.appendChild ( divPer );
-			configDiv.appendChild ( divLab );
-			configDiv.appendChild ( divDef );
-			configDiv.appendChild ( divTyp );
-			configDiv.appendChild ( divUni );
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
