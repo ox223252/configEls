@@ -60,30 +60,11 @@ class Els_Back {
 		return new Promise((ok,ko)=>{ko("not available for this type")});
 	}
 
-	static _newOut ( params, json )
+	static _newOut ( index, json )
 	{
 		try // out
 		{
-			let outDiv = document.getElementById ( params.outDiv );
-
-			let newChild = new Els[ json.type ]( json );
-			newChild.dom.id = "newEl_"+params.index;
-
-			let replaced = false;
-			for ( let oldChild of outDiv.childNodes )
-			{
-				if ( oldChild.id == "newEl_"+params.index )
-				{
-					outDiv.replaceChild ( newChild.dom, oldChild );
-					replaced = true;
-					break;
-				}
-			}
-
-			if ( !replaced )
-			{
-				outDiv.appendChild ( newChild.dom );
-			}
+			let newChild = new Els[ json.type ]( json, index );
 
 			return newChild;
 		}
@@ -128,72 +109,63 @@ class Els_title extends Els_Back {
 
 	static new ( params = {}, config = undefined )
 	{
-		return new Promise((ok,ko)=>{
-			let configDiv = undefined;
-			let outDiv = undefined;
-			let jsonDiv = undefined;
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
 
-			if ( undefined == params.id )
-			{
-				params.id = Math.random ( );
+		let json = {
+			type:"title",
+			text:"",
+		}
+
+		if ( undefined != config )
+		{
+			json = JSON.parse ( JSON.stringify ( config ) );
+		}
+
+		try // config
+		{
+			let configDiv = document.createElement ( "div" );
+			let title = document.createElement ( "input" );
+			title.type = "text";
+			title.placeholder = "title"
+			title.onchange = (ev)=>{
+				json.text=ev.target.value;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
 			}
 
-			let json = {
-				type:"title",
-				text:"",
-			}
-
-			let validate = ()=>{ok(json);}
-			let cancel = ()=>{ko();}
-
-			if ( undefined != config )
+			while ( configDiv.firstChild )
 			{
-				json = JSON.parse ( JSON.stringify ( config ) );
+				configDiv.removeChild ( configDiv.firstChild );	
 			}
+			configDiv.appendChild ( title );
 
-			try // config
-			{
-				configDiv = document.getElementById ( params.configDiv );
-				let title = document.createElement ( "input" );
-				title.type = "text";
-				title.onchange = (ev)=>{
-					json.text=ev.target.value;
-					jsonDiv.value = JSON.stringify ( json, null, 4 );
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( json, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				try
+				{
+					json = JSON.parse ( ev.target.value );
+					jsonDiv.style.backgroundColor = "";
+					title.value = json.text;
 					outDiv.update ( json );
 				}
-
-				while ( configDiv.firstChild )
+				catch ( e )
 				{
-					configDiv.removeChild ( configDiv.firstChild );	
+					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
 				}
-				configDiv.appendChild ( title );
-
-				document.getElementById ( params.okButton ).addEventListener( "click", validate );
-				document.getElementById ( params.cancelButton ).addEventListener( "click", cancel );
-
-				let jsonDiv = document.getElementById ( params.jsonDiv );
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				jsonDiv.onchange = (ev)=>{
-					try
-					{
-						json = JSON.parse ( ev.target.value );
-						jsonDiv.style.backgroundColor = "";
-						title.value = json.text;
-						outDiv.update ( json );
-					}
-					catch ( e )
-					{
-						jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-					}
-				}
-
-				outDiv = Els_title._newOut ( params, json );
 			}
-			catch ( e )
-			{
-				ko ( e );
-			}
-		});
+
+			let outDiv = Els_Back._newOut ( params.id, json );
+
+			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		}
+		catch ( e )
+		{
+			return undefined
+		}
 	}
 }
 
@@ -231,72 +203,62 @@ class Els_text extends Els_Back {
 
 	static new ( params = {}, config = undefined )
 	{
-		return new Promise((ok,ko)=>{
-			let configDiv = undefined;
-			let outDiv = undefined;
-			let jsonDiv = undefined;
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
 
-			if ( undefined == params.id )
-			{
-				params.id = Math.random ( );
+		let json = {
+			type:"text",
+			text:"",
+		}
+
+		if ( undefined != config )
+		{
+			json = JSON.parse ( JSON.stringify ( config ) );
+		}
+
+		try // config
+		{
+			let configDiv = document.createElement ( "div" );
+			let text = document.createElement ( "input" );
+			text.type = "text";
+			text.onchange = (ev)=>{
+				json.text=ev.target.value;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
 			}
 
-			let json = {
-				type:"text",
-				text:"",
-			}
-
-			let validate = ()=>{ok(json);}
-			let cancel = ()=>{ko();}
-
-			if ( undefined != config )
+			while ( configDiv.firstChild )
 			{
-				json = JSON.parse ( JSON.stringify ( config ) );
+				configDiv.removeChild ( configDiv.firstChild );	
 			}
+			configDiv.appendChild ( text );
 
-			try // config
-			{
-				configDiv = document.getElementById ( params.configDiv );
-				let text = document.createElement ( "input" );
-				text.type = "text";
-				text.onchange = (ev)=>{
-					json.text=ev.target.value;
-					jsonDiv.value = JSON.stringify ( json, null, 4 );
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( json, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				try
+				{
+					json = JSON.parse ( ev.target.value );
+					jsonDiv.style.backgroundColor = "";
+					text.value = json.text;
 					outDiv.update ( json );
 				}
-
-				while ( configDiv.firstChild )
+				catch ( e )
 				{
-					configDiv.removeChild ( configDiv.firstChild );	
+					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
 				}
-				configDiv.appendChild ( text );
-
-				document.getElementById ( params.okButton ).addEventListener( "click", validate );
-				document.getElementById ( params.cancelButton ).addEventListener( "click", cancel );
-
-				let jsonDiv = document.getElementById ( params.jsonDiv );
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				jsonDiv.onchange = (ev)=>{
-					try
-					{
-						json = JSON.parse ( ev.target.value );
-						jsonDiv.style.backgroundColor = "";
-						text.value = json.text;
-						outDiv.update ( json );
-					}
-					catch ( e )
-					{
-						jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-					}
-				}
-
-				outDiv = Els_text._newOut ( params, json );
 			}
-			catch ( e )
-			{
-				ko ( e );
-			}
-		});
+
+			let outDiv = Els_Back._newOut ( params.id, json );
+
+			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		}
+		catch ( e )
+		{
+			return undefined
+		}
 	}
 }
 
@@ -336,72 +298,62 @@ class Els_img extends Els_Back {
 
 	static new ( params = {}, config = undefined )
 	{
-		return new Promise((ok,ko)=>{
-			let configDiv = undefined;
-			let outDiv = undefined;
-			let jsonDiv = undefined;
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
 
-			if ( undefined == params.id )
-			{
-				params.id = Math.random ( );
+		let json = {
+			type:"img",
+			src:"",
+		}
+
+		if ( undefined != config )
+		{
+			json = JSON.parse ( JSON.stringify ( config ) );
+		}
+
+		try // config
+		{
+			let configDiv = document.createElement ( "div" );
+			let imgSrc = document.createElement ( "input" );
+			imgSrc.type = "text";
+			imgSrc.onchange = (ev)=>{
+				json.src=ev.target.value;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
 			}
 
-			let json = {
-				type:"img",
-				src:"",
-			}
-
-			let validate = ()=>{ok(json);}
-			let cancel = ()=>{ko();}
-
-			if ( undefined != config )
+			while ( configDiv.firstChild )
 			{
-				json = JSON.parse ( JSON.stringify ( config ) );
+				configDiv.removeChild ( configDiv.firstChild );	
 			}
+			configDiv.appendChild ( imgSrc );
 
-			try // config
-			{
-				configDiv = document.getElementById ( params.configDiv );
-				let imgSrc = document.createElement ( "input" );
-				imgSrc.type = "text";
-				imgSrc.onchange = (ev)=>{
-					json.src=ev.target.value;
-					jsonDiv.value = JSON.stringify ( json, null, 4 );
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( json, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				try
+				{
+					json = JSON.parse ( ev.target.value );
+					jsonDiv.style.backgroundColor = "";
+					imgSrc.value = json.src;
 					outDiv.update ( json );
 				}
-
-				while ( configDiv.firstChild )
+				catch ( e )
 				{
-					configDiv.removeChild ( configDiv.firstChild );	
+					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
 				}
-				configDiv.appendChild ( imgSrc );
-
-				document.getElementById ( params.okButton ).addEventListener( "click", validate );
-				document.getElementById ( params.cancelButton ).addEventListener( "click", cancel );
-
-				let jsonDiv = document.getElementById ( params.jsonDiv );
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				jsonDiv.onchange = (ev)=>{
-					try
-					{
-						json = JSON.parse ( ev.target.value );
-						jsonDiv.style.backgroundColor = "";
-						imgSrc.value = json.src;
-						outDiv.update ( json );
-					}
-					catch ( e )
-					{
-						jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-					}
-				}
-
-				outDiv = Els_img._newOut ( params, json );
 			}
-			catch ( e )
-			{
-				ko ( e );
-			}
-		});
+
+			let outDiv = Els_Back._newOut ( params.id, json );
+
+			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		}
+		catch ( e )
+		{
+			return undefined
+		}
 	}
 }
 
@@ -411,11 +363,6 @@ class Els_title_id extends Els_title {
 		super( config, id );
 		this._els.innerHTML = createEls ( config.text_id, config.prefix );
 	}
-
-	static canCreateNew ( )
-	{
-		return false;
-	}
 }
 
 class Els_text_id extends Els_text {
@@ -423,11 +370,6 @@ class Els_text_id extends Els_text {
 	{
 		super( config, id );
 		this._els.innerHTML = createEls ( config.text_id, config.prefix );
-	}
-
-	static canCreateNew ( )
-	{
-		return false;
 	}
 }
 
@@ -459,6 +401,112 @@ class Els_map extends Els_Back {
 			this._elList.src += "&marker="+p.a+"%2C"+p.b;
 		})
 		this._elList.src += "&layers=ND";
+	}
+
+	update ( config )
+	{
+		this._update ( config );
+
+		this._elList.src = "https://www.openstreetmap.org/export/embed.html"
+		this._elList.src += "?bbox="+config.view.a
+		this._elList.src += "%2C"+config.view.b
+		this._elList.src += "%2C"+config.view.c
+		this._elList.src += "%2C"+config.view.d;
+		config.gps.forEach((p)=>{
+			this._elList.src += "&marker="+p.a+"%2C"+p.b;
+		})
+		this._elList.src += "&layers=ND";
+	}
+
+	static canCreateNew ( )
+	{
+		return true;
+	}
+
+	static new ( params = {}, config = undefined )
+	{
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
+
+		let json = {
+			type:"map",
+			gps:[
+				{
+					a:0,
+					b:0
+				}
+			],
+			view:{
+				a:-0.01,
+				b:-0.01,
+				c:0.01,
+				d:0.01,
+			}
+		}
+
+		if ( undefined != config )
+		{
+			json = JSON.parse ( JSON.stringify ( config ) );
+		}
+
+		try // config
+		{
+			let configDiv = document.createElement ( "div" );
+
+			let [divLa,iLa] = _createInput ( "Latitude (N/S)" );
+			let [divLo,iLo] = _createInput ( "Longitude (E/W)" );
+
+			iLa.type = "number";
+			iLa.onchange = (ev)=>{
+				json.gps[0].a = ev.target.value;
+				json.view.b = Number ( ev.target.value ) - 0.01;
+				json.view.d = Number ( ev.target.value ) + 0.01;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
+			}
+
+			iLo.type = "number";
+			iLo.onchange = (ev)=>{
+				json.gps[0].b = ev.target.value;
+				json.view.a = Number ( ev.target.value ) - 0.01;
+				json.view.c = Number ( ev.target.value ) + 0.01;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
+			}
+
+			while ( configDiv.firstChild )
+			{
+				configDiv.removeChild ( configDiv.firstChild );	
+			}
+			configDiv.appendChild ( divLa );
+			configDiv.appendChild ( divLo );
+
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( json, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				try
+				{
+					json = JSON.parse ( ev.target.value );
+					jsonDiv.style.backgroundColor = "";
+					text.value = json.text;
+					outDiv.update ( json );
+				}
+				catch ( e )
+				{
+					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
+				}
+			}
+
+			let outDiv = Els_Back._newOut ( params.id, json );
+
+			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		}
+		catch ( e )
+		{
+			return undefined
+		}
 	}
 }
 
@@ -594,113 +642,103 @@ class Els_io extends Els_Back {
 
 	static new ( params = {}, config = undefined )
 	{
-		return new Promise ((ok,ko)=>{
-			let configDiv = undefined;
-			let outDiv = undefined;
-			let jsonDiv = undefined;
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
 
-			if ( undefined == params.id )
-			{
-				params.id = Math.random ( );
-			}
+		let json = {
+			type:"io",
+			channel:"WEBSOCKET CHANNEL",
+			periode:0,
+		}
 
-			let json = {
-				type:"io",
-				channel:"WEBSOCKET CHANNEL",
-				periode:0,
-			}
+		if ( undefined != config )
+		{
+			json = JSON.parse ( JSON.stringify ( config ) );
+		}
 
-			let validate = ()=>{ok(json);}
-			let cancel = ()=>{ko();}
-
-			if ( undefined != config )
-			{
-				json = JSON.parse ( JSON.stringify ( config ) );
-			}
-
-			try // config
-			{
-				configDiv = document.getElementById ( params.configDiv );
-				let [divCha,sCha] = _createSelectChannel ( params.channels );
-				json.channel = sCha.value;
-				sCha.onchange = (ev)=>{
-					json.channel = ev.target.value;
-					jsonDiv.value = JSON.stringify ( json, null, 4 );
-				}
-
-				let [divPer,sPer] = _createSelectPeriode ( )
-				json.periode = parseInt(sPer.value);
-				sPer.onchange = (ev)=>{
-					json.periode = parseInt(ev.target.value);
-					jsonDiv.value = JSON.stringify ( json, null, 4 );
-				}
-
-				let [divLab,inLab] = _createInput ( "label" );
-				inLab.onchange = (ev)=>{
-					json.label = ev.target.value;
-					jsonDiv.value = JSON.stringify ( json, null, 4 );
-					outDiv.update ( json );
-				}
-
-				let [divDef,inDef] = _createInput ( "default value" );
-				inDef.onchange = (ev)=>{
-					json.default = ev.target.value;
-					jsonDiv.value = JSON.stringify ( json, null, 4 );
-					outDiv.update ( json );
-				}
-
-				let [divTyp,inTyp] = _createInput ( "value type" );
-				inTyp.onchange = (ev)=>{
-					json.valueType = ev.target.value;
-					jsonDiv.value = JSON.stringify ( json, null, 4 );
-					outDiv.update ( json );
-				}
-
-				let [divUni,inUni] = _createInput ( "unit" );
-				inUni.onchange = (ev)=>{
-					json.unit = ev.target.value;
-					jsonDiv.value = JSON.stringify ( json, null, 4 );
-					outDiv.update ( json );
-				}
-
-
-				while ( configDiv.firstChild )
-				{
-					configDiv.removeChild ( configDiv.firstChild );
-				}
-				configDiv.appendChild ( divCha );
-				configDiv.appendChild ( divPer );
-				configDiv.appendChild ( divLab );
-				configDiv.appendChild ( divDef );
-				configDiv.appendChild ( divTyp );
-				configDiv.appendChild ( divUni );
-
-				document.getElementById ( params.okButton ).addEventListener( "click", validate );
-				document.getElementById ( params.cancelButton ).addEventListener( "click", cancel );
-
-				let jsonDiv = document.getElementById ( params.jsonDiv );
+		try // config
+		{
+			let configDiv = document.createElement ( "div" );
+			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
+			json.channel = sCha.value;
+			sCha.onchange = (ev)=>{
+				json.channel = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				jsonDiv.onchange = (ev)=>{
-					try
-					{
-						json = JSON.parse ( ev.target.value );
-						jsonDiv.style.backgroundColor = "";
-						title.value = json.text;
-						outDiv.update ( json );
-					}
-					catch ( e )
-					{
-						jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-					}
-				}
+			}
 
-				outDiv = Els_io._newOut ( params, json );
+			let [divPer,sPer] = _createSelectPeriode ( )
+			json.periode = parseInt(sPer.value);
+			sPer.onchange = (ev)=>{
+				json.periode = parseInt(ev.target.value);
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
 			}
-			catch ( e )
+
+			let [divLab,inLab] = _createInput ( "label" );
+			inLab.onchange = (ev)=>{
+				json.label = ev.target.value;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
+			}
+
+			let [divDef,inDef] = _createInput ( "default value" );
+			inDef.onchange = (ev)=>{
+				json.default = ev.target.value;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
+			}
+
+			let [divTyp,inTyp] = _createInput ( "nb digits" );
+			inTyp.onchange = (ev)=>{
+				json.valueType = ev.target.value;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
+			}
+
+			let [divUni,inUni] = _createInput ( "unit" );
+			inUni.onchange = (ev)=>{
+				json.unit = ev.target.value;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
+			}
+
+
+			while ( configDiv.firstChild )
 			{
-				ko ( e );
+				configDiv.removeChild ( configDiv.firstChild );
 			}
-		});
+			configDiv.appendChild ( divCha );
+			configDiv.appendChild ( divPer );
+			configDiv.appendChild ( divLab );
+			configDiv.appendChild ( divDef );
+			configDiv.appendChild ( divTyp );
+			configDiv.appendChild ( divUni );
+
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( json, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				try
+				{
+					json = JSON.parse ( ev.target.value );
+					jsonDiv.style.backgroundColor = "";
+					title.value = json.text;
+					outDiv.update ( json );
+				}
+				catch ( e )
+				{
+					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
+				}
+			}
+
+			let outDiv = Els_Back._newOut ( params.id, json );
+
+			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		}
+		catch ( e )
+		{
+			return undefined
+		}
 	}
 }
 
@@ -1584,7 +1622,7 @@ const Els = {
 	csv: Els_csv,
 };
 
-function _createSelectChannel ( channels = [] )
+function _createSelect ( array = [] )
 {
 	let div = document.createElement ( "div" );
 	div.style.display = "flex";
@@ -1594,7 +1632,7 @@ function _createSelectChannel ( channels = [] )
 
 	let select = document.createElement ( "select" );
 
-	for ( let c of channels )
+	for ( let c of array )
 	{
 		let option = document.createElement ( "option" );
 		option.value = c;
@@ -1606,6 +1644,43 @@ function _createSelectChannel ( channels = [] )
 	div.appendChild ( select );
 
 	return [div,select];
+}
+
+function _createInputArray ( inText, array = [] )
+{
+	let div = document.createElement ( "div" );
+	div.style.display = "flex";
+
+	if ( undefined != inText )
+	{
+		let label = document.createElement ( "label" );
+		label.innerHTML = inText+" : ";
+		
+		div.appendChild ( label );
+	}
+
+	let input = document.createElement ( "input" );
+	div.appendChild ( input );
+
+	if ( undefined != array )
+	{
+		let list = document.createElement ( "datalist" );
+		div.appendChild ( list );
+		list.id = "newList"+Math.random( );
+		input.setAttribute ( 'list', list.id );
+
+
+		for ( let index in array )
+		{
+			console.log ( index, array[ index ] )
+			let option = document.createElement ( "option" );
+			option.value = array[ index ].label;
+			option.innerHTML = array[ index ].label;
+			list.appendChild ( option );
+		}
+	}
+
+	return [div,input];
 }
 
 function _createSelectPeriode ( )
