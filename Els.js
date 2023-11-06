@@ -765,6 +765,71 @@ class Els_bin extends Els_Back {
 
 		this._callArgs.push ( cb );
 	}
+
+	static canCreateNew ( )
+	{
+		return true;
+	}
+
+	static new ( params = {}, config = undefined )
+	{
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
+
+		let json = {
+			type:"bin",
+			channel:"WS_DATA_CHANNEL",
+			text:""
+		}
+
+		if ( undefined != config )
+		{
+			json = JSON.parse ( JSON.stringify ( config ) );
+		}
+
+		try // config
+		{
+			let configDiv = document.createElement ( "div" );
+
+			let [divLa,iLa] = _createInput ( "label" );
+			configDiv.appendChild ( divLa );
+			iLa.type = "number";
+			iLa.onchange = (ev)=>{
+				json.gps[0].a = ev.target.value;
+				json.view.b = Number ( ev.target.value ) - 0.01;
+				json.view.d = Number ( ev.target.value ) + 0.01;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
+			}
+
+
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( json, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				try
+				{
+					json = JSON.parse ( ev.target.value );
+					jsonDiv.style.backgroundColor = "";
+					text.value = json.text;
+					outDiv.update ( json );
+				}
+				catch ( e )
+				{
+					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
+				}
+			}
+
+			let outDiv = Els_Back._newOut ( params.id, json );
+
+			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		}
+		catch ( e )
+		{
+			return undefined
+		}
+	}
 }
 
 class Els_multi extends Els_Back {
