@@ -561,6 +561,13 @@ class Els_io extends Els_Back {
 				}
 				break;
 			}
+			case "date":
+			{
+				cb.f = (msg)=>{
+					this.divData.innerHTML = new Date ( msg.value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
+				};
+				break;
+			}
 			default:
 			{
 				cb.f = (msg)=>{
