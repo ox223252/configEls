@@ -711,7 +711,7 @@ class Els_io extends Els_Back {
 				outDiv.update ( json );
 			}
 
-			let [divTyp,inTyp] = _createInput ( "nb digits" );
+			let [divTyp,inTyp] = _createInput ( "nb digits/type", [ "volume", "flow", "temp", "date" ] );
 			configDiv.appendChild ( divTyp );
 			inTyp.onchange = (ev)=>{
 				json.valueType = ev.target.value;
@@ -723,6 +723,14 @@ class Els_io extends Els_Back {
 			configDiv.appendChild ( divUni );
 			inUni.onchange = (ev)=>{
 				json.unit = ev.target.value;
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				outDiv.update ( json );
+			}
+
+			let [divCoef,inCoef] = _createInput ( "static Coef" );
+			configDiv.appendChild ( divCoef );
+			inCoef.onchange = (ev)=>{
+				json.coef = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
 				outDiv.update ( json );
 			}
@@ -1964,19 +1972,36 @@ function _createSelectPeriode ( )
 	return [div,select];
 }
 
-function _createInput ( inLabel )
+function _createInput ( inLabel, option = undefined )
 {
 	let div = document.createElement ( "div" );
 	div.style.display = "flex";
 
 	let label = document.createElement ( "label" );
+	div.appendChild ( label );
 	label.innerHTML = inLabel+" : ";
 	label.style.flexGrow = 1;
 
 	let input = document.createElement ( "input" );
-
-	div.appendChild ( label );
 	div.appendChild ( input );
+
+	if ( ( undefined != option )
+		&& ( "Array" == option.constructor.name ) )
+	{
+		let dataList = document.createElement ( "datalist" );
+		div.appendChild ( dataList );
+		dataList.id = "fh_"+Math.random()+"_"+Math.random();
+
+		input.setAttribute("list", dataList.id);
+
+		for ( let o of option )
+		{
+			let tmp = document.createElement ( "option" );
+			dataList.appendChild ( tmp );
+			tmp.value = o;
+		}
+	}
+
 
 	return [div,input];
 }
