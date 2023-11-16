@@ -535,11 +535,17 @@ class Els_io extends Els_Back {
 			f: console.log
 		};
 
+
 		switch ( config.valueType )
 		{
 			case "volume":
 			{
 				cb.f = (msg)=>{
+					if ( undefined != config.coef )
+					{
+						msg.value *= config.coef;
+					}
+
 					this.divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.volume, "m3" ), "v_"+unit.volume );
 					this.divUnit.innerHTML = unit.volume || "?";
 				};
@@ -548,6 +554,11 @@ class Els_io extends Els_Back {
 			case "flow":
 			{
 				cb.f = (msg)=>{
+					if ( undefined != config.coef )
+					{
+						msg.value *= config.coef;
+					}
+
 					this.divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.flow_v, "m3" ) / timeConvert ( 1, unit.flow_t, "s" ), 1 );
 					this.divUnit.innerHTML = (unit.flow_v || "?") + "/" +(unit.flow_t || "?");
 				}
@@ -556,6 +567,11 @@ class Els_io extends Els_Back {
 			case "temp":
 			{
 				cb.f = (msg)=>{
+					if ( undefined != config.coef )
+					{
+						msg.value *= config.coef;
+					}
+
 					this.divData.innerHTML = refactor ( temperatureConvert ( msg.value, unit.temperature, "C" ), "T_"+unit.temperature );
 					this.divUnit.innerHTML = "°" + unit.temperature;
 				}
@@ -564,7 +580,12 @@ class Els_io extends Els_Back {
 			case "date":
 			{
 				cb.f = (msg)=>{
-					this.divData.innerHTML = new Date ( msg.value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
+					if ( undefined != config.coef )
+					{
+						msg.value *= config.coef;
+					}
+
+					this.divData.innerHTML = new Date ( msg.value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" ).replace ( ".000", "" );
 				};
 				break;
 			}
