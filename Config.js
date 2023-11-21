@@ -37,27 +37,6 @@ class Config {
 				this._callbacksFunctions.push ( ...entry.callbacks );
 			}
 		}
-
-		if ( true == this._config.editable )
-		{
-			let index = this._config.dataset.length;
-			let domNew = document.createElement ( "div" );
-			domNew.innerHTML = '+';
-			domNew.style.display = "flex";
-			domNew.style.alignItems = "center";
-			domNew.style.justifyContent = "center";
-			domNew.style.fontSize = "3em";
-			domNew.style.cursor = "pointer";
-
-			domNew.onclick = param.editConfig.callback;
-			domNew.className = param.editConfig.class;
-
-			this._config.dataset[ index ] = {
-				el: domNew,
-				x:1,
-				y:1
-			}
-		}
 	}
 
 	get callbacks ( )
