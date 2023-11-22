@@ -1611,7 +1611,9 @@ class Els_graph extends Els_Back {
 						chart.update();
 					}
 
-					if ( false == data.zoom )
+					if ( ( false == data.zoom )
+						&& ( undefined != chart.scales.x )
+						&& ( undefined != chart.scales.y ) )
 					{
 						data.x.min = chart.scales.x.min;
 						data.x.max = chart.scales.x.max;
@@ -1930,7 +1932,6 @@ function _createInputArray ( inText, array = [] )
 
 		for ( let index in array )
 		{
-			console.log ( index, array[ index ] )
 			let option = document.createElement ( "option" );
 			option.value = array[ index ].label;
 			option.innerHTML = array[ index ].label;
