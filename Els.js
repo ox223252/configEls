@@ -131,6 +131,7 @@ class Els_title extends Els_Back {
 			configDiv.appendChild ( title );
 			title.type = "text";
 			title.placeholder = "title"
+			title.value = json.text || "";
 			title.onchange = (ev)=>{
 				json.text=ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -219,6 +220,7 @@ class Els_text extends Els_Back {
 			let text = document.createElement ( "input" );
 			configDiv.appendChild ( text );
 			text.type = "text";
+			text.value = json.text || "";
 			text.onchange = (ev)=>{
 				json.text=ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -309,6 +311,7 @@ class Els_img extends Els_Back {
 			let imgSrc = document.createElement ( "input" );
 			configDiv.appendChild ( imgSrc );
 			imgSrc.type = "text";
+			imgSrc.value = json.src || "";
 			imgSrc.onchange = (ev)=>{
 				json.src=ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -453,6 +456,7 @@ class Els_map extends Els_Back {
 			let [divLa,iLa] = _createInput ( "Latitude (N/S)" );
 			configDiv.appendChild ( divLa );
 			iLa.type = "number";
+			iLa.value = json.gps[0].a || "";
 			iLa.onchange = (ev)=>{
 				json.gps[0].a = ev.target.value;
 				json.view.b = Number ( ev.target.value ) - 0.01;
@@ -464,6 +468,7 @@ class Els_map extends Els_Back {
 			let [divLo,iLo] = _createInput ( "Longitude (E/W)" );
 			configDiv.appendChild ( divLo );
 			iLo.type = "number";
+			iLo.value = json.gps[0].b || "";
 			iLo.onchange = (ev)=>{
 				json.gps[0].b = ev.target.value;
 				json.view.a = Number ( ev.target.value ) - 0.01;
@@ -680,16 +685,16 @@ class Els_io extends Els_Back {
 		{
 			let configDiv = document.createElement ( "div" );
 			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
+			sCha.value = json.channel || "";
 			configDiv.appendChild ( divCha );
-			json.channel = sCha.value;
 			sCha.onchange = (ev)=>{
 				json.channel = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
 			}
 
 			let [divPer,sPer] = _createSelectPeriode ( )
+			sPer.value = json.periode;
 			configDiv.appendChild ( divPer );
-			json.periode = parseInt(sPer.value);
 			sPer.onchange = (ev)=>{
 				json.periode = parseInt(ev.target.value);
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -697,6 +702,7 @@ class Els_io extends Els_Back {
 
 			let [divLab,inLab] = _createInput ( "label" );
 			configDiv.appendChild ( divLab );
+			inLab.value = json.label || "";
 			inLab.onchange = (ev)=>{
 				json.label = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -705,6 +711,7 @@ class Els_io extends Els_Back {
 
 			let [divDef,inDef] = _createInput ( "default value" );
 			configDiv.appendChild ( divDef );
+			inDef.value = json.default || "";
 			inDef.onchange = (ev)=>{
 				json.default = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -713,6 +720,7 @@ class Els_io extends Els_Back {
 
 			let [divTyp,inTyp] = _createInput ( "nb digits/type", [ "volume", "flow", "temp", "date" ] );
 			configDiv.appendChild ( divTyp );
+			inTyp.value = json.valueType || "";
 			inTyp.onchange = (ev)=>{
 				json.valueType = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -721,6 +729,7 @@ class Els_io extends Els_Back {
 
 			let [divUni,inUni] = _createInput ( "unit" );
 			configDiv.appendChild ( divUni );
+			inUni.value = json.unit || "";
 			inUni.onchange = (ev)=>{
 				json.unit = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -729,6 +738,7 @@ class Els_io extends Els_Back {
 
 			let [divCoef,inCoef] = _createInput ( "static Coef" );
 			configDiv.appendChild ( divCoef );
+			inCoef.value = json.coef || "";
 			inCoef.onchange = (ev)=>{
 				json.coef = ev.target.value;
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
