@@ -275,6 +275,46 @@ Cf https://bernii.github.io/gauge.js/ pour toutes les possibilités.
 
 Créait un tableau pouvant contenir tout les types d'entrée (si elles ont la place de s'afficher).
 
+### dinTable:
+```javascript
+{
+	type:"dinTable",
+	channel:"WEBSOCKET CHANNEL"
+}
+```
+
+Créait un tableau pouvant contenir un nombre variable de lignes et colonnes.
+L'entête peut contenir des entrées de n'importe que type.
+
+```javascript
+{
+	type:"dinTable",
+	channel:"WEBSOCKET CHANNEL",
+	periode:0,
+	head:[
+		{/*...*/}  // element 1 de la ligne 1
+		{/*...*/}  // element 2 de la ligne 1
+		{/*...*/}  // element 3 de la ligne 1
+	]
+}
+```
+
+Le corp peut contenir un nombre variable de ligne est colone généré à la volé en fonction des données reçues.
+
+```javascript
+les données sont au format suivant :
+{value:[
+	[], // represente une ligne (sans donnée pour cet exemple)
+	[
+		{ // represente une colone avec style CSS
+			value:"...",
+			style:"..."
+		},
+		"..." // represente une colone de texte pur a afficher.
+	],
+]}
+```
+
 ### log:
 ```javascript
 {

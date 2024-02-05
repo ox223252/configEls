@@ -1211,6 +1211,76 @@ class Els_table extends Els_Back {
 	}
 }
 
+class Els_dinTable extends Els_Back {
+	constructor ( config, id )
+	{
+		super( config, id );
+
+		this.table = document.createElement ( "table" );
+		this._domEl.appendChild ( this.table );
+
+		if ( config.head )
+		{
+			let head = document.createElement ( "thead" );
+			this.table.appendChild ( head );
+
+			let tr = document.createElement ( "tr" );
+			head.appendChild ( tr );
+
+			for ( let [i,head] of config.head.entries() )
+			{
+				let td = document.createElement ( "td" );
+				tr.appendChild ( td );
+
+				let entry = new Els[ head.type ]( head, id+"_"+i );
+				td.appendChild ( entry.dom );
+
+				this._callArgs.push ( ...entry.callbacks );
+			}
+		}
+
+		let cb = {
+			periode: config.periode || 0,
+			channel: config.channel,
+			f: (msg)=>{
+				let body = document.createElement ( "tbody" );
+
+				for ( let row of msg.value )
+				{
+					let tr = document.createElement ( "tr" );
+					body.appendChild ( tr );
+
+					for ( let col of row )
+					{
+						let td = document.createElement ( "td" );
+						tr.appendChild ( td );
+
+						if ( "object" == col.constructor.name.toLowerCase ( ) )
+						{
+							td.appendChild ( document.createTextNode ( col.value ) );
+							td.style = col.style;
+						}
+						else
+						{
+							td.appendChild ( document.createTextNode ( col ) );
+						}
+					}
+				}
+
+				if ( this.body )
+				{
+					this.table.removeChild ( this.body );
+				}
+
+				this.body = body;
+				this.table.appendChild ( this.body );
+			}
+		};
+
+		this._callArgs.push ( cb );
+	}
+}
+
 class Els_log extends Els_Back {
 	constructor ( config, id )
 	{
@@ -1886,6 +1956,7 @@ const Els = {
 	multi: Els_multi,
 	gauge: Els_gauge,
 	table: Els_table,
+	dinTable: Els_dinTable,
 	log: Els_log,
 	svg: Els_svg,
 	graph: Els_graph,
