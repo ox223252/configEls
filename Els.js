@@ -1243,12 +1243,9 @@ class Els_dinTable extends Els_Back {
 			periode: config.periode || 0,
 			channel: config.channel,
 			f: (msg)=>{
-				let body = document.createElement ( "tbody" );
-
-				for ( let row of msg.value )
+				function createLine ( row )
 				{
 					let tr = document.createElement ( "tr" );
-					body.appendChild ( tr );
 
 					for ( let col of row )
 					{
@@ -1265,15 +1262,62 @@ class Els_dinTable extends Els_Back {
 							td.appendChild ( document.createTextNode ( col ) );
 						}
 					}
+					return tr;
 				}
 
-				if ( this.body )
+				if ( msg.update )
 				{
-					this.table.removeChild ( this.body );
-				}
+					if ( !this.line )
+					{
+						return;
+					}
 
-				this.body = body;
-				this.table.appendChild ( this.body );
+					for ( let update of msg.update )
+					{
+						if ( this.line[ update.id ]
+							&& !update.value )
+						{ // update existing line to an empty line
+							while ( this.line[ update.id ].firstChild )
+							{
+								this.line[ update.id ].removeChild ( this.line[ update.id ].lastChild );
+							}
+
+							this.line[ update.id ].style.display = "none";
+						}
+						else if ( this.line[ update.id ] )
+						{
+							let tr = createLine ( update.value );
+							this.line[ update.id ].replaceWith ( tr );
+							this.line[ update.id ] = tr;
+						}
+						else
+						{
+							let tr = createLine ( update.value );
+							this.body.appendChild ( tr );
+							this.line[ update.id ] = tr;
+						}
+					}
+				}
+				else if ( msg.value )
+				{
+					this.line = [];
+					let body = document.createElement ( "tbody" );
+
+					for ( let row of msg.value )
+					{
+						let tr = createLine ( row );
+						body.appendChild ( tr );
+						this.line.push ( tr );
+					}
+
+					if ( this.body )
+					{
+						this.table.removeChild ( this.body );
+					}
+
+					this.body = body;
+					this.table.appendChild ( this.body );
+				}
 			}
 		};
 

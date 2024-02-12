@@ -301,19 +301,39 @@ L'entête peut contenir des entrées de n'importe que type.
 
 Le corp peut contenir un nombre variable de ligne est colone généré à la volé en fonction des données reçues.
 
-```javascript
 les données sont au format suivant :
-{value:[
-	[], // represente une ligne (sans donnée pour cet exemple)
-	[
-		{ // represente une colone avec style CSS
-			value:"...",
-			style:"..."
-		},
-		"..." // represente une colone de texte pur a afficher.
-	],
-]}
+```javascript
+{
+	value:[
+		[], // represente une ligne (sans donnée pour cet exemple)
+		[
+			{ // represente une colone avec style CSS
+				value:"...",
+				style:"..."
+			},
+			"..." // represente une colone de texte pur a afficher.
+		],
+	]
+}
 ```
+Pour mette a jour l'ensemblre des données, utilisez le forma précedente, pour une partie des données :
+```javascript
+{
+	update:[
+		{
+			id:0, // id de la ligne qui doit etre mise a jour
+			value:[
+				{ // represente une colone avec style CSS
+					value:"...",
+					style:"..."
+				},
+				"..." // represente une colone de texte pur a afficher.
+			]
+		}
+	]
+}
+```
+
 
 ### log:
 ```javascript
