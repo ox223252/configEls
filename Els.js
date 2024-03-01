@@ -1243,24 +1243,29 @@ class Els_dinTable extends Els_Back {
 			periode: config.periode || 0,
 			channel: config.channel,
 			f: (msg)=>{
+				function createCol ( col )
+				{
+					let td = document.createElement ( "td" );
+
+					if ( "object" == col.constructor.name.toLowerCase ( ) )
+					{
+						td.appendChild ( document.createTextNode ( col.value ) );
+						td.style = col.style;
+					}
+					else
+					{
+						td.appendChild ( document.createTextNode ( col ) );
+					}
+
+					return td;
+				}
 				function createLine ( row )
 				{
 					let tr = document.createElement ( "tr" );
 
 					for ( let col of row )
 					{
-						let td = document.createElement ( "td" );
-						tr.appendChild ( td );
-
-						if ( "object" == col.constructor.name.toLowerCase ( ) )
-						{
-							td.appendChild ( document.createTextNode ( col.value ) );
-							td.style = col.style;
-						}
-						else
-						{
-							td.appendChild ( document.createTextNode ( col ) );
-						}
+						tr.appendChild ( createCol ( col ) );
 					}
 					return tr;
 				}
@@ -1274,21 +1279,21 @@ class Els_dinTable extends Els_Back {
 
 					for ( let update of msg.update )
 					{
-						if ( this.line[ update.id ]
-							&& !update.value )
-						{ // update existing line to an empty line
+						if ( this.line[ update.id ] )
+						{ // update existing line
 							while ( this.line[ update.id ].firstChild )
 							{
 								this.line[ update.id ].removeChild ( this.line[ update.id ].lastChild );
 							}
 
-							this.line[ update.id ].style.display = "none";
-						}
-						else if ( this.line[ update.id ] )
-						{
-							let tr = createLine ( update.value );
-							this.line[ update.id ].replaceWith ( tr );
-							this.line[ update.id ] = tr;
+							if ( !update.value )
+							{ // empty line
+								this.line[ update.id ].style.display = "none";
+							}
+							else for ( let col of update.value )
+							{ // line with values
+								this.line[ update.id ].appendChild ( createCol ( col ) );
+							}
 						}
 						else
 						{
