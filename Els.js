@@ -598,12 +598,20 @@ class Els_io extends Els_Back {
 			{
 				cb.f = (msg)=>{
 					msg.value *= config.coef || 1;
-					let a = config.valueType;
-					if ( a == undefined )
+					if ( undefined != refactor )
 					{
-						a = 1;
+						let a = config.valueType;
+						if ( a == undefined )
+						{
+							a = 1;
+						}
+						this.divData.innerHTML = refactor ( msg.value, a );
 					}
-					this.divData.innerHTML = refactor ( msg.value, a );
+					else
+					{
+						this.divData.innerHTML = msg.value;
+					}
+
 					if ( config.unit )
 					{
 						this.divUnit.innerHTML =  config.unit;
