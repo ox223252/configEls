@@ -1797,6 +1797,11 @@ class Els_csv extends Els_Back {
 		this._domEl.appendChild ( this.divLast );
 		this.last.value = 0;
 
+		[this.periodeDiv,this.periode]= _createInput ( "Save Every" );
+		this._domEl.appendChild ( this.periodeDiv );
+		this.periode.min = 0;
+		this.periode.placeholder = "hours";
+
 		[this.divDownload,this.download] = _createIconButton ( "Download", "download" );
 		this._domEl.appendChild ( this.divDownload );
 
@@ -1984,6 +1989,29 @@ class Els_csv extends Els_Back {
 			downloadLink.click();
 			document.body.removeChild(downloadLink);
 		});
+
+		this.periode.addEventListener ( "change", ()=>{
+			if ( this.interval )
+			{
+				clearInterval ( this.interval );
+			}
+
+			if ( 0.01666 < this.periode.value )
+			{
+				this.interval = setInterval ( ()=>{
+					let prompt  = this.config.prompt;
+					this.config.prompt = false;
+
+					this.download.dispatchEvent ( new Event ( "click" ) );
+
+					setTimeout ( ()=>{
+						this.clean.dispatchEvent ( new Event ( "click" ) );
+					}, 1000 );
+
+					this.config.prompt  = prompt;
+				},  this.periode.value * 3600 * 1000 );
+			}
+		})
 	}
 }
 
