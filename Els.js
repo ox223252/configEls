@@ -1995,7 +1995,7 @@ class Els_csv extends Els_Back {
 			}
 			else
 			{
-				downloadLink.download = "CSV_"+new Date().toISOString();
+				downloadLink.download = "CSV_"+new Date().toISOString()+".csv";
 			}
 
 			document.body.appendChild(downloadLink);
