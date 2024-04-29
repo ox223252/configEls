@@ -925,9 +925,9 @@ class Els_multi extends Els_Back {
 			channel: config.channel,
 			f: function f(msg){
 				this.div.style = "--status-color:"+config.color[ 0 ];
-				for ( let i = 0; i < config.seuil.length; i++ )
+				for ( let i = 0; i < config.threshold.length; i++ )
 				{
-					if ( msg.value <= config.seuil[ i ] )
+					if ( msg.value <= config.threshold[ i ] )
 					{
 						break;
 					}
@@ -938,6 +938,27 @@ class Els_multi extends Els_Back {
 		};
 
 		this._callArgs.push ( cb );
+	}
+
+	update ( config )
+	{
+		this._update ( config );
+
+		for ( let k of Object.keys ( config ) )
+		{
+			switch ( k )
+			{
+				case "text":
+				{
+					this.div.innerHTML = config.text;
+					break;
+				}
+				case "channel":
+				{
+					break;
+				}
+			}
+		}
 	}
 
 	static canCreateNew ( )
@@ -955,8 +976,9 @@ class Els_multi extends Els_Back {
 		let json = {
 			type:"multi",
 			channel:"WS_DATA_CHANNEL",
+			periode:0,
 			text:"",
-			seuil:[],
+			threshold:[],
 			color:[]
 		}
 
@@ -972,136 +994,164 @@ class Els_multi extends Els_Back {
 
 		try // config
 		{
-			let setColorSeuil = ( )=>{
-				json.seuil = [];
-				for ( let threshold of domEls.threshold )
+			let drowThreshold = (input)=>{
+				let index = 0;
+				switch ( input?.constructor.name )
 				{
-					json.seuil.push ( Number ( threshold.value ) );
-				}
-				json.color = [];
-				for ( let color of domEls.color )
-				{
-					json.color.push ( color.style.backgroundColor );
+					case "Event":
+					{
+						index = Number ( input.target.value );
+						if ( index < 0 )
+						{
+							input.target.value = 0;
+						}
+						break;
+					}
+					case "Number":
+					{
+						index = input;
+						break;
+					}
 				}
 
-			}
-
-			let colorClicker  = ( ev )=>{
-				let target = ev.target;
-				if ( target.active == true )
+				if ( index < 0 )
 				{
-					return;
+					index = 0;
 				}
-				target.active = true;
-				createColorPiker( undefined,
-					(color)=>{
-						target.style.backgroundColor = "rgba("+color.join(',')+")";
-						target.active = false;
-						setColorSeuil ( );
-						jsonDiv.value = JSON.stringify ( json, null, 4 );
-					},
-					()=>{
 
-					});
+				for ( let thIndex = Math.min ( json.threshold.length, domEls.threshold.length ); thIndex < index; thIndex++ )
+				{
+					// threshold
+					tr = document.createElement ( "tr" );
+					tbody.appendChild ( tr );
+					domEls.threshold[ thIndex ] = tr;
+
+					let td = document.createElement ( "td" );
+					tr.appendChild ( td );
+					td.rowSpan = 2;
+					td.style.minWidth = "100px" ;
+
+					let threshold = document.createElement ( "input" );
+					td.appendChild ( threshold );
+					threshold.type = "number" ;
+					threshold.value = json.threshold[ thIndex ] || json.threshold.at( -1 ) + 1 || 1;
+					threshold.style.height = "100%" ;
+					json.threshold[ thIndex ] = Number ( threshold.value );
+	
+					let colorIndex = thIndex + 1;
+
+					// color
+					tr = document.createElement ( "tr" );
+					tbody.appendChild ( tr );
+					domEls.color[ colorIndex ] = tr;
+
+					let [noUsed,iColor] = _createColorClicker ( {
+						callback: (ev,color)=>{
+							json.color[ colorIndex ] = "rgba("+color.join(',')+")";
+							Els_Back.newJson ( json, jsonDiv, outDiv );
+						},
+						type: "td",
+						color: json.color[ colorIndex ],
+					} );
+					tr.appendChild ( iColor );
+					iColor.rowSpan = 2;
+				}
+
+				if ( index < json.threshold.length )
+				{
+					let divs = domEls.threshold.splice ( index );
+					divs.map ( d=> tbody.removeChild ( d ) );
+
+					divs = domEls.color.splice ( index + 1 );
+					divs.map ( d=> tbody.removeChild ( d ) );
+
+					json.threshold.splice ( index );
+				}				
+
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
 			}
 
 			let configDiv = document.createElement ( "div" );
+			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
+			configDiv.appendChild ( divCha );
+			sCha.value = json.channel || "";
+			sCha.onchange = (ev)=>{
+				json.channel = ev.target.value;
+				Els_Back.newJson ( json, jsonDiv );
+			}
+			sCha.onkeyup = sCha.onchange;
 
-
+			let [divPer,sPer] = _createSelectPeriode ( )
+			configDiv.appendChild ( divPer );
+			sPer.value = json.periode;
+			sPer.onchange = (ev)=>{
+				json.periode = parseInt(ev.target.value);
+				Els_Back.newJson ( json, jsonDiv );
+			}
+			sPer.onkeyup = sPer.onchange;
 
 			let [divLa,iLa] = _createInput ( "label" );
 			configDiv.appendChild ( divLa );
-			iLa.type = "number";
 			iLa.onchange = (ev)=>{
-				json.gps[0].a = ev.target.value;
-				json.view.b = Number ( ev.target.value ) - 0.01;
-				json.view.d = Number ( ev.target.value ) + 0.01;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				json.text = ev.target.value;
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			iLa.onkeyup = iLa.onchange;
 
-			let [divNb,iNb] = _createInput ( "threshold number" );
+			let [divNb,iNb] = _createInput ( "limits nb" );
 			configDiv.appendChild ( divNb );
-			iNb.value = 0;
+			iNb.value = json.threshold.length;
 			iNb.type = "number";
 			iNb.min = 0;
-			iNb.onchange = (ev)=>{
-				if ( ev.target.value < 0 )
-				{
-					ev.target.value = 0;
-				}
+			iNb.onchange = drowThreshold;
+			iNb.onkeyup = iNb.onchange;
 
-				if ( ev.target.value > json.seuil.length )
-				{
-					while ( ev.target.value > domEls.threshold.length )
-					{
-						let threshold = document.createElement ( "input" );
-						threshold.type = "number" ;
-						threshold.value = 1 ;
-						let color = document.createElement ( "div" );
-						color.style.height = "1em";
-						color.style.borderColor = "var( --main-border )";
-						color.style.borderWidth = "1px";
-						color.style.borderStyle = "solid";
+			let table = document.createElement ( "table" );
+			configDiv.appendChild ( table );
+			table.style.width = "100%";
+			let thead = document.createElement ( "thead" );
+			table.appendChild ( thead );
+			let tr = document.createElement ( "tr" );
+			thead.appendChild ( tr );
+			let th = document.createElement ( "th" );
+			tr.appendChild ( th );
+			th.appendChild ( document.createTextNode ( "Color" ) );
+			th = document.createElement ( "th" );
+			tr.appendChild ( th );
+			th.appendChild ( document.createTextNode ( "limit" ) );
 
-						color.onclick = colorClicker;
+			let tbody = document.createElement ( "tbody" );
+			table.appendChild ( tbody );
 
-						domEls.threshold.push ( threshold );
-						domEls.color.push ( color );
+			tr = document.createElement ( "tr" );
+			tbody.appendChild ( tr );
+			domEls.color[ 0 ] = tr;
 
-						div.appendChild ( threshold );
-						div.appendChild ( color );
-					}
-				}
-				else if ( ev.target.value < json.threshold.length )
-				{
-					while ( ev.target.value < json.threshold.length )
-					{
-						div.removeChild ( domEls.threshold[ domEls.threshold.length - 1 ] );
-						div.removeChild ( domEls.color[ domEls.color.length - 1 ] );
-
-						domEls.threshold[ domEls.threshold.length - 1 ] = undefined;
-						domEls.color[ domEls.color.length - 1 ] = undefined;
-					}
-				}
-
-				setColorSeuil ( );
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-			}
-
-			let div = document.createElement ( "div" )
-			configDiv.appendChild ( div );
-			div.style.display = "flex";
-			div.style.flexDirection = "column";
-
-			domEls.color[ 0 ] = document.createElement ( "div" );
-			div.appendChild ( domEls.color[ 0 ] );
-			domEls.color[ 0 ].style.height = "1em";
-			domEls.color[ 0 ].style.borderColor = "var( --main-border )";
-			domEls.color[ 0 ].style.borderWidth = "solid";
-			domEls.color[ 0 ].style.borderColor = "1px";
-			domEls.color[ 0 ].style.backgroundColor = "red";
-			domEls.color[ 0 ].onclick = colorClicker;
-
-			setColorSeuil ( );
+			let [noUsed,iColor] = _createColorClicker ( {
+				callback: (ev,color)=>{
+					json.color[ 0 ] = "rgba("+color.join(',')+")";
+					Els_Back.newJson ( json, jsonDiv, outDiv );
+				},
+				type: "td",
+				color: json.color[ 0 ],
+			} );
+			tr.appendChild ( iColor );
+			iColor.rowSpan = 2;
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
-				try
-				{
-					json = JSON.parse ( ev.target.value );
-					jsonDiv.style.backgroundColor = "";
-					text.value = json.text;
-					outDiv.update ( json );
-				}
-				catch ( e )
-				{
-					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-				}
+				sCha.value = json.channel;
+				sPer.value = json.periode;
+				iLa.value = json.text;
+				iNb.value = json.threshold.length;
+				iNb.dispatchEvent ( new Event ( "change" ) );
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
 			}
 
 			let outDiv = Els_Back._newOut ( params.id, json );
+			
+			drowThreshold ( json.threshold.length );
 
 			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
 		}

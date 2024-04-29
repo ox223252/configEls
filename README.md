@@ -194,7 +194,7 @@ Créait un texte qui sera colorisé en rouge / vert selon la donnée sur le chan
 	channel:"WEBSOCKET CHANNEL",
 	text:"texte affiché",
 	periode:0, // temps de rafraichissement
-	seuil:[],
+	threshold:[],
 	color:[]
 }
 ```
@@ -205,7 +205,7 @@ Créait un texte qui sera colorisé en fonction de la donnée sur le channel ain
 ```javascript
 {
 	//...
-	seuil:[ 1, 2.6, 312 ],
+	threshold:[ 1, 2.6, 312 ],
 	color:[ "green", "blue", "rgba(128,128,128,0.5)", "#ff0" ]
 }
 ````
