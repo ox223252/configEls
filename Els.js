@@ -73,6 +73,33 @@ class Els_Back {
 			throw "no out el available";
 		}
 	}
+
+	static newJson ( json, jsonDiv, outDiv, jsonText )
+	{
+		try
+		{
+			if ( jsonText )
+			{
+				Object.assign ( json, JSON.parse ( jsonText ) );
+			}
+			if ( jsonDiv )
+			{
+				jsonDiv.style.backgroundColor = "";
+				jsonDiv.value = JSON.stringify ( json, null, 4 );
+			}
+			if ( outDiv )
+			{
+				outDiv.update ( json );
+			}
+		}
+		catch ( e )
+		{
+			if ( jsonDiv )
+			{
+				jsonDiv.style.backgroundColor = "rgba(128,0,0,0.5)";
+			}
+		}
+	}
 }
 
 class Els_title extends Els_Back {
@@ -134,25 +161,17 @@ class Els_title extends Els_Back {
 			title.value = json.text || "";
 			title.onchange = (ev)=>{
 				json.text=ev.target.value;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			title.onkeyup = title.onchange;
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
-				try
-				{
-					json = JSON.parse ( ev.target.value );
-					jsonDiv.style.backgroundColor = "";
-					title.value = json.text;
-					outDiv.update ( json );
-				}
-				catch ( e )
-				{
-					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-				}
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+				title.value = json.text;
 			}
+			jsonDiv.onkeyup = jsonDiv.onchange;
 
 			let outDiv = Els_Back._newOut ( params.id, json );
 
@@ -223,25 +242,17 @@ class Els_text extends Els_Back {
 			text.value = json.text || "";
 			text.onchange = (ev)=>{
 				json.text=ev.target.value;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			title.onkeyup = title.onchange;
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
-				try
-				{
-					json = JSON.parse ( ev.target.value );
-					jsonDiv.style.backgroundColor = "";
-					text.value = json.text;
-					outDiv.update ( json );
-				}
-				catch ( e )
-				{
-					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-				}
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+				text.value = json.text;
 			}
+			jsonDiv.onkeyup = jsonDiv.onchange;
 
 			let outDiv = Els_Back._newOut ( params.id, json );
 
@@ -314,25 +325,17 @@ class Els_img extends Els_Back {
 			imgSrc.value = json.src || "";
 			imgSrc.onchange = (ev)=>{
 				json.src=ev.target.value;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			title.onkeyup = title.onchange;
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
-				try
-				{
-					json = JSON.parse ( ev.target.value );
-					jsonDiv.style.backgroundColor = "";
-					imgSrc.value = json.src;
-					outDiv.update ( json );
-				}
-				catch ( e )
-				{
-					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-				}
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+				imgSrc.value = json.src;
 			}
+			jsonDiv.onkeyup = jsonDiv.onchange;
 
 			let outDiv = Els_Back._newOut ( params.id, json );
 
@@ -428,6 +431,7 @@ class Els_map extends Els_Back {
 			params.id = Math.random ( );
 		}
 
+		let zoom = 0.01;
 		let json = {
 			type:"map",
 			gps:[
@@ -459,11 +463,11 @@ class Els_map extends Els_Back {
 			iLa.value = json.gps[0].a || "";
 			iLa.onchange = (ev)=>{
 				json.gps[0].a = ev.target.value;
-				json.view.b = Number ( ev.target.value ) - 0.01;
-				json.view.d = Number ( ev.target.value ) + 0.01;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				json.view.b = Number ( ev.target.value ) - zoom;
+				json.view.d = Number ( ev.target.value ) + zoom;
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			iLa.onkeyup = iLa.onchange;
 
 			let [divLo,iLo] = _createInput ( "Longitude (E/W)" );
 			configDiv.appendChild ( divLo );
@@ -471,27 +475,34 @@ class Els_map extends Els_Back {
 			iLo.value = json.gps[0].b || "";
 			iLo.onchange = (ev)=>{
 				json.gps[0].b = ev.target.value;
-				json.view.a = Number ( ev.target.value ) - 0.01;
-				json.view.c = Number ( ev.target.value ) + 0.01;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				json.view.a = Number ( ev.target.value ) - zoom;
+				json.view.c = Number ( ev.target.value ) + zoom;
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			iLo.onkeyup = iLo.onchange;
+
+			let [divZoom,iZoom] = _createInput ( "Zoom" );
+			configDiv.appendChild ( divZoom );
+			iZoom.type = "number";
+			iZoom.value = 0.001;
+			iZoom.step = 0.0001;
+			iZoom.onchange = (ev)=>{
+				zoom = Number ( ev.target.value );
+				json.view.b = Number ( json.gps[0].a ) - zoom;
+				json.view.d = Number ( json.gps[0].a ) + zoom;
+				json.view.a = Number ( json.gps[0].b ) - zoom;
+				json.view.c = Number ( json.gps[0].b ) + zoom;
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iZoom.onkeyup = iZoom.onchange;
 
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
-				try
-				{
-					json = JSON.parse ( ev.target.value );
-					jsonDiv.style.backgroundColor = "";
-					text.value = json.text;
-					outDiv.update ( json );
-				}
-				catch ( e )
-				{
-					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-				}
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+				iLo.value = json?.gps[0]?.a || "";
+				iLo.value = json?.gps[0]?.b || "";
 			}
 
 			let outDiv = Els_Back._newOut ( params.id, json );
@@ -697,7 +708,7 @@ class Els_io extends Els_Back {
 			configDiv.appendChild ( divCha );
 			sCha.onchange = (ev)=>{
 				json.channel = ev.target.value;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				Els_Back.newJson ( json, jsonDiv );
 			}
 
 			let [divPer,sPer] = _createSelectPeriode ( )
@@ -705,7 +716,7 @@ class Els_io extends Els_Back {
 			configDiv.appendChild ( divPer );
 			sPer.onchange = (ev)=>{
 				json.periode = parseInt(ev.target.value);
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
+				Els_Back.newJson ( json, jsonDiv );
 			}
 
 			let [divLab,inLab] = _createInput ( "label" );
@@ -713,8 +724,7 @@ class Els_io extends Els_Back {
 			inLab.value = json.label || "";
 			inLab.onchange = (ev)=>{
 				json.label = ev.target.value;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
 
 			let [divDef,inDef] = _createInput ( "default value" );
@@ -722,8 +732,7 @@ class Els_io extends Els_Back {
 			inDef.value = json.default || "";
 			inDef.onchange = (ev)=>{
 				json.default = ev.target.value;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
 
 			let [divTyp,inTyp] = _createInput ( "nb digits/type", [ "volume", "flow", "temp", "date" ] );
@@ -731,8 +740,7 @@ class Els_io extends Els_Back {
 			inTyp.value = json.valueType || "";
 			inTyp.onchange = (ev)=>{
 				json.valueType = ev.target.value;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
 
 			let [divUni,inUni] = _createInput ( "unit" );
@@ -740,8 +748,7 @@ class Els_io extends Els_Back {
 			inUni.value = json.unit || "";
 			inUni.onchange = (ev)=>{
 				json.unit = ev.target.value;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
 
 			let [divCoef,inCoef] = _createInput ( "static Coef" );
@@ -749,25 +756,15 @@ class Els_io extends Els_Back {
 			inCoef.value = json.coef || "";
 			inCoef.onchange = (ev)=>{
 				json.coef = ev.target.value;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
 
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
-				try
-				{
-					json = JSON.parse ( ev.target.value );
-					jsonDiv.style.backgroundColor = "";
-					title.value = json.text;
-					outDiv.update ( json );
-				}
-				catch ( e )
-				{
-					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-				}
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+				title.value = json.text;
 			}
 
 			let outDiv = Els_Back._newOut ( params.id, json );
