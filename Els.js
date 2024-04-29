@@ -849,6 +849,7 @@ class Els_bin extends Els_Back {
 		let json = {
 			type:"bin",
 			channel:"WS_DATA_CHANNEL",
+			periode:0,
 			text:""
 		}
 
@@ -860,24 +861,42 @@ class Els_bin extends Els_Back {
 		try // config
 		{
 			let configDiv = document.createElement ( "div" );
+			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
+			configDiv.appendChild ( divCha );
+			sCha.value = json.channel || "";
+			sCha.onchange = (ev)=>{
+				json.channel = ev.target.value;
+				Els_Back.newJson ( json, jsonDiv );
+			}
+			sCha.onkeyup = sCha.onchange;
+
+			let [divPer,sPer] = _createSelectPeriode ( )
+			configDiv.appendChild ( divPer );
+			sPer.value = json.periode;
+			sPer.onchange = (ev)=>{
+				json.periode = parseInt(ev.target.value);
+				Els_Back.newJson ( json, jsonDiv );
+			}
+			sPer.onkeyup = sPer.onchange;
 
 			let [divLa,iLa] = _createInput ( "label" );
 			configDiv.appendChild ( divLa );
-			iLa.type = "number";
 			iLa.onchange = (ev)=>{
-				json.gps[0].a = ev.target.value;
-				json.view.b = Number ( ev.target.value ) - 0.01;
-				json.view.d = Number ( ev.target.value ) + 0.01;
+				json.text = ev.target.value;
 				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			iLa.onkeyup = iLa.onchange;
 
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
 				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
-				text.value = json.text;
+				sCha.value = json?.channel || "";
+				sPer.value = json?.periode || "";
+				iLa.value = json?.text || "";
 			}
+			jsonDiv.onkeyup = jsonDiv.onchange;
 
 			let outDiv = Els_Back._newOut ( params.id, json );
 
