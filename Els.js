@@ -704,20 +704,22 @@ class Els_io extends Els_Back {
 		{
 			let configDiv = document.createElement ( "div" );
 			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
-			sCha.value = json.channel || "";
 			configDiv.appendChild ( divCha );
+			sCha.value = json.channel || "";
 			sCha.onchange = (ev)=>{
 				json.channel = ev.target.value;
 				Els_Back.newJson ( json, jsonDiv );
 			}
+			sCha.onkeyup = sCha.onchange;
 
 			let [divPer,sPer] = _createSelectPeriode ( )
-			sPer.value = json.periode;
 			configDiv.appendChild ( divPer );
+			sPer.value = json.periode;
 			sPer.onchange = (ev)=>{
 				json.periode = parseInt(ev.target.value);
 				Els_Back.newJson ( json, jsonDiv );
 			}
+			sPer.onkeyup = sPer.onchange;
 
 			let [divLab,inLab] = _createInput ( "label" );
 			configDiv.appendChild ( divLab );
@@ -726,22 +728,27 @@ class Els_io extends Els_Back {
 				json.label = ev.target.value;
 				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			inLab.onkeyup = inLab.onchange;
 
-			let [divDef,inDef] = _createInput ( "default value" );
+			let [divDef,inDef] = _createInput ( "default" );
 			configDiv.appendChild ( divDef );
 			inDef.value = json.default || "";
+			inDef.placeholder = "default value";
 			inDef.onchange = (ev)=>{
 				json.default = ev.target.value;
 				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			inDef.onkeyup = inDef.onchange;
 
-			let [divTyp,inTyp] = _createInput ( "nb digits/type", [ "volume", "flow", "temp", "date" ] );
+			let [divTyp,inTyp] = _createInput ( "type", [ "volume", "flow", "temp", "date" ] );
 			configDiv.appendChild ( divTyp );
 			inTyp.value = json.valueType || "";
+			inTyp.placeholder = "nb digit / type";
 			inTyp.onchange = (ev)=>{
 				json.valueType = ev.target.value;
 				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			inTyp.onkeyup = inTyp.onchange;
 
 			let [divUni,inUni] = _createInput ( "unit" );
 			configDiv.appendChild ( divUni );
@@ -750,22 +757,32 @@ class Els_io extends Els_Back {
 				json.unit = ev.target.value;
 				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			inUni.onkeyup = inUni.onchange;
 
 			let [divCoef,inCoef] = _createInput ( "static Coef" );
 			configDiv.appendChild ( divCoef );
 			inCoef.value = json.coef || "";
+			inCoef.type = "number";
 			inCoef.onchange = (ev)=>{
-				json.coef = ev.target.value;
+				json.coef = Number ( ev.target.value );
 				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
+			inCoef.onkeyup = inCoef.onchange;
 
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
 				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
-				title.value = json.text;
+				sCha.value = json?.channel || "";
+				sPer.value = json?.periode || "";
+				inLab.value = json?.label || "";
+				inDef.value = json?.default || "";
+				inTyp.value = json?.valueType || "";
+				inUni.value = json?.unit || "";
+				inCoef.value = json?.coef || "";
 			}
+			jsonDiv.onkeyup = jsonDiv.onchange;
 
 			let outDiv = Els_Back._newOut ( params.id, json );
 
@@ -851,25 +868,15 @@ class Els_bin extends Els_Back {
 				json.gps[0].a = ev.target.value;
 				json.view.b = Number ( ev.target.value ) - 0.01;
 				json.view.d = Number ( ev.target.value ) + 0.01;
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-				outDiv.update ( json );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
 
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
-				try
-				{
-					json = JSON.parse ( ev.target.value );
-					jsonDiv.style.backgroundColor = "";
-					text.value = json.text;
-					outDiv.update ( json );
-				}
-				catch ( e )
-				{
-					jsonDiv.style.backgroundColor = "rgba(128,0,0,0.1)";
-				}
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+				text.value = json.text;
 			}
 
 			let outDiv = Els_Back._newOut ( params.id, json );
