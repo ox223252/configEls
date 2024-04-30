@@ -87,10 +87,6 @@ class Els_Back {
 				jsonDiv.style.backgroundColor = "";
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
 			}
-			if ( outDiv )
-			{
-				outDiv.update ( json );
-			}
 		}
 		catch ( e )
 		{
@@ -98,6 +94,17 @@ class Els_Back {
 			{
 				jsonDiv.style.backgroundColor = "rgba(128,0,0,0.5)";
 			}
+		}
+
+		try {
+			if ( outDiv )
+			{
+				outDiv.update ( json );
+			}
+		}
+		catch ( e )
+		{
+			console.error ( e );
 		}
 	}
 }
