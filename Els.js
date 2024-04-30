@@ -2169,7 +2169,10 @@ function _createInput ( inLabel, option = undefined )
 
 	let label = document.createElement ( "label" );
 	div.appendChild ( label );
-	label.innerHTML = inLabel+" : ";
+	if ( inLabel )
+	{
+		label.innerHTML = inLabel+" : ";
+	}
 	label.style.flexGrow = 1;
 
 	let input = document.createElement ( "input" );
