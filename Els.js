@@ -1177,8 +1177,9 @@ class Els_gauge extends Els_Back {
 
 		let canvas = document.createElement ( "canvas" );
 		this._domEl.appendChild ( canvas );
+		this.gauge = undefined;
 
-		let opt = {
+		this.opt = {
 			angle:0,
 			lineWidth:0.2,
 			radiusScale:1,
@@ -1200,76 +1201,375 @@ class Els_gauge extends Els_Back {
 			}
 		}
 
-		// create gauge itself
-		this.gauge = new Gauge( canvas )
-			.setOptions(opt)
-			.setOptions(config.options);
-
-		this.gauge.config = {
-			radiusScale: this.gauge.options.radiusScale,
-			lineWidth: this.gauge.options.lineWidth,
-			baseLabels: [],
-		}
-
-
-		// add all static labels to the graph
-		function addMinMaxLabel ( c, array )
-		{
-			for ( let  label of ["min","max"] )
-			{
-				if ( undefined != c[ label ]
-					&& !array.includes ( c[ label ] ) )
-				{
-					array.push ( c[ label ] );
-				}
-			}
-		}
-
-		addMinMaxLabel ( config, this.gauge.config.baseLabels );
-
-		if ( config.options
-			&& config.options.staticZones )
-		{
-			for ( let s of config.options.staticZones )
-			{
-					addMinMaxLabel ( s, this.gauge.config.baseLabels );
-			}
-		}
-
-		this.gauge.config.baseLabels.sort();
-
-		let calcLabels = ( )=>{
-			let coef = 1;
-			opt.staticLabels.labels = this.gauge.config.baseLabels.map((v)=>{return v*coef;});
-
-			this.gauge.minValue = coef * (( undefined != config.min ) ? config.min : opt.staticLabels.labels[ 0 ]);
-			this.gauge.maxValue = coef * (( undefined != config.max ) ? config.max : opt.staticLabels.labels[ opt.staticLabels.labels - 1 ]);
-		}
+		Object.assign ( this.opt, config.options );
 
 		let cb = {
 			periode: config.periode || 0,
 			channel: config.channel,
 			f: (msg)=>{
-				if ( ( this.gauge.canvas.width == 0 )
-					|| ( this.gauge.canvas.height == 0 ) )
+				if ( !this.gauge )
 				{
-					// corect size of the gauge if needed
-					this.gauge.calcSize ( );
-					let coef = Math.min ( this.gauge.canvas.width, 400 ) / 400;
-
-					this.gauge.canvas.height = Math.min ( this.gauge.canvas.height, this.gauge.canvas.width / 2);
-					this.gauge.availableHeight = this.gauge.canvas.height * 0.8;
-					this.gauge.options.radiusScale = this.gauge.config.radiusScale * coef;
-					this.gauge.options.lineWidth = this.gauge.config.lineWidth * coef;
+					return;
 				}
-
 				this.gauge.options.staticLabels.color = getComputedStyle(this.gauge.canvas).getPropertyValue("--main-text") || "#000";
-				calcLabels ( );
 				this.gauge.set(msg.value);
 			}
 		};
-		
 		this._callArgs.push ( cb );
+
+		let interval = setInterval (()=>{
+			// parent not displayed
+			if ( ( 0 == this._domEl.clientHeight )
+				|| ( 0 == this._domEl.clientWidth ) )
+			{
+				return;
+			}
+
+			clearInterval ( interval );
+
+			// create gauge itself
+			this.gauge = new Gauge( canvas )
+				.setOptions(this.opt);
+
+			this.gauge.config = {
+				radiusScale: this.gauge.options.radiusScale,
+				lineWidth: this.gauge.options.lineWidth,
+				baseLabels: [],
+			}
+
+			this._addMinMaxLabel ( config, this.gauge.config.baseLabels );
+
+			if ( config.options?.staticZones )
+			{
+				for ( let s of config.options.staticZones )
+				{
+						this._addMinMaxLabel ( s, this.gauge.config.baseLabels );
+				}
+			}
+
+			this.gauge.config.baseLabels.sort();
+
+			this.opt.staticLabels.labels = [...this.gauge.config.baseLabels];
+
+			this.gauge.minValue = config.min || this.opt.staticLabels?.labels?.at ( 0 ) || 0;
+			this.gauge.maxValue = config.max || this.opt.staticLabels?.labels?.at ( -1 ) || 100;
+
+			if ( config.default )
+			{
+				this.gauge.set ( config.default );
+			}
+
+			this.gauge.canvas.width = this.gauge.canvas.parentNode.clientWidth;
+			this.gauge.canvas.height = this.gauge.canvas.parentNode.clientHeight;
+
+			// corect size of the gauge if needed
+			let coef = Math.min ( this.gauge.canvas.width, 400 ) / 400;
+
+			this.gauge.availableHeight = this.gauge.canvas.height * 0.8;
+			this.gauge.options.radiusScale = this.gauge.config.radiusScale * coef;
+			this.gauge.options.lineWidth = this.gauge.config.lineWidth * coef;
+
+			this.gauge.setOptions();
+
+		}, 1000 );
+	}
+
+	// add all static labels to the graph
+	_addMinMaxLabel ( c, array )
+	{
+		for ( let  label of ["min","max"] )
+		{
+			if ( undefined != c[ label ]
+				&& !array.includes ( c[ label ] ) )
+			{
+				array.push ( c[ label ] );
+			}
+		}
+	}
+
+	update ( config )
+	{
+		// console.log ( config )
+		this._update ( config );
+
+		for ( let k of Object.keys ( config ) )
+		{
+			switch ( k )
+			{
+				case "min":
+				case "max":
+				{
+					this.gauge.config.baseLabels = [];
+					this._addMinMaxLabel ( config, this.gauge.config.baseLabels );
+					this.gauge.config.baseLabels.sort();
+					break;
+				}
+				case "default":
+				{
+					this.gauge.set(config.default);
+					break;
+				}
+				case "options":
+				{
+					Object.assign ( this.opt, config[ k ] );
+					break;
+				}
+				default:
+				{
+					break;
+				}
+			}
+		}
+
+		this.gauge.setOptions(this.opt);
+	}
+
+	static canCreateNew ( )
+	{
+		return true;
+	}
+
+	static new ( params = {}, config = undefined )
+	{
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
+
+		let json = {
+			type:"gauge",
+			channel:"WS_DATA_CHANNEL",
+			periode:0,
+			min:0,
+			max:100,
+			default:50,
+			options:{
+				angle:0.1,
+				radiusScale:1,
+			}
+		}
+
+		let domEls = {
+			line: [],
+		};
+
+		if ( undefined != config )
+		{
+			json = JSON.parse ( JSON.stringify ( config ) );
+		}
+
+		try // config
+		{
+			let createLine = ( params = {} )=>{
+				let tr = document.createElement ( "tr" );
+
+				if ( "th" == params.type )
+				{
+					let min = document.createElement ( "th" );
+					tr.appendChild ( min );
+					min.appendChild ( document.createTextNode ( params.min ) );
+
+					let color = document.createElement ( "td" );
+					tr.appendChild ( color );
+					color.appendChild ( document.createTextNode ( params.color ) );
+
+					let max = document.createElement ( "th" );
+					tr.appendChild ( max );
+					max.appendChild ( document.createTextNode ( params.max ) );
+				}
+				else
+				{
+					let [divMin,iMin] = _createInput ( );
+					tr.appendChild ( divMin );
+					iMin.value = params.min;
+					iMin.onchange = (ev)=>{
+						params.min = Number ( ev.target.value );
+						Els_Back.newJson ( json, jsonDiv, outDiv );
+					}
+					iMin.onkeyup = iMin.onchange;
+
+					let [noUsed,iColor] = _createColorClicker ( {
+						callback: (ev,color)=>{
+							params.strokeStyle = "rgba("+color.join(',')+")";
+							Els_Back.newJson ( json, jsonDiv, outDiv );
+						},
+						type: "td",
+					} );
+					tr.appendChild ( iColor );
+
+					let [divMax,iMax] = _createInput ( );
+					tr.appendChild ( divMax );
+					iMax.value = params.max;
+					iMax.onchange = (ev)=>{
+						params.max = Number ( ev.target.value );
+						Els_Back.newJson ( json, jsonDiv, outDiv );
+					}
+					iMax.onkeyup = iMax.onchange;
+				}
+
+				return tr;
+			}
+
+			let configDiv = document.createElement ( "div" );
+			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
+			configDiv.appendChild ( divCha );
+			sCha.value = json.channel || "";
+			sCha.onchange = (ev)=>{
+				json.channel = ev.target.value;
+				Els_Back.newJson ( json, jsonDiv );
+			}
+			sCha.onkeyup = sCha.onchange;
+
+			let [divPer,sPer] = _createSelectPeriode ( )
+			configDiv.appendChild ( divPer );
+			sPer.value = json.periode;
+			sPer.onchange = (ev)=>{
+				json.periode = parseInt(ev.target.value);
+				Els_Back.newJson ( json, jsonDiv );
+			}
+			sPer.onkeyup = sPer.onchange;
+
+			let [divMin,iMin] = _createInput ( "Min" );
+			configDiv.appendChild ( divMin );
+			iMin.type = "number";
+			iMin.value = json.min;
+			iMin.onchange = (ev)=>{
+				json.min = Number ( ev.target.value );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iMin.onkeyup = iMin.onchange;
+
+			let [divDef,iDef] = _createInput ( "Default" );
+			configDiv.appendChild ( divDef );
+			iDef.type = "number";
+			iDef.value = json.default;
+			iDef.onchange = (ev)=>{
+				json.default = Number ( ev.target.value );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iDef.onkeyup = iDef.onchange;
+
+			let [divMax,iMax] = _createInput ( "Max" );
+			configDiv.appendChild ( divMax );
+			iMax.type = "number";
+			iMax.value = json.max;
+			iMax.onchange = (ev)=>{
+				json.max = Number ( ev.target.value );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iMax.onkeyup = iMax.onchange;
+
+			let [divZon,iZon] = _createInput ( "Zones" );
+			configDiv.appendChild ( divZon );
+			iZon.type = "number";
+			iZon.value = 0;
+			iZon.onchange = (ev)=>{
+				let index = Number ( ev.target.value );
+				if ( index < 0 )
+				{
+					index = 0;
+					ev.target.value = 0;
+				}
+
+				// remove statics zones
+				if ( 0 == index )
+				{
+					json.options.staticZones = undefined;
+					domEls.line = [];
+					while ( tabZone.childNodes.length > 1 ) // keep only head
+					{
+						tabZone.removeChild ( tabZone.lastChild );
+					}
+					tabZone.style.display = "none";
+					divStartStop.style.display = "";
+					Els_Back.newJson ( json, jsonDiv, outDiv );
+					return;
+				}
+
+				tabZone.style.display = "";
+				divStartStop.style.display = "none";
+				
+				// create statics zones
+				if ( !json.options?.staticZones )
+				{
+					json.options.staticZones = [];
+				}
+
+				for ( let i = json.options.staticZones.length; i < index; i++  )
+				{
+					json.options.staticZones[ i ] = {
+						strokeStyle: json.options.staticZones.at ( i )?.strokeStyle,
+						min: json.options.staticZones.at ( i -1 )?.max || json.min,
+						max: json.max,
+					};
+
+					domEls.line[ i ] = createLine ( json.options.staticZones[ i ] );
+					tabZone.appendChild ( domEls.line[ i ] );
+				}
+
+				if ( index < json.options.staticZones.length )
+				{
+					json.options.staticZones.splice ( index );
+
+					while ( tabZone.childNodes.length + 1 > index ) // keep nb of line + head
+					{
+						tabZone.removeChild ( tabZone.lastChild );
+					}
+
+					domEls.line.splice ( index );
+				}
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iZon.onkeyup = iZon.onchange;
+
+			let divStartStop = document.createElement ( "div" );
+			configDiv.appendChild ( divStartStop );
+
+			let [divStart,iStart] = _createColorClicker ( {
+				label:"begin",
+				callback: (ev,color)=>{
+					json.options.colorStart = "rgba("+color.join(',')+")";
+					json.options.colorStop = json.options.colorStart;
+					Els_Back.newJson ( json, jsonDiv, outDiv );
+				}
+			} );
+			divStartStop.appendChild ( divStart );
+
+			let [divStop,iStop] = _createColorClicker ( {
+				label: "end",
+				callback: (ev,color)=>{
+					json.options.strokeColor = "rgba("+color.join(',')+")";
+					Els_Back.newJson ( json, jsonDiv, outDiv );
+				}
+			} );
+			divStartStop.appendChild ( divStop );
+
+
+			let tabZone = document.createElement ( "table" );
+			configDiv.appendChild ( tabZone );
+			tabZone.style.display = "none";
+			tabZone.appendChild ( createLine ( {min: "Min", color:"Color", max:"Max", type:"th"} ) );
+
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( json, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+				sCha.value = json?.channel || "";
+				sPer.value = json?.periode || "";
+				iMin.value = json?.min || "";
+				iDef.value = json?.default || "";
+				iMax.value = json?.max || "";
+			}
+			jsonDiv.onkeyup = jsonDiv.onchange;
+
+			let outDiv = Els_Back._newOut ( params.id, json );
+
+			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		}
+		catch ( e )
+		{
+			return undefined
+		}
 	}
 }
 
