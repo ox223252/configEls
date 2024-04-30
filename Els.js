@@ -2218,3 +2218,59 @@ function _createIconButton ( inLabel, iconName )
 
 	return [div,button];
 }
+
+function _createColorClicker ( params = {} )
+{
+	function colorClicker ( ev, cb )
+	{
+		let target = ev.target;
+		if ( target.active == true )
+		{
+			return;
+		}
+		target.active = true;
+		createColorPiker( undefined,
+			(color)=>{
+				target.style.backgroundColor = "rgba("+color.join(',')+")";
+				target.active = false;
+				cb ( ev, color );
+			},
+			()=>{
+
+			});
+	}
+
+	params = Object.assign ( {
+		type: "div",
+		callback: undefined,
+		label: undefined,
+	}, params );
+
+	let div = document.createElement ( params.type );
+	div.style.display = "flex";
+
+	if ( params.label )
+	{
+		let label = document.createElement ( "label" );
+		div.appendChild ( label );
+		label.innerHTML = params.label+" : ";
+		label.style.flexGrow = 1;
+	}
+
+	let iColor = document.createElement ( params.type );
+	div.appendChild ( iColor );
+	iColor.style.height = "1em";
+	iColor.style.borderColor = "var( --main-border )";
+	iColor.style.borderWidth = "1px";
+	iColor.style.borderStyle = "solid";
+	iColor.style.width = "100%";
+	iColor.style.backgroundColor = params.color || "";
+
+	if ( params.callback )
+	{
+		iColor.onclick = (ev)=>{colorClicker(ev, params.callback)};
+	}
+
+	return [div,iColor];
+}
+
