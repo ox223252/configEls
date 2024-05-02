@@ -251,7 +251,7 @@ class Els_text extends Els_Back {
 				json.text=ev.target.value;
 				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
-			title.onkeyup = title.onchange;
+			text.onkeyup = text.onchange;
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
@@ -334,13 +334,13 @@ class Els_img extends Els_Back {
 				json.src=ev.target.value;
 				Els_Back.newJson ( json, jsonDiv, outDiv );
 			}
-			title.onkeyup = title.onchange;
+			imgSrc.onkeyup = imgSrc.onchange;
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
-				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
 				imgSrc.value = json.src;
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
 			}
 			jsonDiv.onkeyup = jsonDiv.onchange;
 
