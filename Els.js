@@ -2524,7 +2524,7 @@ class Els_csv extends Els_Back {
 			}
 			iTitle.onkeyup = iTitle.onchange;
 
-			let [divDat,iDat] = _createInput ( "Data" );
+			let [divDat,iDat] = _createInputArray ( "Data", params.channels, true );
 			configDiv.appendChild ( divDat );
 			iDat.placeholder = "Column data channels";
 			iDat.title = "splited by coma (,)";
@@ -2603,7 +2603,7 @@ function _createSelect ( array = [] )
 	return [div,select];
 }
 
-function _createInputArray ( inText, array = [] )
+function _createInputArray ( inText, array = [], multiple = false )
 {
 	let div = document.createElement ( "div" );
 	div.style.display = "flex";
@@ -2619,12 +2619,11 @@ function _createInputArray ( inText, array = [] )
 	let input = document.createElement ( "input" );
 	div.appendChild ( input );
 
-	if ( undefined != array )
+	if ( "Array" == array?.constructor.name )
 	{
-		let list = document.createElement ( "datalist" );
+		let list = document.createElement ( "select" );
 		div.appendChild ( list );
-		list.id = "newList"+Math.random( );
-		input.setAttribute ( 'list', list.id );
+		list.style.width = "0.9em";
 
 		for ( let index in array )
 		{
@@ -2632,6 +2631,27 @@ function _createInputArray ( inText, array = [] )
 			option.value = array[ index ].label;
 			option.innerHTML = array[ index ].label;
 			list.appendChild ( option );
+		}
+
+		list.onchange = (ev)=>{
+			if ( multiple )
+			{
+				if ( input.value.length )
+				{
+					input.value = input.value.trim ( );
+					input.value += ","
+				}
+				else
+				{
+				}
+				input.value += ev.target.value
+			}
+			else
+			{
+				input.value = ev.target.value
+			}
+
+			input.dispatchEvent ( new Event ( "change" ) );
 		}
 	}
 
