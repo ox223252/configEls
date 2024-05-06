@@ -17,6 +17,11 @@ class Els_Back {
 
 	_update ( config )
 	{
+		if ( !config )
+		{
+			return;
+		}
+
 		for ( let k of Object.keys ( config ) )
 		{
 			switch ( k )
