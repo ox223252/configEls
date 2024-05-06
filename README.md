@@ -470,14 +470,17 @@ L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les do
 ```javascript
 {
 	type:"csv",
-	separator:",", // sparateur utilisé pour la génération du CSV
+	separator:",", // séparateur utilisé pour la génération du CSV
 	display:{
-		entries:true, // affiche ou nonle nombre de lignes du fichier
+		entries:true, // affiche ou non le nombre de lignes du fichier
 		clean:true, // affiche un bouton de RAZ du CSV
-		last:true // affiche un bouton permetant de limiter le nombre de lignes a generé
+		last:true // affiche un bouton permettant de limiter le nombre de lignes a générer
+		download:false, // cache le bouton le teléchargement
+		every:false, // cache le champ de sauvegarde automatique
 	},
 	prompt: false, // demande le nom du fichier de sortie
 	file: undefined, // nom du fichier de sortie
+	periode: 0, // période of data transmission
 	channel:{
 		synchro:"CHANNEL TIME", // channel de synchro (horodatage)
 		title:"chrono", // titre de la colone de synchro dans le CSV

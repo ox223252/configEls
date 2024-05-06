@@ -2218,23 +2218,7 @@ class Els_csv extends Els_Back {
 		[this.divClean,this.clean] = _createIconButton ( "Clean log", "trash" );
 		this._domEl.appendChild ( this.divClean );
 
-		if ( this.config.display )
-		{
-			if ( false == this.config.display.entries )
-			{
-				this.divEntries.style.display = "none";
-			}
-			if ( false == this.config.display.last )
-			{
-				this.divLast.style.display = "none";
-			}
-			if ( false == this.config.display.clean )
-			{
-				this.divClean.style.display = "none";
-			}
-			
-			console.log ( false == this.config.display.clean );
-		}
+		this.update ( );
 
 		this.csv = undefined;
 		this.mode = undefined;
@@ -2423,6 +2407,156 @@ class Els_csv extends Els_Back {
 			}
 		})
 	}
+
+	update ( config )
+	{
+		this._update ( config );
+		if ( config )
+		{
+			for ( let key in config )
+			{
+
+			}
+		}
+
+		this.divEntries.style.display  = ( true  == this.config?.display?.entries )? "flex" : "none";
+		this.divLast.style.display     = ( true  == this.config?.display?.last )?    "flex" : "none";
+		this.divClean.style.display    = ( true  == this.config?.display?.clean )?   "flex" : "none";
+		this.divDownload.style.display = ( false == this.config?.display?.download )? "none" : "flex";
+		this.periodeDiv.style.display  = ( false == this.config?.display?.every )?    "none" : "flex";
+	}
+
+	static canCreateNew ( )
+	{
+		return true;
+	}
+
+	static new ( params = {}, config = undefined )
+	{
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
+
+		let json = {
+			type:"csv",
+			separator:",",
+			display:{
+				entries:true, // affiche ou non le nombre de lignes du fichier
+				clean:true, // affiche un bouton de RAZ du CSV
+				last:true // affiche un bouton permettant de limiter le nombre de lignes a générer
+			},
+			prompt: false, // demande le nom du fichier de sortie
+			file: undefined, // nom du fichier de sortie
+			periode: 0,
+			channel:{
+				synchro:"WS_DATA_CHANNEL", // channel de synchro (horodatage)
+				title:"chrono", // titre de la colone de synchro dans le CSV
+				data:[], // channels de donnés
+				titles:[] // titres des colonnes dans le CSV
+			}
+		}
+
+		if ( undefined != config )
+		{
+			json = JSON.parse ( JSON.stringify ( config ) );
+		}
+
+		try // config
+		{
+			let configDiv = document.createElement ( "div" );
+			let [divCha,sCha] = _createInputArray ( "Sync Data", params.channels );
+			configDiv.appendChild ( divCha );
+			sCha.value = json.channel.synchro || "";
+			sCha.onchange = (ev)=>{
+				json.channel.synchro = ev.target.value;
+				Els_Back.newJson ( json, jsonDiv );
+			}
+			sCha.onkeyup = sCha.onchange;
+
+			let [divSLa,sSLa] = _createInput ( "Sync Label" );
+			configDiv.appendChild ( divSLa );
+			sSLa.value = json.channel.title || "";
+			sSLa.onchange = (ev)=>{
+				json.channel.synchro = ev.target.value;
+				Els_Back.newJson ( json, jsonDiv );
+			}
+			sSLa.onkeyup = sSLa.onchange;
+
+			let [divPer,sPer] = _createSelectPeriode ( )
+			configDiv.appendChild ( divPer );
+			sPer.value = json.periode;
+			sPer.onchange = (ev)=>{
+				json.periode = parseInt(ev.target.value);
+				Els_Back.newJson ( json, jsonDiv );
+			}
+			sPer.onkeyup = sPer.onchange;
+
+			let [divSep,iSep] = _createInput ( "CSV Sep." );
+			configDiv.appendChild ( divSep );
+			iSep.value = json.separator;
+			iSep.style.textAlign = "center";
+			iSep.onchange = (ev)=>{
+				ev.target.value = ev.target.value.substring ( 0, 1 );
+				json.separator = ev.target.value;
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iSep.onkeyup = iSep.onchange;
+
+			let [divName,iName] = _createInput ( "Name" );
+			configDiv.appendChild ( divName );
+			iName.placeholder = "CSV_"+new Date ( 0 ).toISOString ( )+".csv";
+			iName.value = json.value || "";
+			iName.onchange = (ev)=>{
+				json.file = ev.target.value;
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iName.onkeyup = iName.onchange;
+
+			let [divTitle,iTitle] = _createInput ( "Title" );
+			configDiv.appendChild ( divTitle );
+			iTitle.placeholder = "Column title";
+			iTitle.title = "splited by coma (,)";
+			iTitle.value = json.channel.titles.join ( "," );
+			iTitle.onchange = (ev)=>{
+				json.channel.titles = ev.target.value.split ( json.separator );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iTitle.onkeyup = iTitle.onchange;
+
+			let [divDat,iDat] = _createInput ( "Data" );
+			configDiv.appendChild ( divDat );
+			iDat.placeholder = "Column data channels";
+			iDat.title = "splited by coma (,)";
+			iDat.value = json.channel.data.join ( "," );
+			iDat.onchange = (ev)=>{
+				json.channel.data = ev.target.value.split ( "," );
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iDat.onkeyup = iDat.onchange;
+
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( json, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				sCha.value = json.channel.synchro || "";
+				sSLa.value = json.channel.title || "";
+				sPer.value = json.periode;
+				iSep.value = json.separator;
+				iTitle.value = json.channel.titles.join ( "," );
+				iDat.value = json.channel.data.join ( "," );
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+			}
+			jsonDiv.onkeyup = jsonDiv.onchange;
+
+			let outDiv = Els_Back._newOut ( params.id, json );
+
+			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		}
+		catch ( e )
+		{
+			return undefined
+		}
+	}
 }
 
 const Els = {
@@ -2491,7 +2625,6 @@ function _createInputArray ( inText, array = [] )
 		div.appendChild ( list );
 		list.id = "newList"+Math.random( );
 		input.setAttribute ( 'list', list.id );
-
 
 		for ( let index in array )
 		{
