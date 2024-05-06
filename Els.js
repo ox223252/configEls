@@ -81,24 +81,36 @@ class Els_Back {
 
 	static newJson ( json, jsonDiv, outDiv, jsonText )
 	{
+
 		try
 		{
+			if ( this.timeOut )
+			{
+				clearTimeout ( this.timeOut );
+			}
+			if ( jsonDiv )
+			{
+				jsonDiv.style.backgroundColor = "";
+				jsonDiv.style.color = "";
+			}
 			if ( jsonText )
 			{
 				Object.assign ( json, JSON.parse ( jsonText ) );
 			}
 			if ( jsonDiv )
 			{
-				jsonDiv.style.backgroundColor = "";
 				jsonDiv.value = JSON.stringify ( json, null, 4 );
 			}
 		}
 		catch ( e )
 		{
-			if ( jsonDiv )
-			{
-				jsonDiv.style.backgroundColor = "rgba(128,0,0,0.5)";
-			}
+			this.timeOut = setTimeout( function() {
+				if ( jsonDiv )
+				{
+					jsonDiv.style.backgroundColor = "rgba(255,0,0,0.5)";
+					jsonDiv.style.color = "rgba(255,255,255,1)";
+				}
+			}, 1000 );
 		}
 
 		try {
