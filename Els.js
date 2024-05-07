@@ -579,6 +579,14 @@ class Els_io extends Els_Back {
 		this.divUnit = document.createElement ( "div" );
 		this._domEl.appendChild ( this.divUnit );
 		this.divUnit.className = "unit";
+		if ( config.unit )
+		{
+			this.divUnit.innerHTML =  config.unit;
+		}
+		else
+		{
+			this.divUnit.style.display = "none"
+		}
 		
 		let cb = {
 			periode: config.periode || 0,
