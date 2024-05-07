@@ -275,7 +275,7 @@ class Els_text extends Els_Back {
 
 		if ( undefined != config )
 		{
-			json = JSON.parse ( JSON.stringify ( config ) );
+			Object.assign ( json, config );
 		}
 
 		try // config
@@ -358,7 +358,7 @@ class Els_img extends Els_Back {
 
 		if ( undefined != config )
 		{
-			json = JSON.parse ( JSON.stringify ( config ) );
+			Object.assign ( json, config );
 		}
 
 		try // config
@@ -399,11 +399,6 @@ class Els_title_id extends Els_title {
 		super( config, id );
 		this._els.innerHTML = createEls ( config.text_id, config.prefix );
 	}
-
-	static canCreateNew ( )
-	{
-		return false;
-	}
 }
 
 class Els_text_id extends Els_text {
@@ -411,11 +406,6 @@ class Els_text_id extends Els_text {
 	{
 		super( config, id );
 		this._els.innerHTML = createEls ( config.text_id, config.prefix );
-	}
-
-	static canCreateNew ( )
-	{
-		return false;
 	}
 }
 
@@ -495,7 +485,7 @@ class Els_map extends Els_Back {
 
 		if ( undefined != config )
 		{
-			json = JSON.parse ( JSON.stringify ( config ) );
+			Object.assign ( json, config );
 		}
 
 		try // config
@@ -742,7 +732,7 @@ class Els_io extends Els_Back {
 
 		if ( undefined != config )
 		{
-			json = JSON.parse ( JSON.stringify ( config ) );
+			Object.assign ( json, config );
 		}
 
 		try // config
@@ -900,7 +890,7 @@ class Els_bin extends Els_Back {
 
 		if ( undefined != config )
 		{
-			json = JSON.parse ( JSON.stringify ( config ) );
+			Object.assign ( json, config );
 		}
 
 		try // config
@@ -1034,7 +1024,7 @@ class Els_multi extends Els_Back {
 
 		if ( undefined != config )
 		{
-			json = JSON.parse ( JSON.stringify ( config ) );
+			Object.assign ( json, config );
 		}
 
 		try // config
@@ -1393,7 +1383,7 @@ class Els_gauge extends Els_Back {
 
 		if ( undefined != config )
 		{
-			json = JSON.parse ( JSON.stringify ( config ) );
+			Object.assign ( json, config );
 		}
 
 		try // config
@@ -2480,7 +2470,7 @@ class Els_csv extends Els_Back {
 
 		if ( undefined != config )
 		{
-			json = JSON.parse ( JSON.stringify ( config ) );
+			Object.assign ( json, config );
 		}
 
 		try // config
