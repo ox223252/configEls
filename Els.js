@@ -1,3 +1,4 @@
+/// \brief baseelement for HMI display
 class Els_Back {
 	constructor ( config, id )
 	{
@@ -11,10 +12,13 @@ class Els_Back {
 		this._domEl.style = config.style;
 	}
 
+	/// \brief need to be surcharged
 	update ( config )
 	{
 	}
 
+	/// \brief update style
+	/// \aram [ in ] config : object with the input element need to be updated
 	_update ( config )
 	{
 		if ( !config )
@@ -35,36 +39,48 @@ class Els_Back {
 		}
 	}
 
+	/// \brief return callbacks
 	get callbacks ( )
 	{
 		return this._callArgs || [];
 	}
 
+	/// \breif return the main dom elements of the object
 	get dom ( )
 	{
 		return this._domEl;
 	}
 
+	/// \brief return the list of sub elements
 	get _els ( )
 	{
 		return this._elList;
 	}
 
+	/// \biref return the config of the object
 	get config ( )
 	{
 		return this._config || {};
 	}
 
+	/// \brief need to be surcherged to allow creation of the configs div used to configure new element
 	static canCreateNew ( )
 	{
 		return false;
 	}
 
-	static new ( id = {} )
+	/// \brief need to be surcherged to create the configs div used to configure new element
+	/// \params [ in ] params : object with the id of the new element
+	///     { id : "xxx" }
+	/// \params [ in ] config : base config for the new element
+	static new ( params = {}, config = undefined )
 	{
 		return new Promise((ok,ko)=>{ko("not available for this type")});
 	}
 
+	/// \brief create an element width input config
+	/// \params [ in ] index : string with the id of the new element
+	/// \params [ in ] json : configuration of new element
 	static _newOut ( index, json )
 	{
 		try // out
@@ -79,6 +95,11 @@ class Els_Back {
 		}
 	}
 
+	/// \brief manage the json check and coloration
+	/// \param [ out ] json : out data object (JSON)
+	/// \param [ in ] jsonDiv : div with the red coloration in case of error
+	/// \param [ in ] outDiv : div with the element need to be update if all right
+	/// \param [ in ] jsonText : string with data need to be checked
 	static newJson ( json, jsonDiv, outDiv, jsonText )
 	{
 
