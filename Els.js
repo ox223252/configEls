@@ -1,5 +1,8 @@
 /// \brief baseelement for HMI display
 class Els_Back {
+	/// \param [ in ] config : object with configuration
+	///     { type: <className String>, id: <String>, style: { } }
+	/// \param [ ind ] id : new element ID (String)
 	constructor ( config, id )
 	{
 		this.data = [];
@@ -13,6 +16,7 @@ class Els_Back {
 	}
 
 	/// \brief need to be surcharged
+	/// \note allow user to update part of config to change display
 	update ( config )
 	{
 	}
@@ -45,7 +49,7 @@ class Els_Back {
 		return this._callArgs || [];
 	}
 
-	/// \breif return the main dom elements of the object
+	/// \brief return the main dom elements of the object
 	get dom ( )
 	{
 		return this._domEl;
@@ -2598,6 +2602,11 @@ const Els = {
 	csv: Els_csv,
 };
 
+/// \brief Create select entry
+/// \param [ in ] array : array of String what represent the option list
+/// \return [div,select]
+///     div : main object need to be added to the DOM list
+///     select : DOM element used to add event listener
 function _createSelect ( array = [] )
 {
 	let div = document.createElement ( "div" );
@@ -2622,6 +2631,14 @@ function _createSelect ( array = [] )
 	return [div,select];
 }
 
+/// \brief Create input entry with eventualy label and select on the right
+///     the select add/update value into the input field
+/// \param [ in ] inText : label of entry
+/// \param [ in ] array : array of String what represent the option list
+/// \param [ in ] multiple : allow to use select to add element to entry no replace
+/// \return [div,input]
+///     div : main object need to be added to the DOM list
+///     input : DOM element used to add event listener
 function _createInputArray ( inText, array = [], multiple = false )
 {
 	let div = document.createElement ( "div" );
@@ -2677,6 +2694,11 @@ function _createInputArray ( inText, array = [], multiple = false )
 	return [div,input];
 }
 
+/// \brief Create input entry with eventualy label and select on the right
+///     the select add/update value into the input field
+/// \return [div,input]
+///     div : main object need to be added to the DOM list
+///     input : DOM element used to add event listener
 function _createSelectPeriode ( )
 {
 	let periodes = [
@@ -2708,6 +2730,12 @@ function _createSelectPeriode ( )
 	return [div,select];
 }
 
+/// \brief Create input entry with eventualy label and list of availables entries
+/// \param [ in ] inLabel : label of entry
+/// \param [ in ] option : array of String what represent the availables entries
+/// \return [div,input]
+///     div : main object need to be added to the DOM list
+///     input : DOM element used to add event listener
 function _createInput ( inLabel, option = undefined )
 {
 	let div = document.createElement ( "div" );
@@ -2745,6 +2773,12 @@ function _createInput ( inLabel, option = undefined )
 	return [div,input];
 }
 
+/// \brief Create a button entry with eventualy label
+/// \param [ in ] inLabel : label of entry
+/// \param [ in ] iconName : name of symbol from CSS : https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css
+/// \return [div,button]
+///     div : main object need to be added to the DOM list
+///     button : DOM element used to add event listener
 function _createIconButton ( inLabel, iconName )
 {
 	let div = document.createElement ( "div" );
@@ -2765,8 +2799,22 @@ function _createIconButton ( inLabel, iconName )
 	return [div,button];
 }
 
+/// \brief Create a color picker
+/// \param [ in ] params : object with configuration informations
+///     {
+///         type: "div"/"td",         // main domEl type
+///         callback: (ev,color)=>{}, // callback function used once a color was selected
+///         label: "String",          // label
+///         color:"rgba(255,0,0,1)"   // default color
+///     }
+/// \return [div,button]
+///     div : main object need to be added to the DOM list
+///     iColor : DOM element used to add event listener
 function _createColorClicker ( params = {} )
 {
+	/// \brief function called once user click on a color
+	/// \param [ in ] ev : event
+	/// \param [ in ] cb : user callback
 	function colorClicker ( ev, cb )
 	{
 		let target = ev.target;
