@@ -1,4 +1,4 @@
-/// \brief baseelement for HMI display
+/// \brief base element for HMI display
 class Els_Back {
 	/// \param [ in ] config : object with configuration
 	///     { type: <className String>, id: <String>, style: { } }
