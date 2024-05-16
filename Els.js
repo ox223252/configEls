@@ -106,9 +106,9 @@ class Els_Back {
 	/// \param [ in ] jsonText : string with data need to be checked
 	static newJson ( json, jsonDiv, outDiv, jsonText )
 	{
-
 		try
 		{
+			// this.timeOut is used to debounce
 			if ( this.timeOut )
 			{
 				clearTimeout ( this.timeOut );
@@ -139,6 +139,7 @@ class Els_Back {
 		}
 
 		try {
+			// outDiv contain the new element configured followin json
 			if ( outDiv )
 			{
 				outDiv.update ( json );
@@ -2696,36 +2697,61 @@ function _createInputArray ( inText, array = [], multiple = false )
 
 /// \brief Create input entry with eventualy label and select on the right
 ///     the select add/update value into the input field
+/// \param [ in ] periodes : array of time (Number) or object with label / value
 /// \return [div,input]
 ///     div : main object need to be added to the DOM list
 ///     input : DOM element used to add event listener
-function _createSelectPeriode ( )
+function _createSelectPeriode ( periodes )
 {
-	let periodes = [
-		{label:"event",value:0},
-		{label:"1 s",value:1},
-		{label:"2 s",value:2},
-		{label:"10 s",value:3},
-	];
+	switch ( periodes?.constructor.name )
+	{
+		case undefined:
+		{
+			periodes = [
+				{label:"event",value:0},
+				{label:"1 s",value:1},
+				{label:"2 s",value:2},
+				{label:"10 s",value:3},
+			];
+			break;
+		}
+		case "Array":
+		{
+			break;
+		}
+		default:
+		{
+			throw "unmanaged type of periodes";
+		}
+	}
 
 	let div = document.createElement ( "div" );
 	div.style.display = "flex";
 
 	let label = document.createElement ( "label" );
+	div.appendChild ( label );
 	label.innerHTML = "Timming : ";
 
 	let select = document.createElement ( "select" );
+	div.appendChild ( select );
 
 	for ( let p of periodes )
 	{
 		let option = document.createElement ( "option" );
-		option.value = p.value;
-		option.innerHTML = p.label;
 		select.appendChild ( option );
+
+		if ( "Object" == p?.constructor.name )
+		{
+			option.value = p.value;
+			option.innerHTML = p.label;
+		}
+		else
+		{
+			option.value = p;
+			option.innerHTML = p;
+		}
 	}
 
-	div.appendChild ( label );
-	div.appendChild ( select );
 
 	return [div,select];
 }
@@ -2785,16 +2811,15 @@ function _createIconButton ( inLabel, iconName )
 	div.style.display = "flex";
 
 	let label = document.createElement ( "label" );
+	div.appendChild ( label );
 	label.innerHTML = inLabel+" : ";
 	label.style.flexGrow = 1;
 
 	button = document.createElement("button");
+	div.appendChild ( button );
 	button.classList.add ( "fa" );
 	button.classList.add ( "fa-"+iconName );
 	button.style.minWidth = "1.5em";
-
-	div.appendChild ( label );
-	div.appendChild ( button );
 
 	return [div,button];
 }
