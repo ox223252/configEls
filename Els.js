@@ -1216,6 +1216,12 @@ class Els_gauge extends Els_Back {
 	{
 		super( config, id );
 
+		if ( !Gauge )
+		{
+			console.error ( "need Gauge from https://github.com/bernii/gauge.js" );
+			return;
+		}
+
 		let canvas = document.createElement ( "canvas" );
 		this._domEl.appendChild ( canvas );
 		this.gauge = undefined;
@@ -1862,6 +1868,12 @@ class Els_graph extends Els_Back {
 	constructor ( config, id )
 	{
 		super( config, id );
+
+		if ( !Chart )
+		{
+			console.error ( "need Gauge from https://github.com/bernii/gauge.js" );
+			return;
+		}
 		
 		this.divMain = document.createElement("div");
 		this._domEl.appendChild( this.divMain );
@@ -1957,6 +1969,8 @@ class Els_graph extends Els_Back {
 				datasets:[]
 			};
 		}
+
+		chart = new Chart ( canvas.getContext('2d'), this.chartConf );
 
 		// init config of zoom overview graph
 		if ( true == config.zoom )
@@ -2061,6 +2075,8 @@ class Els_graph extends Els_Back {
 					},
 				}
 			};
+
+			chartZ = new Chart ( canvasZ.getContext('2d'), this.chartZConf );
 		}
 
 		// capitalize First Letter
