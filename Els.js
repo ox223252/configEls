@@ -1216,7 +1216,7 @@ class Els_gauge extends Els_Back {
 	{
 		super( config, id );
 
-		if ( !Gauge )
+		if ( !window.Gauge )
 		{
 			console.error ( "need Gauge from https://github.com/bernii/gauge.js" );
 			return;
@@ -1869,9 +1869,9 @@ class Els_graph extends Els_Back {
 	{
 		super( config, id );
 
-		if ( !Chart )
+		if ( !window.Chart )
 		{
-			console.error ( "need Gauge from https://github.com/bernii/gauge.js" );
+			console.error ( "need Chart from https://github.com/chartjs/Chart.js" );
 			return;
 		}
 		
