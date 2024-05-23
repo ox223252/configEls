@@ -72,6 +72,11 @@ class Config {
 	/// \note the config should be updated externaly
 	update ( )
 	{
+		if ( "Array" !== this._config?.dataset?.constructor.name )
+		{
+			return;
+		}
+
 		// create all elements once
 		for ( let [i,ds] of this._config.dataset.entries() )
 		{
