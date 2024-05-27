@@ -611,7 +611,11 @@ class Els_io extends Els_Back {
 					}
 
 					this.divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.volume, "m3" ), "v_"+unit.volume );
-					this.divUnit.innerHTML = unit.volume || "?";
+
+					if ( false != config.unit )
+					{
+						this.divUnit.innerHTML = unit.volume || "?";
+					}
 				};
 				break;
 			}
@@ -624,7 +628,11 @@ class Els_io extends Els_Back {
 					}
 
 					this.divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.flow_v, "m3" ) / timeConvert ( 1, unit.flow_t, "s" ), 1 );
-					this.divUnit.innerHTML = (unit.flow_v || "?") + "/" +(unit.flow_t || "?");
+
+					if ( false != config.unit )
+					{
+						this.divUnit.innerHTML = (unit.flow_v || "?") + "/" +(unit.flow_t || "?");
+					}
 				}
 				break;
 			}
@@ -637,7 +645,11 @@ class Els_io extends Els_Back {
 					}
 
 					this.divData.innerHTML = refactor ( temperatureConvert ( msg.value, unit.temperature, "C" ), "T_"+unit.temperature );
-					this.divUnit.innerHTML = "°" + unit.temperature;
+
+					if ( false != config.unit )
+					{
+						this.divUnit.innerHTML = "°" + unit.temperature;
+					}
 				}
 				break;
 			}
@@ -649,7 +661,19 @@ class Els_io extends Els_Back {
 						msg.value *= config.coef;
 					}
 
-					this.divData.innerHTML = new Date ( msg.value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" ).replace ( ".000", "" );
+					this.divData.innerHTML = new Date ( msg.value ).toISOString ( ).replace ( "T"," " ).replace ( /\.\d\d\dZ/, "" );
+				};
+				break;
+			}
+			case "dateMs":
+			{
+				cb.f = (msg)=>{
+					if ( undefined != config.coef )
+					{
+						msg.value *= config.coef;
+					}
+
+					this.divData.innerHTML = new Date ( msg.value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
 				};
 				break;
 			}

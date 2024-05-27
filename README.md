@@ -158,7 +158,7 @@ Créait une `iframe` vers [open street map](https://www.openstreetmap.org/#map=6
 	prefix:"prefix",
 	default:"...",
 	periode:0, // temps de rafraichissement
-	valueType:1, // nombre / "flow" / "volume" / "temp"
+	valueType:1, // nombre / "flow" / "volume" / "temp" / date / dateMs
 	unit:"%"
 }
 ```
@@ -174,6 +174,8 @@ let unit = {
 	temperature:"C" // unitée de temperature
 }
 ````
+
+`unit` peut etre defini a `false` pour les données de type : `flow` / `volume` / `temp`, cela permat de ne pas afficher l'unitée.
 
 ### bin:
 ```javascript
