@@ -1810,7 +1810,12 @@ class Els_log extends Els_Back {
 			periode: config.periode || 0,
 			channel: config.channel,
 			f: (msg)=>{
-				this.p.innerHTML = msg.value + "<br>" + p.innerHTML;
+				this.p.innerHTML = msg.value + "<br>" + this.p.innerHTML;
+				if ( ( 0 != this.p.clientHeight )
+					&& ( !this.p.style.height ) )
+				{
+					this.p.style.height = this.p.clientHeight + "px";
+				}
 			}
 		};
 
