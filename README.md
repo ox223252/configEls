@@ -189,6 +189,29 @@ let unit = {
 
 Créait un texte qui sera colorisé en rouge / vert selon la donnée sur le channel, 0 : rouge, 1 : vert
 
+#### Note :
+Attention, le texte n'est pas directement colorisé en rouge ou vert, c'est une variable qui est mise à jour. Il faut donc affecté cette variable au texte ou à un autre élément.
+
+```
+--status-color
+```
+
+pour changer la coueur du texte
+```CSS
+.status {
+  color: var(--status-color);
+}
+```
+
+ou encore pour afficher un point devant le texte qui lui seul changera de couleur, effet led.
+```CSS
+.status::before {
+  color: var(--status-color);
+  content: "● ";
+  font-size: 1em;
+}
+```
+
 ### multi:
 ```javascript
 {
@@ -216,6 +239,29 @@ value  <= 1 : color == green
 1 < value  <= 2.5 : color == "blue"
 2.5 < value  <= 312 : color == "rgba(128,128,128,0.5)"
 312 < value : color == "#ff0"
+```
+
+#### Note :
+Attention, le texte n'est pas directement colorisé selon les seuils définis, c'est une variable qui est mise à jour. Il faut donc affecté cette variable au texte ou à un autre élément.
+
+```
+--status-color
+```
+
+pour changer la couleur du texte
+```CSS
+.status {
+  color: var(--status-color);
+}
+```
+
+ou encore pour afficher un point devant le texte qui lui seul changera de couleur, effet led.
+```CSS
+.status::before {
+  color: var(--status-color);
+  content: "● ";
+  font-size: 1em;
+}
 ```
 
 ### gauge:
