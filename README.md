@@ -183,7 +183,9 @@ let unit = {
 	type:"bin",
 	channel:"WEBSOCKET CHANNEL",
 	text:"texte affiché",
-	periode:0
+	periode:0,
+	mask: 0x01, // masque a appliquer sur la donnée
+	revert: false // inversion ou non de la donnée
 }
 ```
 

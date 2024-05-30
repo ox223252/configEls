@@ -877,28 +877,28 @@ class Els_bin extends Els_Back {
 		this._domEl.appendChild ( this.div );
 		this.div.innerHTML = config.text;
 
+		if ( undefined == this._config.mask )
+		{
+			this._config.mask = 0x01;
+		}
 
 		let cb = {
 			periode: config.periode || 0,
 			channel: config.channel,
 			f: (msg)=>{
-				switch ( msg.value )
+				if ( this._config.revert == true )
 				{
-					case 0:
-					{
-						this.div.style="--status-color:red";
-						break
-					}
-					case 1:
-					{
-						this.div.style="--status-color:green";
-						break
-					}
-					default:
-					{
-						this.div.style="";
-						break;
-					}
+					msg.value = ~msg.value;
+				}
+
+				if ( ( msg.value == true )
+					|| ( msg.value & this._config.mask ) )
+				{
+					this.div.style="--status-color:green";
+				}
+				else
+				{
+					this.div.style="--status-color:red";
 				}
 			}
 		};
