@@ -502,7 +502,11 @@ les  options sont les même pour tous les graphs :
 			tension:0.3,
 			showLine:true
 		}
-	]
+	],
+	debounce:{ // temps minimum entre deux mise a jour des graphiques
+		time:1000, // temps en ms
+		active:true // actif ou non
+	}
 }
 ```
 

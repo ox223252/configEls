@@ -1950,6 +1950,13 @@ class Els_graph extends Els_Back {
 			}
 		}
 
+		// define default debounce config
+		this.config.debounce = Object.assign ( {
+			time: 1000,
+			active: true,
+			lastUpdate: new Date ( ),
+		}, this.config.debounce );
+
 		// defined base config of the graphs signal, sync or async
 		if ( config.subType == "sync" )
 		{ // in case of sync graph set the X axis data input
@@ -1973,6 +1980,13 @@ class Els_graph extends Els_Back {
 						}
 					}
 
+					if ( this.config.debounce.active
+						&& ( ( new Date ( ) - this.config.debounce.lastUpdate ) < this.config.debounce.time ) )
+					{ // delay betwen lastUpdate and now is less than debounce time definition
+						return;
+					}
+
+					this.config.debounce.lastUpdate = new Date ( );
 					if ( !chart )
 					{
 						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
@@ -2199,6 +2213,14 @@ class Els_graph extends Els_Back {
 						}
 					}
 
+					
+					if ( this.config.debounce.active
+						&& ( ( new Date ( ) - this.config.debounce.lastUpdate ) < this.config.debounce.time ) )
+					{ // delay betwen lastUpdate and now is less than debounce time definition
+						return;
+					}
+
+					this.config.debounce.lastUpdate = new Date ( );
 					if ( !chart )
 					{
 						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
