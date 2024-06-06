@@ -486,7 +486,8 @@ les  options sont les même pour tous les graphs :
 {
 	type:"graph",
 	subType:"sync", // sync/signam/async
-	channel:"WEBSOCKET CHANNEL X"
+	channel:"WEBSOCKET CHANNEL X",
+	xAxisType: "date", // type de donnée sur l'axe X (unituquement date number pour le moment)
 	periode:0,
 	deep:300, // nombre de point de la courbe en X
 	min:-1, // valeur minimum de de l'ordonnée'

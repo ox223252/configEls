@@ -1935,6 +1935,32 @@ class Els_graph extends Els_Back {
 			},
 			plugins:[]
 		}; // conf for base graph
+
+		// nanagement of xAxis type if it's not a pure value like date
+		switch ( this.config.xAxisType )
+		{
+			case "date":
+			{
+				this.chartConf.options.scales.x.ticks = {
+					callback: function(val, index) {
+						val = new Date ( this.getLabelForValue(val) )
+							.toISOString ( )
+							.replace ( /\....Z/,"" )
+
+						if ( 0 == ( index % 100 ) )
+						{
+							return val.replace ( "T", " " );
+						}
+						else
+						{
+							return val.replace ( /.+T/, "" );
+						}
+					}
+				}
+				break;
+			}
+		}
+
 		this.chartZConf = undefined; // conf of zoom graph
 
 		let data = {
@@ -2053,6 +2079,28 @@ class Els_graph extends Els_Back {
 				},
 				plugins: this.chartConf.plugins
 			};
+
+			// nanagement of xAxis type if it's not a pure value like date
+			switch ( this.config.xAxisType )
+			{
+				case "date":
+				{
+					this.chartZConf.options.scales.x.ticks = {
+						// For a category axis, the val is the index so the lookup via getLabelForValue is needed
+						callback: function(val, index) {
+							if ( 0 == ( index % 100 ) )
+							{
+								return this.getLabelForValue(val).replace ( "T", " " ).replace ( /\....Z/,"" );
+							}
+							else
+							{
+								return this.getLabelForValue(val).replace ( /.+T/, "" ).replace ( /\....Z/,"" );
+							}
+						}
+					}
+					break;
+				}
+			}
 
 			this.chartZConf.plugins.push ({
 				id: 'quadrants',
