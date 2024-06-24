@@ -605,12 +605,9 @@ class Els_io extends Els_Back {
 			case "volume":
 			{
 				cb.f = (msg)=>{
-					if ( undefined != config.coef )
-					{
-						msg.value *= config.coef;
-					}
+					let value = msg.value * ( config.coef || 1 );
 
-					this.divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.volume, "m3" ), "v_"+unit.volume );
+					this.divData.innerHTML = refactor ( volumeConvert ( value, unit.volume, "m3" ), "v_"+unit.volume );
 
 					if ( false != config.unit )
 					{
@@ -622,12 +619,9 @@ class Els_io extends Els_Back {
 			case "flow":
 			{
 				cb.f = (msg)=>{
-					if ( undefined != config.coef )
-					{
-						msg.value *= config.coef;
-					}
+					let value = msg.value * ( config.coef || 1 );
 
-					this.divData.innerHTML = refactor ( volumeConvert ( msg.value, unit.flow_v, "m3" ) / timeConvert ( 1, unit.flow_t, "s" ), 1 );
+					this.divData.innerHTML = refactor ( volumeConvert ( value, unit.flow_v, "m3" ) / timeConvert ( 1, unit.flow_t, "s" ), 1 );
 
 					if ( false != config.unit )
 					{
@@ -639,12 +633,9 @@ class Els_io extends Els_Back {
 			case "temp":
 			{
 				cb.f = (msg)=>{
-					if ( undefined != config.coef )
-					{
-						msg.value *= config.coef;
-					}
+					let value = msg.value * ( config.coef || 1 );
 
-					this.divData.innerHTML = refactor ( temperatureConvert ( msg.value, unit.temperature, "C" ), "T_"+unit.temperature );
+					this.divData.innerHTML = refactor ( temperatureConvert ( value, unit.temperature, "C" ), "T_"+unit.temperature );
 
 					if ( false != config.unit )
 					{
@@ -656,31 +647,25 @@ class Els_io extends Els_Back {
 			case "date":
 			{
 				cb.f = (msg)=>{
-					if ( undefined != config.coef )
-					{
-						msg.value *= config.coef;
-					}
+					let value = msg.value * ( config.coef || 1 );
 
-					this.divData.innerHTML = new Date ( msg.value ).toISOString ( ).replace ( "T"," " ).replace ( /\.\d\d\dZ/, "" );
+					this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( /\.\d\d\dZ/, "" );
 				};
 				break;
 			}
 			case "dateMs":
 			{
 				cb.f = (msg)=>{
-					if ( undefined != config.coef )
-					{
-						msg.value *= config.coef;
-					}
+					let value = msg.value * ( config.coef || 1 );
 
-					this.divData.innerHTML = new Date ( msg.value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
+					this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
 				};
 				break;
 			}
 			default:
 			{
 				cb.f = (msg)=>{
-					msg.value *= config.coef || 1;
+					let value = msg.value * ( config.coef || 1 );
 					if ( undefined != refactor )
 					{
 						let a = config.valueType;
@@ -688,11 +673,11 @@ class Els_io extends Els_Back {
 						{
 							a = 1;
 						}
-						this.divData.innerHTML = refactor ( msg.value, a );
+						this.divData.innerHTML = refactor ( value, a );
 					}
 					else
 					{
-						this.divData.innerHTML = msg.value;
+						this.divData.innerHTML = value;
 					}
 
 					if ( config.unit )
