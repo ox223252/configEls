@@ -1992,7 +1992,15 @@ class Els_graph extends Els_Back {
 				periode: config.periode || 0,
 				channel: config.channel,
 				f: (msg)=>{
-					this.chartConf.data.labels.push ( msg.value );
+					if ( this.config.coef )
+					{ // in case of you need to appli coef on XAxis data
+						this.chartConf.data.labels.push ( msg.value * this.config.coef );
+					}
+					else
+					{
+						this.chartConf.data.labels.push ( msg.value );
+					}
+
 					if ( this.chartConf.data.labels.length > config.deep  )
 					{
 						let rm = this.chartConf.data.labels.length - config.deep

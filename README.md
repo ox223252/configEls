@@ -453,6 +453,7 @@ Il existe trois types de graphs, signal, sync, async, le signal sert à afficher
 	subType:"sync", // sync/signam/async
 	channel:"WEBSOCKET CHANNEL X"
 	periode:0,
+	coef: undefined, // coef multiplicateur pour les données
 	curve:[
 		{
 			name:"Courbe 1",
