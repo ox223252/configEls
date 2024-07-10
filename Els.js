@@ -1928,17 +1928,29 @@ class Els_graph extends Els_Back {
 			{
 				this.chartConf.options.scales.x.ticks = {
 					callback: function(val, index) {
-						val = new Date ( this.getLabelForValue(val) )
-							.toISOString ( )
-							.replace ( /\....Z/,"" )
 
-						if ( 0 == ( index % 100 ) )
+						val = new Date ( this.getLabelForValue(val) )
+
+						if ( 0 == index )
 						{
-							return val.replace ( "T", " " );
+							this.xAxisLastDay = val.getDay ( );
+						}
+
+						if ( this.xAxisLastDay != val.getDay ( ) )
+						{
+							this.xAxisLastDay = val.getDay ( );
+
+							return val
+								.toISOString ( )
+								.replace ( /\....Z/,"" )
+								.replace ( "T", " " );
 						}
 						else
 						{
-							return val.replace ( /.+T/, "" );
+							return val
+								.toISOString ( )
+								.replace ( /\....Z/,"" )
+								.replace ( /.+T/, "" );
 						}
 					}
 				}
