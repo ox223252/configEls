@@ -159,6 +159,7 @@ Créait une `iframe` vers [open street map](https://www.openstreetmap.org/#map=6
 	default:"...",
 	periode:0, // temps de rafraichissement
 	valueType:1, // nombre / "flow" / "volume" / "temp" / date / dateMs
+	action: "min", // "min" / "max" / "average" utile uniquement si channel est un tableau (cf note)
 	unit:"%"
 }
 ```
@@ -176,6 +177,18 @@ let unit = {
 ````
 
 `unit` peut etre defini a `false` pour les données de type : `flow` / `volume` / `temp`, cela permat de ne pas afficher l'unitée.
+
+#### note:
+dans le cas ou l'on souhaite afficher la valeur la plus petite / grande ou moyenne entre plusieurs entrée, il est possible de definir la config comme suis :
+
+```javascript
+{
+	type:"io",
+	channel: [ "channel_1", "channel_2", ... ],
+	action: "min", // min / max / average utile uniquement si channel est un tableau (cf note)
+	...
+}
+```
 
 ### bin:
 ```javascript

@@ -593,107 +593,147 @@ class Els_io extends Els_Back {
 			this.divUnit.style.display = "none"
 		}
 		
-		let cb = {
-			periode: config.periode || 0,
-			channel: config.channel,
-			f: console.log
-		};
-
-
-		switch ( config.valueType )
-		{
-			case "volume":
+		const getCallback = ( c )=>{
+			switch ( c.valueType )
 			{
-				cb.f = (msg)=>{
-					let value = msg.value * ( config.coef || 1 );
+				case "volume":
+				{
+					return (msg)=>{
+						let value = msg.value * ( c.coef || 1 );
 
-					this.divData.innerHTML = refactor ( volumeConvert ( value, unit.volume, "m3" ), "v_"+unit.volume );
+						this.divData.innerHTML = refactor ( volumeConvert ( value, unit.volume, "m3" ), "v_"+unit.volume );
 
-					if ( false != config.unit )
-					{
-						this.divUnit.innerHTML = unit.volume || "?";
-					}
-				};
-				break;
-			}
-			case "flow":
-			{
-				cb.f = (msg)=>{
-					let value = msg.value * ( config.coef || 1 );
-
-					this.divData.innerHTML = refactor ( volumeConvert ( value, unit.flow_v, "m3" ) / timeConvert ( 1, unit.flow_t, "s" ), 1 );
-
-					if ( false != config.unit )
-					{
-						this.divUnit.innerHTML = (unit.flow_v || "?") + "/" +(unit.flow_t || "?");
-					}
-				}
-				break;
-			}
-			case "temp":
-			{
-				cb.f = (msg)=>{
-					let value = msg.value * ( config.coef || 1 );
-
-					this.divData.innerHTML = refactor ( temperatureConvert ( value, unit.temperature, "C" ), "T_"+unit.temperature );
-
-					if ( false != config.unit )
-					{
-						this.divUnit.innerHTML = "°" + unit.temperature;
-					}
-				}
-				break;
-			}
-			case "date":
-			{
-				cb.f = (msg)=>{
-					let value = msg.value * ( config.coef || 1 );
-
-					this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( /\.\d\d\dZ/, "" );
-				};
-				break;
-			}
-			case "dateMs":
-			{
-				cb.f = (msg)=>{
-					let value = msg.value * ( config.coef || 1 );
-
-					this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
-				};
-				break;
-			}
-			default:
-			{
-				cb.f = (msg)=>{
-					let value = msg.value * ( config.coef || 1 );
-					if ( undefined != refactor )
-					{
-						let a = config.valueType;
-						if ( a == undefined )
+						if ( false != c.unit )
 						{
-							a = 1;
+							this.divUnit.innerHTML = unit.volume || "?";
 						}
-						this.divData.innerHTML = refactor ( value, a );
-					}
-					else
-					{
-						this.divData.innerHTML = value;
-					}
-
-					if ( config.unit )
-					{
-						this.divUnit.innerHTML =  config.unit;
-					}
-					else
-					{
-						this.divUnit.style.display = "none"
-					}
+					};
+					break;
 				}
-				break;
+				case "flow":
+				{
+					return (msg)=>{
+						let value = msg.value * ( c.coef || 1 );
+
+						this.divData.innerHTML = refactor ( volumeConvert ( value, unit.flow_v, "m3" ) / timeConvert ( 1, unit.flow_t, "s" ), 1 );
+
+						if ( false != c.unit )
+						{
+							this.divUnit.innerHTML = (unit.flow_v || "?") + "/" +(unit.flow_t || "?");
+						}
+					}
+					break;
+				}
+				case "temp":
+				{
+					return (msg)=>{
+						let value = msg.value * ( c.coef || 1 );
+
+						this.divData.innerHTML = refactor ( temperatureConvert ( value, unit.temperature, "C" ), "T_"+unit.temperature );
+
+						if ( false != c.unit )
+						{
+							this.divUnit.innerHTML = "°" + unit.temperature;
+						}
+					}
+					break;
+				}
+				case "date":
+				{
+					return (msg)=>{
+						let value = msg.value * ( c.coef || 1 );
+
+						this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( /\.\d\d\dZ/, "" );
+					};
+					break;
+				}
+				case "dateMs":
+				{
+					return (msg)=>{
+						let value = msg.value * ( c.coef || 1 );
+
+						this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
+					};
+					break;
+				}
+				default:
+				{
+					return (msg)=>{
+						let value = msg.value * ( c.coef || 1 );
+						if ( undefined != refactor )
+						{
+							let a = c.valueType;
+							if ( a == undefined )
+							{
+								a = 1;
+							}
+							this.divData.innerHTML = refactor ( value, a );
+						}
+						else
+						{
+							this.divData.innerHTML = value;
+						}
+
+						if ( c.unit )
+						{
+							this.divUnit.innerHTML =  c.unit;
+						}
+						else
+						{
+							this.divUnit.style.display = "none"
+						}
+					}
+					break;
+				}
 			}
 		}
+		
+		if ( "array" === config.channel?.constructor?.name.toLowerCase ( ) )
+		{
+			this.currentData = [];
 
-		this._callArgs.push ( cb );
+			for ( let [index,channel] of config.channel.entries ( ) )
+			{
+				let f = getCallback ( config );
+				let cb = {
+					periode: config.periode || 0,
+					channel: config.channel,
+					f: (msg)=>{
+						let last = this.currentData[ index ];
+						this.currentData[ index ] = msg;
+
+						switch ( config.action )
+						{
+							case "min":
+							{
+								f ( this.currentData.sort ( (a,b)=>a-b )[ 0 ] );
+								break;
+							}
+							case "max":
+							{
+								f ( this.currentData.sort ( (a,b)=>b-a )[ 0 ] );
+								break;
+							}
+							case "average":
+							{
+								f ( this.currentData.reduce ( (a,v)=> v + a ) / this.currentData.length );
+								break;
+							}
+						}
+					}
+				};
+			}
+		}
+		else
+		{
+			let cb = {
+				periode: config.periode || 0,
+				channel: config.channel,
+				f: getCallback ( config )
+			};
+
+			this._callArgs.push ( cb );
+		}
 	}
 
 	update ( config )
