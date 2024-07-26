@@ -911,7 +911,7 @@ class Els_bin extends Els_Back {
 			periode: config.periode || 0,
 			channel: config.channel,
 			f: (msg)=>{
-				let v = ( this._config.revert )? ~msg.value: ms.value;
+				let v = ( this._config.revert )? ~msg.value: msg.value;
 				v &= this._config.mask;
 
 				this.div.style="--status-color:"+((v)?"green":"red");
@@ -1887,7 +1887,7 @@ class Els_svg extends Els_Back {
 				case "bin":
 				{
 					cb.f = (msg)=>{
-						let v = ( d.revert )? ~msg.value: ms.value;
+						let v = ( d.revert )? ~msg.value: msg.value;
 						v &= d.mask;
 
 						style.innerHTML="#"+d.id+"{fill:"+((v)?"green":"red");
