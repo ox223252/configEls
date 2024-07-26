@@ -169,8 +169,8 @@ Créait un champ de texte qui sera mis à jour à partir des données envoyés p
 Pour que les types de données "flow" / "volume" / "temp", le module unitManager est utilisé pour les conversions. Il faut qu'une variable "unit" globale exite :
 ```javascript
 let unit = {
-	volume:"m3", // unité de volument
-	flow_v:"m3", // unité de volumet pour le débit
+	volume:"m3", // unité de volume
+	flow_v:"m3", // unité de volume pour le débit
 	flow_t:"s", // unité de temps pour le débit
 	temperature:"C" // unitée de temperature
 }
