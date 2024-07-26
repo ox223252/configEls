@@ -419,7 +419,9 @@ Créait une zone de log qui affichera les données envoyées par le serveur
 			id:"id_Path1",
 			type:"bin",
 			channel:"WEBSOCKET CHANNEL",
-			periode:0
+			periode:0,
+			revert: false, // complement a 1 sur la donnée
+			mask: 0x01 // masque sur la donnée pour savori quel bits observer
 		},
 		{/*...*/}
 	]
