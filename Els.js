@@ -592,6 +592,18 @@ class Els_io extends Els_Back {
 		{
 			this.divUnit.style.display = "none"
 		}
+
+		if ( !window.unit )
+		{
+			Object.assign ( window, {
+				unit:{
+					volume: "m3",
+					flow_v: "m3",
+					flow_t: "s",
+					temperature: "C"
+				}
+			});
+		}
 		
 		const getCallback = ( c )=>{
 			switch ( c.valueType )
