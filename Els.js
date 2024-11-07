@@ -1267,109 +1267,30 @@ class Els_gauge extends Els_Back {
 	{
 		super( config, id );
 
-		if ( !window.Gauge )
-		{
-			console.error ( "need Gauge from https://github.com/bernii/gauge.js" );
-			return;
-		}
+		let textColor = getComputedStyle(document.body).getPropertyValue('--main-text') || "#000";
 
-		let canvas = document.createElement ( "canvas" );
-		this._domEl.appendChild ( canvas );
-		this.gauge = undefined;
-
-		this.opt = {
-			angle:0,
-			lineWidth:0.2,
-			radiusScale:1,
-			addText:true,
-			pointer: {
-				length: 0.6,
-				strokeWidth: 0.035,
-				color: "#000"
-			},
-			colorStop: "#5C57DA",
-			gradientType: 0,
-			strokeColor: "#e0e0e0",
-			generateGradient: true,
-			staticLabels: {
-				font: "10px sans-serif",
-				labels: [],
-				color: "#000",
-				fractionDigits: 0
-			}
-		}
-
-		Object.assign ( this.opt, config.options );
+		this.gauge = new Gauge ( config.options );
+		
+		this.gauge.textColor = textColor || "#000";
+		
+		this._domEl.appendChild ( this.gauge.domEl );
+		this._domEl.style.textAlign = "center"
 
 		let cb = {
 			periode: config.periode || 0,
 			channel: config.channel,
 			f: (msg)=>{
-				if ( !this.gauge )
+				if ( textColor != getComputedStyle(document.body).getPropertyValue('--main-text') )
 				{
-					return;
+					textColor = getComputedStyle(document.body).getPropertyValue('--main-text');
+					this.gauge.textColor = textColor;
 				}
-				this.gauge.options.staticLabels.color = getComputedStyle(this.gauge.canvas).getPropertyValue("--main-text") || "#000";
-				this.gauge.set(msg.value);
+
+				this.gauge.value = msg.value;
 			}
 		};
+
 		this._callArgs.push ( cb );
-
-		let interval = setInterval (()=>{
-			// parent not displayed
-			if ( ( 0 == this._domEl.clientHeight )
-				|| ( 0 == this._domEl.clientWidth ) )
-			{
-				return;
-			}
-
-			clearInterval ( interval );
-
-			// create gauge itself
-			this.gauge = new Gauge( canvas )
-				.setOptions(this.opt);
-
-			this.gauge.config = {
-				radiusScale: this.gauge.options.radiusScale,
-				lineWidth: this.gauge.options.lineWidth,
-				baseLabels: [],
-			}
-
-			this._addMinMaxLabel ( config, this.gauge.config.baseLabels );
-
-			if ( config.options?.staticZones )
-			{
-				for ( let s of config.options.staticZones )
-				{
-						this._addMinMaxLabel ( s, this.gauge.config.baseLabels );
-				}
-			}
-
-			this.gauge.config.baseLabels.sort();
-
-			this.opt.staticLabels.labels = [...this.gauge.config.baseLabels];
-
-			this.gauge.minValue = config.min || this.opt.staticLabels?.labels?.at ( 0 ) || 0;
-			this.gauge.maxValue = config.max || this.opt.staticLabels?.labels?.at ( -1 ) || 100;
-
-			if ( config.default )
-			{
-				this.gauge.set ( config.default );
-			}
-
-			this.gauge.canvas.width = this.gauge.canvas.parentNode.clientWidth;
-			this.gauge.canvas.height = this.gauge.canvas.parentNode.clientHeight;
-
-			// corect size of the gauge if needed
-			let coef = Math.min ( this.gauge.canvas.width, 400 ) / 400;
-
-			this.gauge.availableHeight = this.gauge.canvas.height * 0.8;
-			this.gauge.options.radiusScale = this.gauge.config.radiusScale * coef;
-			this.gauge.options.lineWidth = this.gauge.config.lineWidth * coef;
-
-			this.gauge.setOptions();
-
-		}, 1000 );
 	}
 
 	// add all static labels to the graph
@@ -1387,39 +1308,8 @@ class Els_gauge extends Els_Back {
 
 	update ( config )
 	{
-		// console.log ( config )
 		this._update ( config );
-
-		for ( let k of Object.keys ( config ) )
-		{
-			switch ( k )
-			{
-				case "min":
-				case "max":
-				{
-					this.gauge.config.baseLabels = [];
-					this._addMinMaxLabel ( config, this.gauge.config.baseLabels );
-					this.gauge.config.baseLabels.sort();
-					break;
-				}
-				case "default":
-				{
-					this.gauge.set(config.default);
-					break;
-				}
-				case "options":
-				{
-					Object.assign ( this.opt, config[ k ] );
-					break;
-				}
-				default:
-				{
-					break;
-				}
-			}
-		}
-
-		this.gauge.setOptions(this.opt);
+		this.gauge.textColor = getComputedStyle(document.body).getPropertyValue('--main-text');
 	}
 
 	static canCreateNew ( )
