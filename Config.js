@@ -2,7 +2,8 @@
 class Config {
 	/// \param | in ] config : JSoN object who represent HMI (see README for full details)
 	/// \param | in ] id : base ID of every element created
-	constructor ( config, id )
+	/// \param [ in ] params : config parameters
+	constructor ( config, id, params )
 	{
 		if ( ( undefined == config )
 			|| ( undefined == id ) )
@@ -13,6 +14,7 @@ class Config {
 		this._callbacksFunctions = []; ///< array with all elements callback {periode: Number, channel: String, f: function }
 		this._config = config;
 		this._id = id;
+		this._params = params;
 
 		this.update ( );
 	}
@@ -105,6 +107,12 @@ class Config {
 
 				// define ID + dataset index + data in dataset index 
 				let uId = this._id+"_"+i+"_"+j;
+
+				if ( da?.unit
+					&& this._params?.units )
+				{
+					da.unitCurrent = this._params.units;
+				}
 
 				// create sub elements
 				let entry = new Els[ da.type ]( da, uId );

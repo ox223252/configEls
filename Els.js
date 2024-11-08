@@ -1274,11 +1274,11 @@ class Els_gauge extends Els_Back {
 				for ( let u in this._config.unit )
 				{
 					this.config.unitCurrent.event.addEventListener ( u, (event)=>{
-						let {coef,print} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
+						let {coef} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
 						this.gauge.coef = coef;
 					});
 
-					let {coef,print} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
+					let {coef} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
 					this.gauge.coef = coef;
 				}
 				break;
