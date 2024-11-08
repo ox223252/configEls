@@ -593,18 +593,6 @@ class Els_io extends Els_Back {
 			this.divUnit.style.display = "none"
 		}
 
-		if ( !window.unit )
-		{
-			Object.assign ( window, {
-				unit:{
-					volume: "m3",
-					flow_v: "m3",
-					flow_t: "s",
-					temperature: "C"
-				}
-			});
-		}
-		
 		const getCallback = ( c )=>{
 			switch ( c.valueType )
 			{
@@ -613,12 +601,10 @@ class Els_io extends Els_Back {
 					return (msg)=>{
 						let value = msg.value * ( c.coef || 1 );
 
-						this.divData.innerHTML = refactor ( volumeConvert ( value, unit.volume, "m3" ), "v_"+unit.volume );
+						let {coef,print} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
 
-						if ( false != c.unit )
-						{
-							this.divUnit.innerHTML = unit.volume || "?";
-						}
+						this.divData.innerHTML = refactor ( value * coef , "v_"+this._config.unitCurrent.volume );
+						this.divUnit.innerHTML = print;
 					};
 					break;
 				}
@@ -626,13 +612,11 @@ class Els_io extends Els_Back {
 				{
 					return (msg)=>{
 						let value = msg.value * ( c.coef || 1 );
+						
+						let {coef,print} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
 
-						this.divData.innerHTML = refactor ( volumeConvert ( value, unit.flow_v, "m3" ) / timeConvert ( 1, unit.flow_t, "s" ), 1 );
-
-						if ( false != c.unit )
-						{
-							this.divUnit.innerHTML = (unit.flow_v || "?") + "/" +(unit.flow_t || "?");
-						}
+						this.divData.innerHTML = refactor ( value * coef , 1 );
+						this.divUnit.innerHTML = print;
 					}
 					break;
 				}
@@ -641,11 +625,16 @@ class Els_io extends Els_Back {
 					return (msg)=>{
 						let value = msg.value * ( c.coef || 1 );
 
-						this.divData.innerHTML = refactor ( temperatureConvert ( value, unit.temperature, "C" ), "T_"+unit.temperature );
-
-						if ( false != c.unit )
+						if ( this._config.unitCurrent
+							&& this._config.unit )
 						{
-							this.divUnit.innerHTML = "°" + unit.temperature;
+							coef = temperatureConvert ( 1, unit.temperature, "C" );
+						}
+						this.divData.innerHTML = refactor ( value * coef, "T_"+unit.temperature );
+
+						if ( this._config.unit )
+						{
+							this.divUnit.innerHTML = "°" + this._config.unitCurrent;
 						}
 					}
 					break;
@@ -1274,7 +1263,24 @@ class Els_gauge extends Els_Back {
 		this.gauge.textColor = textColor || "#000";
 		
 		this._domEl.appendChild ( this.gauge.domEl );
-		this._domEl.style.textAlign = "center"
+		this._domEl.style.textAlign = "center";
+
+		switch ( this._config.valueType )
+		{
+			case "temp":
+			case "volume":
+			case "flow":
+			{
+				for ( let u in this._config.unit )
+				{
+					this.config.unitCurrent.event.addEventListener ( u, (event)=>{
+						let {coef,print} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
+						this.gauge.coef = coef;
+					});
+				}
+				break;
+			}
+		}
 
 		let cb = {
 			periode: config.periode || 0,
@@ -2953,3 +2959,49 @@ function _createColorClicker ( params = {} )
 	return [div,iColor];
 }
 
+function _calcCoef ( type, baseUnit, currentUnit )
+{
+	let coef = 1;
+	let print = "";
+
+	switch ( type )
+	{
+		case "volume":
+		{
+			break;
+		}
+		case "flow":
+		{
+			if ( currentUnit
+				&& baseUnit )
+			{
+				coef = volumeConvert ( 1, currentUnit.flow_v, baseUnit.flow_v ) / timeConvert ( 1, currentUnit.flow_t, baseUnit.flow_t )
+			}
+
+			if ( currentUnit )
+			{
+				print = (currentUnit.flow_v || "?") + "/" +(currentUnit.flow_t || "?");
+			}
+			else if ( baseUnit )
+			{
+				print = (baseUnit.flow_v || "?") + "/" +(baseUnit.flow_t || "?");
+			}
+			break;
+		}
+		case "temp":
+		{
+			if ( currentUnit
+				&& baseUnit )
+			{
+				coef = temperatureConvert ( 1, currentUnit.temperature, baseUnit.temperature );
+			}
+
+			if ( baseUnit )
+			{
+				print = "°" + currentUnit;
+			}
+			break;
+		}
+	}
+	return {coef,print}
+}
