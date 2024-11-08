@@ -286,8 +286,9 @@ ou encore pour afficher un point devant le texte qui lui seul changera de couleu
 	type:"gauge",
 	channel:"WEBSOCKET CHANNEL",
 	periode:0, // temps de rafraichissement
-	min:0,
-	max:23
+	options: {
+		values:[ 0, 100 ]
+	}
 }
 ```
 
@@ -299,18 +300,21 @@ Créait un un compteur avec une aiguille qui va varier en fonction de la donnée
 	type:"gauge",
 	channel:"WEBSOCKET CHANNEL",
 	periode:0, // temps de rafraichissement
-	min:0,
-	max:23,
-	default:1500,
 	options:{
-		lineWidth: 0.2,
-		staticZones: [
-			{
-				strokeStyle: "red",
-				min: 1350,
-				max: 1550
+		values: [ ],
+		curve: {
+			min: 0, // angle start (left)
+			max: 180, // angle stop (right)
+			size: 300, // graph width (px)
+			width: 30, // line width (px)
+			label: {
+				height: 20, // text height (px)
 			},
-		]
+			backColor: "transparent", // line color in case of no color provided in values
+			textColor: "black", // text color
+		},
+		coef: 1, // coefficeint need to be applied on gauge label value
+		errorColor: "red", // Out Of Limit error color 
 	}
 }
 ```
