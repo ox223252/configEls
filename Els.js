@@ -2147,7 +2147,8 @@ class Els_graph extends Els_Back {
 
 			this.chartConf.data.datasets[index] = {
 				label:c.name,
-				data:[],
+				data:[], // value with coef
+				trueData:[], // value without coef applyed (directly from device)
 				borderColor:c.color,
 				tension:c.tension||0.1,
 				showLine:c.showLine || true,
@@ -2169,7 +2170,12 @@ class Els_graph extends Els_Back {
 					{
 						case "signal":
 						{
-							this.chartConf.data.datasets[ index ].data = JSON.parse ( msg.value );
+							// TODO test management of c.oef
+							this.chartConf.data.datasets[ index ].trueData = JSON.parse ( msg.value );
+							this.chartConf.data.datasets[ index ].data = this.chartConf.data.datasets[ index ].trueData.map ( p=>{
+								p.y*=c.coef;
+								return p;
+							});
 							break;
 						}
 						case "sync":
@@ -2177,13 +2183,20 @@ class Els_graph extends Els_Back {
 							if ( this.chartConf.data.datasets[ index ].data.length < this.chartConf.data.labels.length  )
 							{ // add data only if we add a label for this data
 								// add the data to the last label
-								this.chartConf.data.datasets[ index ].data[ this.chartConf.data.labels.length - 1 ] = msg.value;
+								this.chartConf.data.datasets[ index ].data[ this.chartConf.data.labels.length - 1 ] = msg.value * c.coef;
+								this.chartConf.data.datasets[ index ].trueData[ this.chartConf.data.labels.length - 1 ] = msg.value;
 							}
 							break;
 						}
 						case "async":
 						{
-							this.chartConf.data.datasets[ index ].data.push ( msg.value );
+							// TODO test management c.coef
+							this.chartConf.data.datasets[ index ].trueData.push ( JSON.parse ( msg.value ) );
+
+							let point = JSON.parse ( msg.value );
+							point.y *= c.coef;
+							this.chartConf.data.datasets[ index ].data.push ( point );
+
 							let deep = c.deep || config.deep;
 							if ( ( undefined != deep )
 								&& ( this.chartConf.data.datasets[ index ].data.length > deep ) )
@@ -2214,8 +2227,7 @@ class Els_graph extends Els_Back {
 							break;
 						}
 					}
-
-					
+	
 					if ( this.config.debounce.active
 						&& ( ( new Date ( ) - this.config.debounce.lastUpdate ) < this.config.debounce.time ) )
 					{ // delay betwen lastUpdate and now is less than debounce time definition
@@ -2276,6 +2288,62 @@ class Els_graph extends Els_Back {
 					this.chartZConf.options.scales.y.ticks.color = color;
 				}
 			});
+
+
+			c.coef = 1;
+			if ( !this._config.unitCurrent
+				&& !c.unit )
+			{ // no unit needed
+			}
+			else if ( !this._config.unitCurrent
+				&& c.unit )
+			{
+				console.error ( "graph element with unit selected but not set globaly" );
+			}
+			else switch ( c.valueType )
+			{
+				case "temp":
+				case "volume":
+				case "flow":
+				{
+					for ( let u in c.unit )
+					{
+						this._config.unitCurrent.event.addEventListener ( u, (event)=>{
+							let {coef} = _calcCoef ( c.valueType, c.unit, this._config.unitCurrent );
+							c.coef = coef;
+							
+							switch ( config.subType )
+							{
+								case "signal":
+								{
+									// TODO management of c.oef
+									console.log ( this.chartConf.data )
+									break;
+								}
+								case "sync":
+								{
+									for ( let d of this.chartConf.data.datasets )
+									{
+										d.data = d.trueData.map( v=>v*c.coef );
+									}
+									break;
+								}
+								case "async":
+								{
+									// TODO management of c.oef
+									console.log ( this.chartConf.data )
+									break;
+								}
+							}
+						});
+
+						let {coef} = _calcCoef ( c.valueType, c.unit, this._config.unitCurrent );
+						c.coef = coef;
+					}
+
+					break;
+				}
+			}
 		}
 	}
 }
