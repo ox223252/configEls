@@ -3039,6 +3039,11 @@ function _calcCoef ( type, baseUnit, currentUnit )
 	{
 		case "volume":
 		{
+			if ( currentUnit
+				&& baseUnit )
+			{
+				coef = volumeConvert ( 1, currentUnit.volume, baseUnit.volume )
+			}
 			break;
 		}
 		case "flow":
