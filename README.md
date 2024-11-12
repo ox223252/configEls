@@ -158,9 +158,9 @@ Créait une `iframe` vers [open street map](https://www.openstreetmap.org/#map=6
 	prefix:"prefix",
 	default:"...",
 	periode:0, // temps de rafraichissement
-	valueType:1, // nombre / "flow" / "volume" / "temp" / date / dateMs
 	action: "min", // "min" / "max" / "average" utile uniquement si channel est un tableau (cf note)
-	unit:"%"
+	valueType: <Data>, // cf Chapter valueType
+	unit: <Data> // cf Chapter valueType
 }
 ```
 
@@ -300,6 +300,8 @@ Créait un un compteur avec une aiguille qui va varier en fonction de la donnée
 	type:"gauge",
 	channel:"WEBSOCKET CHANNEL",
 	periode:0, // temps de rafraichissement
+	valueType: <Data>, // cf Chapter valueType
+	unit: <Data>, // cf Chapter valueTypet
 	options:{
 		values: [ ],
 		curve: {
@@ -366,7 +368,7 @@ L'entête peut contenir des entrées de n'importe que type.
 }
 ```
 
-Le corp peut contenir un nombre variable de ligne est colone généré à la volé en fonction des données reçues.
+Le corps peut contenir un nombre variable de ligne est colonne généré à la volé en fonction des données reçues.
 
 les données sont au format suivant :
 ```javascript
@@ -383,7 +385,7 @@ les données sont au format suivant :
 	]
 }
 ```
-Pour mette a jour l'ensemblre des données, utilisez le forma précedente, pour une partie des données :
+Pour mette a jour l’ensemble des données, utilisez le forma précédente, pour une partie des données :
 ```javascript
 {
 	update:[
@@ -472,13 +474,13 @@ Il existe trois types de graphs, signal, sync, async, le signal sert à afficher
 	subType:"sync", // sync/signam/async
 	channel:"WEBSOCKET CHANNEL X"
 	periode:0,
-	coef: undefined, // coef multiplicateur pour les données
+	coef:1, // dans le cas ou le X doit etre modifié
 	curve:[
 		{
 			name:"Courbe 1",
 			channel:"WEBSOCKET CHANNEL Y",
 			periode:0,
-			color:"green"
+			color:"green",
 		}
 	]
 }
@@ -513,6 +515,7 @@ les  options sont les même pour tous les graphs :
 	min:-1, // valeur minimum de de l'ordonnée'
 	max:1, // valeur maximum de l'ordonnée
 	zoom:true, // active le mode zoom
+	unit: false, // need to set to true if units are needed for at least one curve
 	curve:[
 		{
 			name:"Courbe 1",
@@ -521,7 +524,9 @@ les  options sont les même pour tous les graphs :
 			deep:300,
 			color:"green",
 			tension:0.3,
-			showLine:true
+			showLine:true,
+			valueType: <Data>, // cf Chapter valueType
+			unit: <Data> // cf Chapter valueType
 		}
 	],
 	debounce:{ // temps minimum entre deux mise a jour des graphiques
@@ -564,3 +569,73 @@ L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les do
 	}
 }
 ````
+
+## valueType and unit:
+```javascript
+{
+	...,
+	valueType: <Data>,
+	unit: <Data>
+}
+````
+
+### valueType:
+value type permet de déterminer comment doit être interpréter la donnée et peut être couplé à l'objet `unit`, ainsi les valeurs disponibles sont :
+- <Number> : un nombre, pour avoir un nombre de digit fixe,
+- temp : température,
+- volume : volume,
+- flow : débit
+- date : date en secondes
+- dateMs : date en millisecondes
+
+// nombre / "flow" / "volume" / "temp" / date / dateMs
+
+### unit :
+```javascript
+{
+	...,
+	valueType: 1,
+	unit: "%"
+}
+```
+
+```javascript
+{
+	...,
+	valueType: "temp",
+	unit: {
+		temperature: "C" || "K" || "F"
+	}
+}
+```
+
+```javascript
+{
+	...,
+	valueType: "volume",
+	unit: {
+		volume: "b" || "g" || "l" || "m3"
+	}
+}
+```
+
+```javascript
+{
+	...,
+	valueType: "flow",
+	unit: {
+		flow_v: "b" || "g" || "l" || "m3",
+		flow_t: "s" || "m" || "h" || "d"
+	}
+}
+```
+
+```javascript
+{
+	...,
+	valueType: "date" || "dateMs",
+}
+```
+
+### Validité:
+tous les objets n'ont pas accès à tous les types de valeurs.
