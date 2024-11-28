@@ -509,6 +509,7 @@ les  options sont les même pour tous les graphs :
 	type:"graph",
 	subType:"sync", // sync/signam/async
 	channel:"WEBSOCKET CHANNEL X",
+	coef: 1, // coeficient multiplicateur pour la donnée en X
 	xAxisType: "date", // type de donnée sur l'axe X (unituquement date number pour le moment)
 	periode:0,
 	deep:300, // nombre de point de la courbe en X
@@ -525,6 +526,7 @@ les  options sont les même pour tous les graphs :
 			color:"green",
 			tension:0.3,
 			showLine:true,
+			coef: 1, // coeficient multiplicateur pour la donnée en Y
 			valueType: <Data>, // cf Chapter valueType
 			unit: <Data> // cf Chapter valueType
 		}
