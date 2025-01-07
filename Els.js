@@ -2904,19 +2904,23 @@ function _createInput ( inLabel, option = undefined )
 	let div = document.createElement ( "div" );
 	div.style.display = "flex";
 
-	let label = document.createElement ( "label" );
-	div.appendChild ( label );
 	if ( inLabel )
 	{
+		let label = document.createElement ( "label" );
+		div.appendChild ( label );
 		label.innerHTML = inLabel+" : ";
+		label.style.flexGrow = 1;
 	}
-	label.style.flexGrow = 1;
 
 	let input = document.createElement ( "input" );
 	div.appendChild ( input );
 
-	if ( ( undefined != option )
-		&& ( "Array" == option.constructor.name ) )
+	if ( undefined == option )
+	{
+		return [div,input];
+	}
+
+	if ( "Array" == option.constructor.name )
 	{
 		let dataList = document.createElement ( "datalist" );
 		div.appendChild ( dataList );
@@ -2931,7 +2935,6 @@ function _createInput ( inLabel, option = undefined )
 			tmp.value = o;
 		}
 	}
-
 
 	return [div,input];
 }
@@ -2991,8 +2994,10 @@ function _createColorClicker ( params = {} )
 				target.active = false;
 				cb ( ev, color );
 			},
-			()=>{
-
+			(color)=>{
+				target.style.backgroundColor = "rgba("+color.join(',')+")";
+				target.active = false;
+				cb ( ev, color );
 			});
 	}
 
@@ -3080,4 +3085,36 @@ function _calcCoef ( type, baseUnit, currentUnit )
 		}
 	}
 	return {coef,print}
+}
+
+/// \brief Create a debounce methode to avoid multiples events
+/// \param[ in ] id : string
+/// \param[ in ] cb : callback function
+/// \param[ in ] arg : callback function arg
+/// \param[ in ] delay : delay before function call
+let Els_debounce = {};
+function _debounceEvent ( id, cb, arg, delay = 100 )
+{
+	if ( Els_debounce[ id ] )
+	{
+		clearTimeout ( Els_debounce[ id ].timeout )
+		Els_debounce[ id ].args.push ( arg )
+	}
+	else
+	{
+		Els_debounce[ id ] = {
+			timeout: undefined,
+			args: [ arg ],
+			cb: cb
+		};
+	}
+
+	Els_debounce[ id ].timeout = setTimeout ( ()=>{
+		let ev = new Event ( id )
+		ev.args = Els_debounce[ id ].args;
+
+		Els_debounce[ id ].cb ( arg );
+
+		delete Els_debounce[ id ]
+	}, delay );
 }
