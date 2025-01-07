@@ -1334,15 +1334,19 @@ class Els_gauge extends Els_Back {
 		}
 
 		let json = {
-			type:"gauge",
-			channel:"WS_DATA_CHANNEL",
-			periode:0,
-			min:0,
-			max:100,
-			default:50,
+			type: "gauge",
+			channel: "WS_DATA_CHANNEL",
+			periode: 0,
 			options:{
-				angle:0.1,
-				radiusScale:1,
+				values: [ 0, "yellow", 100 ],
+				curve:{
+					min: 0,
+					max: 180,
+					label:{
+						height: 20,
+						line: 1
+					}
+				}
 			}
 		}
 
@@ -1366,45 +1370,119 @@ class Els_gauge extends Els_Back {
 					tr.appendChild ( min );
 					min.appendChild ( document.createTextNode ( params.min ) );
 
-					let color = document.createElement ( "td" );
+					let color = document.createElement ( "th" );
 					tr.appendChild ( color );
 					color.appendChild ( document.createTextNode ( params.color ) );
 
 					let max = document.createElement ( "th" );
 					tr.appendChild ( max );
 					max.appendChild ( document.createTextNode ( params.max ) );
+				
+					return tr;
 				}
 				else
 				{
+					let cell = document.createElement ( "td" );
+					tr.appendChild ( cell );
+					cell.style.width = "33%";
+
 					let [divMin,iMin] = _createInput ( );
-					tr.appendChild ( divMin );
-					iMin.value = params.min;
-					iMin.onchange = (ev)=>{
-						params.min = Number ( ev.target.value );
-						Els_Back.newJson ( json, jsonDiv, outDiv );
-					}
+					cell.appendChild ( divMin );
+					iMin.type = "number";
+					iMin.value = json.options.values[ params ];
 					iMin.onkeyup = iMin.onchange;
 
 					let [noUsed,iColor] = _createColorClicker ( {
+						color: json.options.values[ params + 1 ],
 						callback: (ev,color)=>{
-							params.strokeStyle = "rgba("+color.join(',')+")";
+							json.options.values[ params + 1 ] = "rgba("+color.join(',')+")";
 							Els_Back.newJson ( json, jsonDiv, outDiv );
+							outDiv.gauge.update ( );
 						},
 						type: "td",
 					} );
 					tr.appendChild ( iColor );
+					iColor.style.width = "33%";
+					
+					cell = document.createElement ( "td" );
+					tr.appendChild ( cell );
+					cell.style.width = "33%";
 
 					let [divMax,iMax] = _createInput ( );
-					tr.appendChild ( divMax );
-					iMax.value = params.max;
-					iMax.onchange = (ev)=>{
-						params.max = Number ( ev.target.value );
-						Els_Back.newJson ( json, jsonDiv, outDiv );
-					}
+					cell.appendChild ( divMax );
+					iMax.type = "number";
+					iMax.value = json.options.values[ params + 2 ];
 					iMax.onkeyup = iMax.onchange;
+
+					return {tr, iMin, iMax, iColor};
+				}
+			}
+
+			let createTable = ( params = {} )=>{
+				while ( 1 < tabZone.children.length )
+				{
+					tabZone.removeChild ( tabZone.lastChild );
 				}
 
-				return tr;
+				let values = json.options.values.filter ( v=>!isNaN(v));
+
+				let cells = [];
+				for ( let i = 0; i < values.length - 1; i++ )
+				{
+					let index = json.options.values.indexOf ( values[ i ] );
+					let length = json.options.values.indexOf ( values[ i + 1 ] ) - index;
+
+					if ( length < 2 )
+					{
+						json.options.values.splice ( json.options.values.indexOf ( values[ i+1 ] ), 0, "transparent" );
+					}
+
+					let ret = createLine ( index );
+					tabZone.appendChild ( ret.tr );
+
+					cells.push ( ret );
+				}
+
+				for ( let i = 0; i < cells.length; i++ )
+				{
+					let indexMin = json.options.values.indexOf ( values[ i ] );
+					let indexMax = json.options.values.indexOf ( values[ i + 1 ] );
+
+					cells[ i ].iMin.onchange = (ev)=>{
+						json.options.values[ indexMin ] = Number ( ev.target.value );
+
+						if ( i > 0 )
+						{
+							cells[ i - 1 ].iMax.value = json.options.values[ indexMin ];
+						}
+
+						Els_Back.newJson ( json, jsonDiv, outDiv );
+						_debounceEvent ( "gauge", ()=>{ outDiv.gauge.update ( ) } );
+					}
+
+					cells[ i ].iMax.onchange = (ev)=>{
+						json.options.values[ indexMax ] = Number ( ev.target.value );
+
+						if ( i < cells.length - 1 )
+						{
+							cells[ i + 1 ].iMin.value = json.options.values[ indexMax ];
+						}
+
+						Els_Back.newJson ( json, jsonDiv, outDiv );
+						_debounceEvent ( "gauge", ()=>{ outDiv.gauge.update ( ) } );
+					}
+
+					cells[ i ].iColor.onclik = (ev,color)=>{
+						json.options.values[ params + 1 ] = "rgba("+color.join(',')+")";
+						Els_Back.newJson ( json, jsonDiv, outDiv );
+						_debounceEvent ( "gauge", ()=>{ outDiv.gauge.update ( ) } );
+					};
+				}
+
+				return {
+					midValue:( Number( cells[ cells.length - 1 ].iMax.value ) - Number ( cells[ 0 ].iMin.value ) ) / 2 + Number ( cells[ 0 ].iMin.value ),
+					nbArea: cells.length
+				};
 			}
 
 			let configDiv = document.createElement ( "div" );
@@ -1426,40 +1504,11 @@ class Els_gauge extends Els_Back {
 			}
 			sPer.onkeyup = sPer.onchange;
 
-			let [divMin,iMin] = _createInput ( "Min" );
-			configDiv.appendChild ( divMin );
-			iMin.type = "number";
-			iMin.value = json.min;
-			iMin.onchange = (ev)=>{
-				json.min = Number ( ev.target.value );
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			iMin.onkeyup = iMin.onchange;
-
-			let [divDef,iDef] = _createInput ( "Default" );
-			configDiv.appendChild ( divDef );
-			iDef.type = "number";
-			iDef.value = json.default;
-			iDef.onchange = (ev)=>{
-				json.default = Number ( ev.target.value );
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			iDef.onkeyup = iDef.onchange;
-
-			let [divMax,iMax] = _createInput ( "Max" );
-			configDiv.appendChild ( divMax );
-			iMax.type = "number";
-			iMax.value = json.max;
-			iMax.onchange = (ev)=>{
-				json.max = Number ( ev.target.value );
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			iMax.onkeyup = iMax.onchange;
-
 			let [divZon,iZon] = _createInput ( "Zones" );
 			configDiv.appendChild ( divZon );
 			iZon.type = "number";
-			iZon.value = 0;
+			iZon.value = 1;
+			iZon.min = 1;
 			iZon.onchange = (ev)=>{
 				let index = Number ( ev.target.value );
 				if ( index < 0 )
@@ -1468,94 +1517,54 @@ class Els_gauge extends Els_Back {
 					ev.target.value = 0;
 				}
 
-				// remove statics zones
-				if ( 0 == index )
+				let values = json.options.values.filter ( v=>!isNaN(v));
+				if ( index < values.length - 1 )
 				{
-					json.options.staticZones = undefined;
-					domEls.line = [];
-					while ( tabZone.childNodes.length > 1 ) // keep only head
+					while ( index < values.length - 1 )
 					{
-						tabZone.removeChild ( tabZone.lastChild );
-					}
-					tabZone.style.display = "none";
-					divStartStop.style.display = "";
-					Els_Back.newJson ( json, jsonDiv, outDiv );
-					return;
-				}
-
-				tabZone.style.display = "";
-				divStartStop.style.display = "none";
-				
-				// create statics zones
-				if ( !json.options?.staticZones )
-				{
-					json.options.staticZones = [];
-				}
-
-				for ( let i = json.options.staticZones.length; i < index; i++  )
-				{
-					json.options.staticZones[ i ] = {
-						strokeStyle: json.options.staticZones.at ( i )?.strokeStyle,
-						min: json.options.staticZones.at ( i -1 )?.max || json.min,
-						max: json.max,
-					};
-
-					domEls.line[ i ] = createLine ( json.options.staticZones[ i ] );
-					tabZone.appendChild ( domEls.line[ i ] );
-				}
-
-				if ( index < json.options.staticZones.length )
-				{
-					json.options.staticZones.splice ( index );
-
-					while ( tabZone.childNodes.length + 1 > index ) // keep nb of line + head
-					{
-						tabZone.removeChild ( tabZone.lastChild );
+						values.pop ( );
 					}
 
-					domEls.line.splice ( index );
+					for ( let i = json.options.values.indexOf ( values[ values.length - 1 ] ); i > 0; i-- )
+					{
+						json.options.values.pop ( );
+					}
 				}
+				else while ( index > values.length - 1 )
+				{
+					values.push ( values[ values.length - 1 ] + 1 );
+					json.options.values.push ( "transparent" );
+					json.options.values.push ( values[ values.length - 1 ] );
+				}
+
+				createTable ( );
+				outDiv.gauge.value = ( outDiv.gauge.max - outDiv.gauge.min ) / 2 + outDiv.gauge.min;
+
 				Els_Back.newJson ( json, jsonDiv, outDiv );
+
+				_debounceEvent ( "gauge", ()=>{ outDiv.gauge.update ( ) } );
 			}
 			iZon.onkeyup = iZon.onchange;
 
-			let divStartStop = document.createElement ( "div" );
-			configDiv.appendChild ( divStartStop );
-
-			let [divStart,iStart] = _createColorClicker ( {
-				label:"begin",
-				callback: (ev,color)=>{
-					json.options.colorStart = "rgba("+color.join(',')+")";
-					json.options.colorStop = json.options.colorStart;
-					Els_Back.newJson ( json, jsonDiv, outDiv );
-				}
-			} );
-			divStartStop.appendChild ( divStart );
-
-			let [divStop,iStop] = _createColorClicker ( {
-				label: "end",
-				callback: (ev,color)=>{
-					json.options.strokeColor = "rgba("+color.join(',')+")";
-					Els_Back.newJson ( json, jsonDiv, outDiv );
-				}
-			} );
-			divStartStop.appendChild ( divStop );
-
-
 			let tabZone = document.createElement ( "table" );
 			configDiv.appendChild ( tabZone );
-			tabZone.style.display = "none";
 			tabZone.appendChild ( createLine ( {min: "Min", color:"Color", max:"Max", type:"th"} ) );
+
+			let retTable = createTable ( );
+			iZon.value = retTable.nbArea;
 
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( json, null, 4 );
 			jsonDiv.onchange = (ev)=>{
-				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
 				sCha.value = json?.channel || "";
-				sPer.value = json?.periode || "";
-				iMin.value = json?.min || "";
-				iDef.value = json?.default || "";
-				iMax.value = json?.max || "";
+				sPer.value = json?.periode;
+
+				let r = createTable ( );
+				iZon.value = r.nbArea;
+				outDiv.gauge.value = r.midValue;
+
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+				_debounceEvent ( "gauge", ()=>{ outDiv.gauge.update ( json.options ) } );
 			}
 			jsonDiv.onkeyup = jsonDiv.onchange;
 
