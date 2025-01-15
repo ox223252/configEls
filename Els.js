@@ -2179,12 +2179,25 @@ class Els_graph extends Els_Back {
 					{
 						case "signal":
 						{
-							// TODO test management of c.oef
-							this.chartConf.data.datasets[ index ].trueData = JSON.parse ( msg.value );
-							this.chartConf.data.datasets[ index ].data = this.chartConf.data.datasets[ index ].trueData.map ( p=>{
-								p.y*=c.coef;
-								return p;
-							});
+							switch ( msg.value?.constructor.name )
+							{
+								case "Array":
+								{
+									let v = msg.value.filter ( a=>a.x!=undefined&&a.y!=undefined );
+									this.chartConf.data.datasets[ index ].trueData = v;
+									this.chartConf.data.datasets[ index ].data = v.map ( p=>{
+										p.y*=c.coef;
+										return p;
+									});
+									break;
+								}
+								default:
+								{
+									console.log ( "graph signal" );
+									console.log ( msg.value );
+									break;
+								}
+							}
 							break;
 						}
 						case "sync":
