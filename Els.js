@@ -1839,86 +1839,161 @@ class Els_svg extends Els_Back {
 class Els_graph extends Els_Back {
 	constructor ( config, id )
 	{
-		super( config, id );
+		// manage X axis labels if it's date
+		function xAxisDateCallback (val, index)
+		{
+			val = new Date ( this.getLabelForValue(val) )
 
+			if ( 0 == index )
+			{
+				this.xAxisLastDay = val.getDay ( );
+			}
+
+			if ( this.xAxisLastDay != val.getDay ( ) )
+			{
+				this.xAxisLastDay = val.getDay ( );
+
+				return val
+					.toISOString ( )
+					.replace ( /\....Z/,"" )
+					.replace ( "T", " " );
+			}
+			else
+			{
+				return val
+					.toISOString ( )
+					.replace ( /\....Z/,"" )
+					.replace ( /.+T/, "" );
+			}
+		}
+
+		// capitalize First Letter
+		function cFL(string)
+		{
+			return string.charAt(0).toUpperCase() + string.slice(1);
+		}
+
+		// reset Zoom
+		const resetZoom = ( )=>{
+			console.log ( "reset" )
+			zoomData = this.graph.main.chart.getInitialScaleBounds ( );
+			zoomData.zoom = false;
+			this.graph.main.chart.resetZoom ( );
+			this.graph.main.chart.update ( );
+			this.graph.zoom.chart.update ( );
+		}
+
+		super( config, id );
+		
 		if ( !window.Chart )
 		{
 			console.error ( "need Chart from https://github.com/chartjs/Chart.js" );
 			return;
 		}
+
+		// define default debounce config
+		this.config.debounce = Object.assign ( {
+			time: 100,
+			active: true,
+		}, this.config.debounce );
 		
 		this.divMain = document.createElement("div");
 		this._domEl.appendChild( this.divMain );
 		this.divMain.className = "main";
 
-		let canvas = document.createElement("canvas");
-		this.divMain.appendChild( canvas );
-		let canvasZ = undefined;
-
-		let chart = null; // base graph
-		let chartZ = null; // zoom overview graph
-
-		this.chartConf = {
-			options: {
-				maintainAspectRatio: false,
-				animation: false,
-				scales: {
-					x: {
-						grid: {
-							color:"rgba(128,128,128,0.4)"
-						}
+		// base graph elements
+		this.graph = {
+			main:{
+				canvas: document.createElement("canvas"),
+				chart: undefined, // base graph
+				config: { // conf for base graph
+					options: {
+						maintainAspectRatio: false,
+						animation: false,
+						scales: {
+							x: {
+								grid: {
+									color:"rgba(128,128,128,0.4)"
+								}
+							},
+							y: {
+								grid:{
+									color:"rgba(128,128,128,0.4)"
+								} 
+							}
+						},
+						plugins:{}
 					},
-					y: {
-						grid:{
-							color:"rgba(128,128,128,0.4)"
-						} 
-					}
-				},
-				plugins:{}
-			},
-			plugins:[]
-		}; // conf for base graph
-
-		// nanagement of xAxis type if it's not a pure value like date
-		switch ( this.config.xAxisType )
-		{
-			case "date":
-			{
-				this.chartConf.options.scales.x.ticks = {
-					callback: function(val, index) {
-
-						val = new Date ( this.getLabelForValue(val) )
-
-						if ( 0 == index )
-						{
-							this.xAxisLastDay = val.getDay ( );
-						}
-
-						if ( this.xAxisLastDay != val.getDay ( ) )
-						{
-							this.xAxisLastDay = val.getDay ( );
-
-							return val
-								.toISOString ( )
-								.replace ( /\....Z/,"" )
-								.replace ( "T", " " );
-						}
-						else
-						{
-							return val
-								.toISOString ( )
-								.replace ( /\....Z/,"" )
-								.replace ( /.+T/, "" );
-						}
-					}
+					plugins:[]
 				}
-				break;
+			},
+			zoom:{
+				canvas: undefined,
+				chart: undefined, // zoom overview graph
+				config: {
+				}, // conf of zoom graph
 			}
 		}
 
-		this.chartZConf = undefined; // conf of zoom graph
+		//  add main graph to the displayed elements
+		this.divMain.appendChild( this.graph.main.canvas );
 
-		let data = {
+		// nanagement of xAxis type if it's not a pure value like date
+		if ( "date" == this.config.xAxisType )
+		{
+			this.graph.main.config.options.scales.x.ticks = {
+				callback: xAxisDateCallback
+			}
+		}
+
+		// defined base config of the graphs signal, sync or async
+		if ( this.config.subType == "sync" )
+		{ // in case of sync graph set the X axis data input
+			this.graph.main.config.type = 'line';
+			this.graph.main.config.data = {
+				labels:[],
+				datasets:[]
+			};
+			let cb = {
+				periode: this.config.periode || 0,
+				channel: this.config.channel,
+				f: (msg)=>{
+					if ( this.config.coef )
+					{ // in case of you need to appli coef on XAxis data
+						this.graph.main.config.data.labels.push ( msg.value * this.config.coef );
+					}
+					else
+					{
+						this.graph.main.config.data.labels.push ( msg.value );
+					}
+
+					if ( this.graph.main.config.data.labels.length > config.deep  )
+					{
+						let rm = this.graph.main.config.data.labels.length - config.deep
+						this.graph.main.config.data.labels.splice( 0, rm );
+						for ( let d of this.graph.main.config.data.datasets )
+						{
+							d.data.splice ( 0, rm );
+						}
+					}
+
+					this._updateGraph ( "main" );
+				}
+			}
+			this._callArgs.push ( cb );
+		}
+		else
+		{ // async/signal case
+			this.graph.main.config.type = 'scatter',
+			this.graph.main.config.data = {
+				datasets:[]
+			};
+		}
+
+		// creat graph
+		this.graph.main.chart = new Chart ( this.graph.main.canvas.getContext('2d'), this.graph.main.config );
+
+		let zoomData = {
 			zoom:false,
 			update:true,
 			x:{
@@ -1931,104 +2006,29 @@ class Els_graph extends Els_Back {
 			}
 		}
 
-		// define default debounce config
-		this.config.debounce = Object.assign ( {
-			time: 1000,
-			active: true,
-			lastUpdate: new Date ( ),
-		}, this.config.debounce );
-
-		// defined base config of the graphs signal, sync or async
-		if ( config.subType == "sync" )
-		{ // in case of sync graph set the X axis data input
-			this.chartConf.type = 'line';
-			this.chartConf.data = {
-				labels:[],
-				datasets:[]
-			};
-			let cb = {
-				periode: config.periode || 0,
-				channel: config.channel,
-				f: (msg)=>{
-					if ( this.config.coef )
-					{ // in case of you need to appli coef on XAxis data
-						this.chartConf.data.labels.push ( msg.value * this.config.coef );
-					}
-					else
-					{
-						this.chartConf.data.labels.push ( msg.value );
-					}
-
-					if ( this.chartConf.data.labels.length > config.deep  )
-					{
-						let rm = this.chartConf.data.labels.length - config.deep
-						this.chartConf.data.labels.splice( 0, rm );
-						for ( let d of this.chartConf.data.datasets )
-						{
-							d.data.splice ( 0, rm );
-						}
-					}
-
-					if ( this.config.debounce.active
-						&& ( ( new Date ( ) - this.config.debounce.lastUpdate ) < this.config.debounce.time ) )
-					{ // delay betwen lastUpdate and now is less than debounce time definition
-						return;
-					}
-
-					this.config.debounce.lastUpdate = new Date ( );
-					if ( !chart )
-					{
-						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
-					}
-					else if ( chart.width == 0 )
-					{
-						chart.destroy ( );
-						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
-					}
-					else if ( ( data.zoom == false )
-						&& ( data.update == true ) )
-					{
-						chart.update();
-					}
-				}
-			}
-			this._callArgs.push ( cb );
-		}
-		else
-		{ // async/signal case
-			this.chartConf.type = 'scatter',
-			this.chartConf.data = {
-				datasets:[]
-			};
-		}
-
-		chart = new Chart ( canvas.getContext('2d'), this.chartConf );
-
 		// init config of zoom overview graph
-		if ( true == config.zoom )
+		if ( true == this.config.zoom )
 		{
 			this.divZoom = document.createElement("div");
 			this.divZoom.className = "zoom";
 			this._domEl.appendChild( this.divZoom );
 
-			canvasZ = document.createElement( "canvas" );
-			this.divZoom.appendChild( canvasZ );
-			canvasZ.addEventListener ( "dblclick", ()=>{
-				data = chart.getInitialScaleBounds ( );
-				data.zoom = false;
-				chart.resetZoom ( );
-				chart.update ( );
-				chartZ.update ( );
-			});
+			this.graph.zoom.canvas = document.createElement( "canvas" );
+			this.divZoom.appendChild( this.graph.zoom.canvas );
 
-			this.chartZConf = {
-				type: this.chartConf.type,
-				data: this.chartConf.data,
+			this.graph.zoom.canvas.addEventListener ( "dblclick", resetZoom );
+			this.graph.main.canvas.addEventListener ( "dblclick", resetZoom );
+
+			this.graph.zoom.config = {
+				type: this.graph.main.config.type,
+				data: this.graph.main.config.data,
 				options: {
 					maintainAspectRatio: false,
 					animation: false,
 					scales: {
-						x: {},
+						x: {
+							ticks: this.graph.main.config.options.scales.x.ticks
+						},
 						y: {},
 					},
 					plugins: {
@@ -2040,40 +2040,18 @@ class Els_graph extends Els_Back {
 						}
 					}
 				},
-				plugins: this.chartConf.plugins
+				plugins: []
 			};
 
-			// nanagement of xAxis type if it's not a pure value like date
-			switch ( this.config.xAxisType )
-			{
-				case "date":
-				{
-					this.chartZConf.options.scales.x.ticks = {
-						// For a category axis, the val is the index so the lookup via getLabelForValue is needed
-						callback: function(val, index) {
-							if ( 0 == ( index % 100 ) )
-							{
-								return this.getLabelForValue(val).replace ( "T", " " ).replace ( /\....Z/,"" );
-							}
-							else
-							{
-								return this.getLabelForValue(val).replace ( /.+T/, "" ).replace ( /\....Z/,"" );
-							}
-						}
-					}
-					break;
-				}
-			}
-
-			this.chartZConf.plugins.push ({
+			this.graph.zoom.config.plugins.push ({
 				id: 'quadrants',
 				beforeDraw(chart, args, opt) {
 					const {ctx, scales: {x, y}} = chart;
 
-					let left = x.getPixelForValue(data.x.min);
-					let right = x.getPixelForValue(data.x.max);
-					let bot = y.getPixelForValue(data.y.min);
-					let top = y.getPixelForValue(data.y.max);
+					let left = x.getPixelForValue ( zoomData.x.min );
+					let right = x.getPixelForValue ( zoomData.x.max );
+					let bot = y.getPixelForValue ( zoomData.y.min );
+					let top = y.getPixelForValue ( zoomData.y.max );
 
 					ctx.save();
 					ctx.fillStyle = "rgba(128,128,128,0.2)";
@@ -2082,7 +2060,7 @@ class Els_graph extends Els_Back {
 				}
 			});
 
-			this.chartConf.options.plugins.zoom = {
+			this.graph.main.config.options.plugins.zoom = {
 				pan: {
 					enabled: true,
 					mode: 'xy',
@@ -2104,23 +2082,23 @@ class Els_graph extends Els_Back {
 					},
 					mode: 'xy',
 					onZoom: (c)=>{
-						data.x.min = c.chart.scales.x.start;
-						data.x.max = c.chart.scales.x.end;
-						data.y.min = c.chart.scales.y.start;
-						data.y.max = c.chart.scales.y.end;
+						zoomData.x.min = c.chart.scales.x.min;
+						zoomData.x.max = c.chart.scales.x.max;
+						zoomData.y.min = c.chart.scales.y.min;
+						zoomData.y.max = c.chart.scales.y.max;
 
-						data.zoom = true;
+						zoomData.zoom = true;
 
-						chartZ.update ( );
+						this.graph.zoom.chart.update ( );
 					},
 					onZoomRejected: (c)=>{
-						data.update = true;
+						zoomData.update = true;
 					},
 					onZoomComplete: (c)=>{
-						data.update = true;
+						zoomData.update = true;
 					},
 					onZoomStart: (c)=>{
-						data.update = false;
+						zoomData.update = false;
 					}
 				},
 				limits: {
@@ -2130,12 +2108,7 @@ class Els_graph extends Els_Back {
 				}
 			};
 
-			chartZ = new Chart ( canvasZ.getContext('2d'), this.chartZConf );
-		}
-
-		// capitalize First Letter
-		function cFL(string) {
-			return string.charAt(0).toUpperCase() + string.slice(1);
+			this.graph.zoom.chart = new Chart ( this.graph.zoom.canvas.getContext('2d'), this.graph.zoom.config );
 		}
 
 		// add min / max on graph
@@ -2143,22 +2116,22 @@ class Els_graph extends Els_Back {
 		{
 			if ( undefined == config[ label ] ) continue;
 			
-			this.chartConf.options.scales.y[ "suggested"+cFL( label ) ] = config[ label ];
+			this.graph.main.config.options.scales.y[ "suggested"+cFL( label ) ] = config[ label ];
 
 			if ( true != config.zoom ) continue;
 		
-			this.chartZConf.options.scales.y[ "suggested"+cFL( label ) ] = config[ label ];
+			this.graph.zoom.config.options.scales.y[ "suggested"+cFL( label ) ] = config[ label ];
 		}
 
-		for ( let [i,c] of config.curve.entries() )
+		for ( let [i,c] of config.curve.entries ( ) )
 		{
-			let index = this.chartConf.data.datasets.length;
+			let index = this.graph.main.config.data.datasets.length;
 
-			this.chartConf.data.datasets[index] = {
+			this.graph.main.config.data.datasets[index] = {
 				label:c.name,
 				data:[], // value with coef
 				trueData:[], // value without coef applyed (directly from device)
-				borderColor:c.color,
+				borderColor:c.color||defaultColor[i],
 				tension:c.tension||0.1,
 				showLine:c.showLine || true,
 				pointRadius: c.pointRadius || 0,
@@ -2167,150 +2140,102 @@ class Els_graph extends Els_Back {
 
 			if ( c.fill != undefined )
 			{
-				this.chartConf.data.datasets[index].fill = c.fill - i + "";
-				this.chartConf.data.datasets[index].fillBetweenSet = 0;
+				this.graph.main.config.data.datasets[index].fill = c.fill - i + "";
+				this.graph.main.config.data.datasets[index].fillBetweenSet = 0;
 			}
-
+			
 			this._callArgs.push ({
 				channel: c.channel,
 				periode: c.periode || 0,
-				f: (msg)=>{
+				f: ( msg )=>{
 					switch ( config.subType )
 					{
 						case "signal":
 						{
-							switch ( msg.value?.constructor.name )
+							if ( "Array" !== msg.value?.constructor.name )
 							{
-								case "Array":
-								{
-									let v = msg.value.filter ( a=>a.x!=undefined&&a.y!=undefined );
-									this.chartConf.data.datasets[ index ].trueData = v;
-									this.chartConf.data.datasets[ index ].data = v.map ( p=>{
-										p.y*=c.coef;
-										return p;
-									});
-									break;
-								}
-								default:
-								{
-									console.log ( "graph signal" );
-									console.log ( msg.value );
-									break;
-								}
+								return;
 							}
+
+							let vXY = msg.value.filter ( a=>a.x!=undefined&&a.y!=undefined );
+							let vY = msg.value.filter ( a=>a.x==undefined&&a.y!=undefined );
+							let vN = msg.value.filter ( a=>!isNaN( a ) );
+
+							let v = undefined;
+
+							if ( 0 <= vXY.length )
+							{
+								v = vXY;
+							}
+							else if ( 0 <= vY.length )
+							{
+								v = vY.map ( (v,i)=>{
+									v.x = i; 
+									return v;
+								});
+							}
+							else
+							{
+								v = vN.map ( (v,i)=>{
+									return {x:i, y:v};
+								});
+							}
+
+							this.graph.main.config.data.datasets[ index ].trueData = v;
+							this.graph.main.config.data.datasets[ index ].data = v.map ( p=>{
+								p.y*=c.coef;
+								return p;
+							});
+
 							break;
 						}
 						case "sync":
 						{
-							if ( this.chartConf.data.datasets[ index ].data.length < this.chartConf.data.labels.length  )
+							if ( this.graph.main.config.data.datasets[ index ].data.length < this.graph.main.config.data.labels.length  )
 							{ // add data only if we add a label for this data
 								// add the data to the last label
-								this.chartConf.data.datasets[ index ].data[ this.chartConf.data.labels.length - 1 ] = msg.value * c.coef;
-								this.chartConf.data.datasets[ index ].trueData[ this.chartConf.data.labels.length - 1 ] = msg.value;
+								this.graph.main.config.data.datasets[ index ].data[ this.graph.main.config.data.labels.length - 1 ] = msg.value * c.coef;
+								this.graph.main.config.data.datasets[ index ].trueData[ this.graph.main.config.data.labels.length - 1 ] = msg.value;
 							}
 							break;
 						}
 						case "async":
 						{
+							console.log ( "graph async" );
+							console.log ( msg.value );
+
+							return;
+
 							// TODO test management c.coef
-							this.chartConf.data.datasets[ index ].trueData.push ( JSON.parse ( msg.value ) );
+							this.graph.main.config.data.datasets[ index ].trueData.push ( JSON.parse ( msg.value ) );
 
 							let point = JSON.parse ( msg.value );
 							point.y *= c.coef;
-							this.chartConf.data.datasets[ index ].data.push ( point );
+							this.graph.main.config.data.datasets[ index ].data.push ( point );
 
 							let deep = c.deep || config.deep;
 							if ( ( undefined != deep )
-								&& ( this.chartConf.data.datasets[ index ].data.length > deep ) )
+								&& ( this.graph.main.config.data.datasets[ index ].data.length > deep ) )
 							{
-								this.chartConf.data.datasets[ index ].data.splice( 0, this.chartConf.data.datasets[ index ].data.length - deep )
+								this.graph.main.config.data.datasets[ index ].data.splice( 0, this.graph.main.config.data.datasets[ index ].data.length - deep )
 							}
 
-							let min  = [];
-							let max  = [];
-							for ( let d of this.chartConf.data.datasets )
-							{
-								min.push ( Math.min( ...d.data.map((p)=>{return p.x;}) ) );
-								max.push ( Math.max( ...d.data.map((p)=>{return p.x;}) ) );
-							}
-
-							if ( ( data.zoom == false )
-								&& ( data.update == true ) )
-							{
-								this.chartConf.options.scales.x.min = Math.min ( ...min );
-								this.chartConf.options.scales.x.max = Math.max ( ...max );
-							}
-
-							if ( true == config.zoom )
-							{
-								this.chartZConf.options.scales.x.min = Math.min ( ...min );
-								this.chartZConf.options.scales.x.max = Math.max ( ...max );
-							}
 							break;
 						}
 					}
-	
-					if ( this.config.debounce.active
-						&& ( ( new Date ( ) - this.config.debounce.lastUpdate ) < this.config.debounce.time ) )
-					{ // delay betwen lastUpdate and now is less than debounce time definition
-						return;
-					}
 
-					this.config.debounce.lastUpdate = new Date ( );
-					if ( !chart )
-					{
-						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
-					}
-					else if ( chart.width == 0 )
-					{
-						chart.destroy ( );
-						chart = new Chart ( canvas.getContext('2d'), this.chartConf );
-					}
-					else if ( ( data.zoom == false )
-						&& ( data.update == true ) )
-					{
-						chart.update();
-					}
+					let color = getComputedStyle( this.graph.main.canvas ).getPropertyValue("--main-text");
 
-					if ( ( false == data.zoom )
-						&& ( undefined != chart.scales.x )
-						&& ( undefined != chart.scales.y ) )
-					{
-						data.x.min = chart.scales.x.min;
-						data.x.max = chart.scales.x.max;
-						data.y.min = chart.scales.y.min;
-						data.y.max = chart.scales.y.max;
-					}
+					this.graph.main.config.options.scales.x.ticks.color = color;
+					this.graph.main.config.options.scales.y.ticks.color = color;
 
-					let color = getComputedStyle(chart.canvas).getPropertyValue("--main-text")
+					this._updateGraph ( "main" );
 					
-					this.chartConf.options.scales.x.ticks.color = color;
-					this.chartConf.options.scales.y.ticks.color = color;
+					zoomData.color = color;
 
-					if ( true != config.zoom )
-					{
-						return;
-					}
-
-					if ( !chartZ )
-					{
-						chartZ = new Chart ( canvasZ.getContext('2d'), this.chartZConf );
-					}
-					else if ( chartZ.width == 0 )
-					{
-						chartZ.destroy ( );
-						chartZ = new Chart ( canvasZ.getContext('2d'), this.chartZConf );
-					}
-					else
-					{
-						chartZ.update();
-					}
-
-					this.chartZConf.options.scales.x.ticks.color = color;
-					this.chartZConf.options.scales.y.ticks.color = color;
+					this._updateZoom ( zoomData );
 				}
 			});
-
 
 			c.coef = 1;
 			if ( !this._config.unitCurrent
@@ -2344,7 +2269,7 @@ class Els_graph extends Els_Back {
 								}
 								case "sync":
 								{
-									for ( let d of this.chartConf.data.datasets )
+									for ( let d of this.graph.main.config.data.datasets )
 									{
 										d.data = d.trueData.map( v=>v*c.coef );
 									}
@@ -2366,6 +2291,88 @@ class Els_graph extends Els_Back {
 					break;
 				}
 			}
+		}
+	}
+
+	_updateGraph ( id, force = false )
+	{
+		if ( force
+			&& this.graph[ id ]?.debounce )
+		{ // force update
+			clearTimeout ( this.graph[ id ]?.debounce )
+		}
+		else if ( this.graph[ id ]?.debounce )
+		{
+			return;
+		}
+
+		if ( !this.graph[ id ].chart )
+		{
+			return;
+		}
+		
+		if ( this.graph[ id ].chart.width == 0 )
+		{
+			this.graph[ id ].chart.destroy ( );
+			this.graph[ id ] = new Chart ( this.graph[ id ].canvas.getContext('2d'), conf );
+		}
+		else
+		{
+			this.graph[ id ].chart.update();
+
+			this.graph[ id ].debounce = setTimeout( ()=>{
+				this.graph[ id ].debounce = undefined;
+			}, this.config.debounce.time );
+		}
+	}
+
+	_updateZoom ( params )
+	{
+		if ( true != this.config.zoom )
+		{
+			return;
+		}
+
+		// get min / max to drax grey rectangle of zoom in zoom graph
+		if ( ( false == params.zoom )
+			&& ( undefined != this.graph.main.chart.scales.x )
+			&& ( undefined != this.graph.main.chart.scales.y ) )
+		{
+			params.x.min = this.graph.main.chart.scales.x.min;
+			params.x.max = this.graph.main.chart.scales.x.max;
+			params.y.min = this.graph.main.chart.scales.y.min;
+			params.y.max = this.graph.main.chart.scales.y.max;
+		}
+
+		// update the color of labels
+		this.graph.zoom.config.options.scales.x.ticks.color = params.color;
+		this.graph.zoom.config.options.scales.y.ticks.color = params.color;
+
+		// get the min max value to draw full curve on zoom graph
+		let min  = [];
+		let max  = [];
+		for ( let d of this.graph.main.config.data.datasets )
+		{
+			min.push ( Math.min( ...d.data.map((p)=>{return p.x;}) ) );
+			max.push ( Math.max( ...d.data.map((p)=>{return p.x;}) ) );
+		}
+
+
+		if ( ( params.zoom == false )
+			&& ( params.update == true ) )
+		{
+			this.graph.main.config.options.scales.x.min = Math.min ( ...min );
+			this.graph.main.config.options.scales.x.max = Math.max ( ...max );
+		
+			this._updateGraph ( "main" );
+		}
+
+		if ( true == this.config.zoom )
+		{
+			this.graph.zoom.config.options.scales.x.min = Math.min ( ...min );
+			this.graph.zoom.config.options.scales.x.max = Math.max ( ...max );
+			
+			this._updateGraph ( "zoom" );
 		}
 	}
 }
