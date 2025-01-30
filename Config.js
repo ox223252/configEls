@@ -48,6 +48,27 @@ class Config {
 	/// \return the list of listenned data
 	setIO ( socket )
 	{
+		function emitter ( e, config )
+		{
+			let event = new Event ( "userCmd" );
+
+			for ( let k in config )
+			{
+				if ( ( "obj" == k )
+					|| ( undefined === config[ k ] ) )
+				{
+					continue;
+				}
+				if ( undefined == event.data )
+				{
+					event.data = {};
+				}
+				event.data[ k ] = config[ k ];
+			}
+
+			socket.dispatchEvent ( event );
+		}
+
 		if ( undefined == socket )
 		{
 			return [];
@@ -56,14 +77,23 @@ class Config {
 		let list = {};
 		for ( let c of this._callbacksFunctions )
 		{
-			list[ c.channel ] = c.periode;
-			if ( undefined != socket.on )
-			{ // if we-re using socket.io
-				socket.on ( c.channel, c.f );
+			if ( c.channel )
+			{
+				list[ c.channel ] = c.periode;
+				if ( undefined != socket.on )
+				{ // if we-re using socket.io
+					socket.on ( c.channel, c.f );
+				}
+				else
+				{ // if we're using basics websockets
+					socket.addEventListener ( c.channel, c.f );
+				}
 			}
-			else
-			{ // if we're using basics websockets
-				socket.addEventListener ( c.channel, c.f );
+
+			if ( c.obj )
+			{
+				c.obj.removeEventListener ( "click", emitter );
+				c.obj.addEventListener ( "click", emitter, c );
 			}
 		}
 

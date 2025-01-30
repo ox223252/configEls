@@ -2749,6 +2749,100 @@ class Els_csv extends Els_Back {
 	}
 }
 
+class Els_button extends Els_Back {
+	constructor ( config, id )
+	{
+		super( config, id );
+
+		this._tab = [];
+		this.update ( );
+	}
+
+	update ( config )
+	{
+		if ( config )
+		{
+			this._config = config;;
+		}
+
+		if ( undefined == this._config?.options )
+		{
+			return;
+		}
+
+		while ( this._domEl.childElementCount > this._config?.options?.length )
+		{
+			this._domEl.removeChild ( this._domEl.lastChild );
+		}
+
+		for ( let i = 0; i < this._domEl.childElementCount; i++ )
+		{
+			this._tab[ i ].label.innerText = this._config.options[ i ].label || "";
+			this._tab[ i ].button.innerText = this._config.options[ i ].text || "X";
+		}
+
+		for ( let i = this._domEl.childElementCount; i < this._config?.options?.length; i++ )
+		{
+			let ret = this.#createButton ( this._config.options[ i ], (1==this._config?.options)?"row":"column" );
+
+			let cb = {
+				obj: ret.obj.button,
+				cmd: ret.cmd,
+				arg: ret.arg
+			};
+
+			this._tab[ i ] = ret.obj;
+			this._callArgs.push ( cb );
+
+			this._domEl.appendChild ( ret.obj.div );
+		}
+
+		if ( 1 < this._config?.options.length )
+		{
+			Object.assign ( this._domEl.style, {
+				display: "flex",
+				flexDirection: "row",
+			});
+		}
+	}
+
+	#createButton ( config, direction )
+	{
+		let obj = {
+			div: document.createElement ( "div" ),
+			label: document.createElement ( "span" ),
+			button: document.createElement ( "button" ),
+		}
+
+		obj.div.appendChild ( obj.label );
+		obj.div.appendChild ( obj.button );
+
+		obj.label.innerText = config.label || "";
+		obj.button.innerText = config.text || "X";
+
+		Object.assign ( obj.div.style, {
+			display: "flex",
+			flexDirection: (direction == "column")?"column":"row",
+			alignItems: "strech",
+			textAlign: "center",
+			flexGrow: "1",
+			padding: "10px",
+		});
+
+		return {obj, cmd:config.cmd, arg:config.arg};
+	}
+
+	static canCreateNew ( )
+	{
+		return false;
+	}
+
+	static new ( params = {}, config = undefined )
+	{
+
+	}
+}
+
 const Els = {
 	title: Els_title,
 	text: Els_text,
@@ -2767,6 +2861,7 @@ const Els = {
 	svg: Els_svg,
 	graph: Els_graph,
 	csv: Els_csv,
+	button: Els_button,
 };
 
 /// \brief Create select entry
