@@ -2834,12 +2834,135 @@ class Els_button extends Els_Back {
 
 	static canCreateNew ( )
 	{
-		return false;
+		return true;
 	}
 
 	static new ( params = {}, config = undefined )
 	{
+		function drawTable ( table, json, jsonDiv, outDiv )
+		{
+			while ( table.childElementCount >= json.options.length )
+			{
+				table.removeChild ( table.lastChild );
+			}
 
+			for ( let i = table.childElementCount; i < json.options.length; i++ )
+			{
+				let line = document.createElement ( "tr" );
+				table.appendChild ( line );
+
+				for ( let item of ["label","text","cmd","arg"] )
+				{
+					let cell = document.createElement ( "td" );
+					line.appendChild ( cell );
+					// cell.style.width = "24%";
+
+					if ( !json.options[ i ] )
+					{
+						json.options[ i ] = {};
+					}
+
+					let iVal = document.createElement ( "input" );
+					cell.appendChild ( iVal );
+					iVal.value = json.options[ i ][ item ] || "";
+					iVal.onchange = (ev)=>{
+						json.options[ i ][ item ] = ev.target.value.trim ( );
+						Els_Back.newJson ( json, jsonDiv, outDiv );
+					}
+				}
+			}
+		}
+
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
+
+		let json = {
+			type: "button",
+			options:[
+				{
+					label: "X",
+					text: "Y",
+					cmd: "visuEcho"
+				}
+			]
+		};
+
+		if ( undefined != config )
+		{
+			Object.assign ( json, config );
+		}
+
+		try
+		{
+			let configDiv = document.createElement ( "div" );
+			
+			let [divNbB,iNbB] = _createInput ( "Nb of Buttons" );
+			configDiv.appendChild ( divNbB );
+			iNbB.value = json.options.length;
+			iNbB.type = "number";
+			iNbB.min = "0";
+			iNbB.style.width = "5em";
+			iNbB.onchange = (ev)=>{
+				if ( ev.target.value < 0 )
+				{
+					ev.target.value = 0;
+				}
+
+				if ( ev.target.value < json.options.length )
+				{
+					json.options = json.options.slice ( 0, ev.target.value );
+				}
+				else if ( ev.target.value > json.options.length )
+				{
+					for ( let i = json.options.length; i < ev.target.value; i++ )
+					{
+						json.options[ i ] = {};
+					}
+				}
+				drawTable ( tbody, json, jsonDiv, outDiv )
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			iNbB.onkeyup = iNbB.onchange;
+
+			let tab = document.createElement ( "table" );
+			configDiv.appendChild ( tab );
+			tab.style.width = "100%";
+			tab.style.tableLayout = "fixed";
+
+			let thead = document.createElement ( "thead" );
+			tab.appendChild ( thead )
+			let tr = document.createElement ( "tr" );
+			thead.appendChild ( tr )
+			for ( let item of ["label","button","cmd","arg"] )
+			{
+				let cell = document.createElement ( "td" );
+				tr.appendChild ( cell );
+
+				cell.innerText = item;
+			}
+			let tbody = document.createElement ( "tbody" );
+			tab.appendChild ( tbody )
+
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( json, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				drawTable ( tbody, json, jsonDiv, outDiv );
+				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
+			}
+			jsonDiv.onkeyup = jsonDiv.onchange;
+
+			let outDiv = Els_Back._newOut ( params.id, json );
+
+			drawTable ( tbody, json, jsonDiv, outDiv );
+
+			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		}
+		catch ( e )
+		{
+			return e;
+		}
 	}
 }
 
