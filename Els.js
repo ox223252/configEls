@@ -2773,6 +2773,7 @@ class Els_button extends Els_Back {
 		while ( this._domEl.childElementCount > this._config?.options?.length )
 		{
 			this._domEl.removeChild ( this._domEl.lastChild );
+			this._tab.pop ( );
 		}
 
 		for ( let i = 0; i < this._domEl.childElementCount; i++ )
@@ -2783,7 +2784,7 @@ class Els_button extends Els_Back {
 
 		for ( let i = this._domEl.childElementCount; i < this._config?.options?.length; i++ )
 		{
-			let ret = this.#createButton ( this._config.options[ i ], (1==this._config?.options)?"row":"column" );
+			let ret = this.#createButton ( this._config.options[ i ] );
 
 			let cb = {
 				obj: ret.obj.button,
@@ -2797,7 +2798,16 @@ class Els_button extends Els_Back {
 			this._domEl.appendChild ( ret.obj.div );
 		}
 
-		if ( 1 < this._config?.options.length )
+		this.#updateCSSFlex ( );
+
+		if ( 1 >= this._config?.options.length )
+		{
+			Object.assign ( this._domEl.style, {
+				display: "flex",
+				flexDirection: "column",
+			});
+		}
+		else
 		{
 			Object.assign ( this._domEl.style, {
 				display: "flex",
@@ -2806,7 +2816,15 @@ class Els_button extends Els_Back {
 		}
 	}
 
-	#createButton ( config, direction )
+	#updateCSSFlex ( )
+	{
+		for ( let t of this._tab )
+		{
+			t.div.style.flexDirection = (1 >= this._tab.length)?"row":"column";
+		}
+	}
+
+	#createButton ( config )
 	{
 		let obj = {
 			div: document.createElement ( "div" ),
@@ -2817,12 +2835,14 @@ class Els_button extends Els_Back {
 		obj.div.appendChild ( obj.label );
 		obj.div.appendChild ( obj.button );
 
+		obj.label.style.flexGrow = 1;
+		obj.button.style.flexGrow = 1;
+
 		obj.label.innerText = config.label || "";
 		obj.button.innerText = config.text || "X";
 
 		Object.assign ( obj.div.style, {
 			display: "flex",
-			flexDirection: (direction == "column")?"column":"row",
 			alignItems: "strech",
 			textAlign: "center",
 			flexGrow: "1",
