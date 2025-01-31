@@ -2349,28 +2349,40 @@ class Els_graph extends Els_Back {
 		this.graph.zoom.config.options.scales.y.ticks.color = params.color;
 
 		// get the min max value to draw full curve on zoom graph
-		let min  = [];
-		let max  = [];
+		let x = {
+			min: [],
+			max: [],
+		};
+		let y = {
+			min: [],
+			max: [],
+		};
+
 		for ( let d of this.graph.main.config.data.datasets )
 		{
-			min.push ( Math.min( ...d.data.map((p)=>{return p.x;}) ) );
-			max.push ( Math.max( ...d.data.map((p)=>{return p.x;}) ) );
-		}
+			x.min.push ( Math.min( ...d.data.map((p)=>{return p.x;}) ) );
+			x.max.push ( Math.max( ...d.data.map((p)=>{return p.x;}) ) );
 
+			y.min.push ( Math.min( ...d.data.map((p)=>{return p.y;}) ) );
+			y.max.push ( Math.max( ...d.data.map((p)=>{return p.y;}) ) );
+		}
 
 		if ( ( params.zoom == false )
 			&& ( params.update == true ) )
 		{
-			this.graph.main.config.options.scales.x.min = Math.min ( ...min );
-			this.graph.main.config.options.scales.x.max = Math.max ( ...max );
+			this.graph.main.config.options.scales.x.min = Math.min ( ...x.min );
+			this.graph.main.config.options.scales.x.max = Math.max ( ...x.max );
 		
 			this._updateGraph ( "main" );
 		}
 
 		if ( true == this.config.zoom )
 		{
-			this.graph.zoom.config.options.scales.x.min = Math.min ( ...min );
-			this.graph.zoom.config.options.scales.x.max = Math.max ( ...max );
+			this.graph.zoom.config.options.scales.x.min = Math.min ( ...x.min );
+			this.graph.zoom.config.options.scales.x.max = Math.max ( ...x.max );
+
+			this.graph.zoom.config.options.scales.y.min = Math.min ( ...y.min );
+			this.graph.zoom.config.options.scales.y.max = Math.max ( ...y.max );
 			
 			this._updateGraph ( "zoom" );
 		}
