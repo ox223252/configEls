@@ -2163,11 +2163,11 @@ class Els_graph extends Els_Back {
 
 							let v = undefined;
 
-							if ( 0 <= vXY.length )
+							if ( 0 < vXY.length )
 							{
 								v = vXY;
 							}
-							else if ( 0 <= vY.length )
+							else if ( 0 < vY.length )
 							{
 								v = vY.map ( (v,i)=>{
 									v.x = i; 
