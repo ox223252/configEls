@@ -2314,7 +2314,7 @@ class Els_graph extends Els_Back {
 		if ( this.graph[ id ].chart.width == 0 )
 		{
 			this.graph[ id ].chart.destroy ( );
-			this.graph[ id ] = new Chart ( this.graph[ id ].canvas.getContext('2d'), conf );
+			this.graph[ id ] = new Chart ( this.graph[ id ].canvas.getContext('2d'), this.graph[ id ].config );
 		}
 		else
 		{
