@@ -1,5 +1,7 @@
+import Els from "./Els.js"
+
 /// \brief read JSON config and create elements from it
-class Config {
+export default class Config {
 	/// \param | in ] config : JSoN object who represent HMI (see README for full details)
 	/// \param | in ] id : base ID of every element created
 	/// \param [ in ] params : config parameters

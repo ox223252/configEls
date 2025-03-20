@@ -2998,7 +2998,7 @@ class Els_button extends Els_Back {
 	}
 }
 
-const Els = {
+export default {
 	title: Els_title,
 	text: Els_text,
 	img: Els_img,
