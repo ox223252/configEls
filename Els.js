@@ -12,7 +12,7 @@ class Els_Back {
 		this._domEl = document.createElement ( "div" );
 		this._domEl.className = config.type;
 		this._domEl.id = config.id || id;
-		this._domEl.style = config.style;
+		this._update ( config );
 	}
 
 	/// \brief need to be surcharged
@@ -30,17 +30,17 @@ class Els_Back {
 			return;
 		}
 
-		for ( let k of Object.keys ( config ) )
-		{
-			switch ( k )
-			{
-				case "style":
+		Object.keys ( config )
+			.map ( key=>{
+				if ( "style" == key ) try
 				{
-					this._domEl.style = config.style;
-					break;
+					Object.assign ( this._domEl.style, config.style );
 				}
-			}
-		}
+				catch ( e )
+				{
+					console.log ( e )
+				}
+			});
 	}
 
 	/// \brief return callbacks
