@@ -618,6 +618,12 @@ class Els_io extends Els_Back {
 				case "volume":
 				{
 					return (msg)=>{
+						if ( isNaN ( msg.value ) )
+						{
+							this.divData.innerHTML = msg.value;
+							return;
+						}
+
 						let value = msg.value * ( c.coef || 1 );
 
 						let {coef,print} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
@@ -630,6 +636,12 @@ class Els_io extends Els_Back {
 				case "flow":
 				{
 					return (msg)=>{
+						if ( isNaN ( msg.value ) )
+						{
+							this.divData.innerHTML = msg.value;
+							return;
+						}
+
 						let value = msg.value * ( c.coef || 1 );
 						
 						let {coef,print} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
@@ -642,6 +654,12 @@ class Els_io extends Els_Back {
 				case "temp":
 				{
 					return (msg)=>{
+						if ( isNaN ( msg.value ) )
+						{
+							this.divData.innerHTML = msg.value;
+							return;
+						}
+
 						let value = msg.value * ( c.coef || 1 );
 
 						if ( this._config.unitCurrent
@@ -661,6 +679,12 @@ class Els_io extends Els_Back {
 				case "date":
 				{
 					return (msg)=>{
+						if ( isNaN ( msg.value ) )
+						{
+							this.divData.innerHTML = msg.value;
+							return;
+						}
+
 						let value = msg.value * ( c.coef || 1 );
 
 						this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( /\.\d\d\dZ/, "" );
@@ -670,6 +694,12 @@ class Els_io extends Els_Back {
 				case "dateMs":
 				{
 					return (msg)=>{
+						if ( isNaN ( msg.value ) )
+						{
+							this.divData.innerHTML = msg.value;
+							return;
+						}
+
 						let value = msg.value * ( c.coef || 1 );
 
 						this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
@@ -679,7 +709,14 @@ class Els_io extends Els_Back {
 				default:
 				{
 					return (msg)=>{
+						if ( isNaN ( msg.value ) )
+						{
+							this.divData.innerHTML = msg.value;
+							return;
+						}
+						
 						let value = msg.value * ( c.coef || 1 );
+
 						if ( undefined != refactor )
 						{
 							let a = c.valueType;
