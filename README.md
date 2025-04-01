@@ -448,6 +448,37 @@ Affiche un svg, et permet la colorisation d'items en fonction d'une donnée
 </svg>
 ```
 
+#### options:
+
+```javascript
+{
+	type:"svg",
+	/* ... */
+	data:[
+		{
+			onclik:
+			{ // send over socket 'userCmd'
+				cmd:"********", // cmd param
+				toogle: false, // for bin only onclick toogle value of input and esend it 
+				arg:{ // reserved
+					value:undefined
+				}
+			},
+			/* ... */
+			colors:
+			{
+				undeifned: "grey", // si la valeur n'est pas un nombre ou pas definie
+				false: "red", // si la valeur masqué est 0
+				true: "green" // si la valeur masqué est deferente de 0
+			},
+		},
+		{/*...*/}
+	]
+}
+````
+
+permet l'utilisation du SVG comme zone de click et de definir les valeurs de couleurs pour l'etat bin ( undefined / flase / true )
+
 ### graph:
 Il existe trois types de graphs, signal, sync, async, le signal sert à afficher une courbe complète à chaque donnée. Le signal sync, sert a afficher différentes données avec un même abscisse. Le graph async sert à afficher plusieurs données qui n'ont pas forcement le même abcisse.
 

@@ -1763,23 +1763,54 @@ class Els_svg extends Els_Back {
 	{
 		super( config, id );
 
-
 		let img = document.createElement("img");
+		const baseColors = {
+			undefined: "grey",
+			false: "red",
+			true: "green"
+		};
 
 		this._domEl.appendChild ( img );
+		this.cbEvents = [];
 
 		fetch ( config.src )
-			.then(r=>r.text())
+			.then(r=>{
+				if ( r.ok )
+				{
+					return r.text ( );
+				}
+				else
+				{
+					throw "status: "+r.status
+				}
+			})
 			.then(t=>{
 				this.svg = new DOMParser().parseFromString(t, 'text/html').querySelector('svg');
 				img.replaceWith(this.svg);
 
-				if ( undefined != config.backImg )
+				if ( !this.svg )
+				{
+					throw "SVG not found";
+				}
+				else if ( undefined != config.backImg )
 				{
 					let backImg = '<image href="'+config.backImg+'" '
 					backImg += 'width="'+this.svg.viewBox.baseVal.width+'" '
 					backImg += 'height="'+this.svg.viewBox.baseVal.height+'" />';
 					this.svg.innerHTML = backImg + this.svg.innerHTML;
+				}
+
+				this.svg.style.maxWidth = "100%";
+
+				let h = ( this.svg.clientWidth * this.svg.viewBox.baseVal.height / this.svg.viewBox.baseVal.width )
+				this.svg.style.maxHeight = h + "px";
+			})
+			.then( ()=>{
+				for ( let id in this.cbEvents )
+				{
+					this.svg.querySelector ( "#"+id ).addEventListener ( "click", (ev)=>{
+						this.cbEvents[ id ].dispatchEvent ( new Event ( "click" ) );
+					});
 				}
 			})
 			.catch(console.log)
@@ -1807,10 +1838,26 @@ class Els_svg extends Els_Back {
 				case "bin":
 				{
 					cb.f = (msg)=>{
-						let v = ( d.revert )? ~msg.value: msg.value;
-						v &= d.mask;
+						let v = undefined;
+						
+						if ( ( msg.value || msg )
+							&& !isNaN ( msg.value || msg ) )
+						{
+							v = Number ( msg.value || msg );
+							v = ( d.revert )? ~v: v;
+							v &= d.mask;
+							v = v != 0
+						}
 
-						style.innerHTML="#"+d.id+"{fill:"+((v)?"green":"red");
+						let color = d?.colors?.[ v ] || baseColors[ v ];
+
+						style.innerHTML="#"+d.id+"{fill:"+color+"}";
+
+						if ( d.arg )
+						{
+							// onclick arg
+							d.arg.value = (d?.onclick?.toogle)? !v : v;
+						}
 					}
 					break;
 				}
@@ -1830,6 +1877,29 @@ class Els_svg extends Els_Back {
 					break;
 				}
 			}
+
+			// input callback
+			this._callArgs.push ( cb );
+
+			if ( !d.onclick )
+			{
+				continue;
+			}
+
+			if ( !d.arg )
+			{
+				d.arg = {};
+			}
+
+			d.arg.value = undefined;
+
+			this.cbEvents[ d.id ] = new EventTarget ( );
+
+			cb = {
+				obj: this.cbEvents[ d.id ],
+				cmd: d.onclick.cmd,
+				arg: d.arg,
+			};
 
 			this._callArgs.push ( cb );
 		}
@@ -2998,7 +3068,7 @@ class Els_button extends Els_Back {
 	}
 }
 
-const Els = {
+export default {
 	title: Els_title,
 	text: Els_text,
 	img: Els_img,

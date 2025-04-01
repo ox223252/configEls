@@ -1,5 +1,7 @@
+import Els from "./Els.js"
+
 /// \brief read JSON config and create elements from it
-class Config {
+export default class Config {
 	/// \param | in ] config : JSoN object who represent HMI (see README for full details)
 	/// \param | in ] id : base ID of every element created
 	/// \param [ in ] params : config parameters
@@ -48,25 +50,38 @@ class Config {
 	/// \return the list of listenned data
 	setIO ( socket )
 	{
-		function emitter ( e, config )
+		function emitter ( config )
 		{
-			let event = new Event ( "userCmd" );
-
-			for ( let k in config )
-			{
-				if ( ( "obj" == k )
-					|| ( undefined === config[ k ] ) )
-				{
-					continue;
-				}
-				if ( undefined == event.data )
-				{
-					event.data = {};
-				}
-				event.data[ k ] = config[ k ];
+			if ( undefined != socket.on )
+			{ // if we-re using socket.io
+				let c = Object.keys ( config || {} )
+					.filter ( k=>k!="obj" )
+					.reduce ( (a,k)=>{
+						a[ k ] = config[ k ];
+						return a;
+					}, {});
+				socket.emit ( "userCmd", c );
 			}
+			else
+			{ // if we're using basics websockets
+				let event = new Event ( "userCmd" );
 
-			socket.dispatchEvent ( event );
+				for ( let k in config )
+				{
+					if ( ( "obj" == k )
+						|| ( undefined === config[ k ] ) )
+					{
+						continue;
+					}
+					if ( undefined == event.data )
+					{
+						event.data = {};
+					}
+					event.data[ k ] = config[ k ];
+				}
+
+				socket.dispatchEvent ( event );
+			}
 		}
 
 		if ( undefined == socket )
@@ -92,8 +107,10 @@ class Config {
 
 			if ( c.obj )
 			{
-				c.obj.removeEventListener ( "click", emitter );
-				c.obj.addEventListener ( "click", emitter, c );
+				c.obj.removeEventListener ( "click", c.obj.fnOnClick );
+				c.obj.addEventListener ( "click", c.obj.fnOnClick = ()=>{
+					emitter ( c );
+				});
 			}
 		}
 
