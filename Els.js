@@ -34,7 +34,26 @@ class Els_Back {
 			.map ( key=>{
 				if ( "style" == key ) try
 				{
-					Object.assign ( this._domEl.style, config.style );
+					switch (config.style.constructor.name)
+					{
+						case 'Object':
+						{
+							Object.assign ( this._domEl.style, config.style );
+							break;
+						}
+						case 'String':
+						{
+							this._domEl.style.cssText = config.style;
+							break;
+						}
+						default:
+						{
+							console.error ( 'Unknown style object prototype' );
+							console.log ( config.style );
+							console.log ( config.style.constructor.name );
+							break;
+						}
+					}
 				}
 				catch ( e )
 				{
