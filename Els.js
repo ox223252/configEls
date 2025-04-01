@@ -3087,7 +3087,7 @@ class Els_button extends Els_Back {
 	}
 }
 
-export default {
+const Els = {
 	title: Els_title,
 	text: Els_text,
 	img: Els_img,
@@ -3107,6 +3107,8 @@ export default {
 	csv: Els_csv,
 	button: Els_button,
 };
+
+export default Els;
 
 /// \brief Create select entry
 /// \param [ in ] array : array of String what represent the option list
@@ -3323,7 +3325,7 @@ function _createIconButton ( inLabel, iconName )
 	label.innerHTML = inLabel+" : ";
 	label.style.flexGrow = 1;
 
-	button = document.createElement("button");
+	let button = document.createElement ( "button" );
 	div.appendChild ( button );
 	button.classList.add ( "fa" );
 	button.classList.add ( "fa-"+iconName );
