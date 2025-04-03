@@ -1857,9 +1857,13 @@ class Els_svg extends Els_Back {
 				}
 
 				this.svg.style.maxWidth = "100%";
+				this.svg.style.maxHeight = "100%";
 
-				let h = ( this.svg.clientWidth * this.svg.viewBox.baseVal.height / this.svg.viewBox.baseVal.width )
-				this.svg.style.maxHeight = h + "px";
+				if ( !this._domEl?.style?.height )
+				{
+					let h = ( this.svg.clientWidth * this.svg.viewBox.baseVal.height / this.svg.viewBox.baseVal.width )
+					this._domEl.style.maxHeight = h + "px";
+				}
 			})
 			.then( ()=>{
 				for ( let id in this.cbEvents )
