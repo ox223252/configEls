@@ -138,7 +138,7 @@ export default class Config {
 			ds.el = document.createElement ( "div" );
 			ds.el.className = ds.class;
 			ds.el.style = ds.style;
-			ds.el.title = ds.name;
+			ds.el.title = ds.name || "";
 			
 			if ( !ds.data )
 			{ // not data available 
