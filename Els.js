@@ -2438,17 +2438,28 @@ class Els_graph extends Els_Back {
 
 		if ( !this.graph[ id ].chart )
 		{
+			this.graph[ id ].chart = new Chart ( this.graph[ id ].canvas.getContext('2d'), this.graph[ id ].config );
+			this.height = undefined;
 			return;
 		}
 		
 		if ( this.graph[ id ].chart.width == 0 )
 		{
 			this.graph[ id ].chart.destroy ( );
-			this.graph[ id ] = new Chart ( this.graph[ id ].canvas.getContext('2d'), this.graph[ id ].config );
 		}
 		else
 		{
 			this.graph[ id ].chart.update();
+
+			if ( !this.height )
+			{
+				this.height = this.graph.main.chart.canvas.attributes.height.value;
+			}
+			else if ( this.height != this.graph.main.chart.canvas.attributes.height.value )
+			{
+				this.graph[ id ].chart.destroy ( );
+				this.graph[ id ].chart = undefined;
+			}
 
 			this.graph[ id ].debounce = setTimeout( ()=>{
 				this.graph[ id ].debounce = undefined;
