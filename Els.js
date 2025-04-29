@@ -11,6 +11,7 @@ class Els_Back {
 
 		this._domEl = document.createElement ( "div" );
 		this._domEl.className = config.type;
+		this._domEl.style.flexGrow = 1;
 		this._domEl.id = config.id || id;
 		this._update ( config );
 	}
