@@ -666,13 +666,13 @@ class Els_io extends Els_Back {
 						if ( this._config.unitCurrent
 							&& this._config.unit )
 						{
-							coef = temperatureConvert ( 1, unit.temperature, "C" );
+							value = temperatureConvert ( value, this._config.unitCurrent.temperature, this._config.unit );
 						}
-						this.divData.innerHTML = refactor ( value * coef, "T_"+unit.temperature );
+						this.divData.innerText = refactor ( value, "T_"+this._config.unitCurrent.temperature );
 
 						if ( this._config.unit )
 						{
-							this.divUnit.innerHTML = "°" + this._config.unitCurrent;
+							this.divUnit.innerHTML = "°" + this._config.unitCurrent.temperature;
 						}
 					}
 					break;
