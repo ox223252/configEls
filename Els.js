@@ -179,7 +179,7 @@ class Els_title extends Els_Back {
 
 		this._elList = document.createElement ( "h3" );
 		this._domEl.appendChild ( this._elList );
-		this._elList.innerHTML = config.text;
+		this._elList.innerHTML = config.text || "";
 	}
 
 	update ( config )
@@ -261,7 +261,7 @@ class Els_text extends Els_Back {
 
 		this._elList = document.createElement ( "p" );
 		this._domEl.appendChild ( this._elList );
-		this._elList.innerHTML = config.text;
+		this._elList.innerHTML = config.text || "";
 	}
 
 	update ( config )
@@ -422,7 +422,7 @@ class Els_title_id extends Els_title {
 	constructor ( config, id )
 	{
 		super( config, id );
-		this._els.innerHTML = createEls ( config.text_id, config.prefix );
+		_createTranslateItem ( this._els, config );
 	}
 }
 
@@ -430,7 +430,7 @@ class Els_text_id extends Els_text {
 	constructor ( config, id )
 	{
 		super( config, id );
-		this._els.innerHTML = createEls ( config.text_id, config.prefix );
+		_createTranslateItem ( this._els, config );
 	}
 }
 
@@ -591,7 +591,7 @@ class Els_io extends Els_Back {
 		}
 		if ( config.labelId )
 		{
-			this.divLabel.innerHTML = ccreateEls ( config.labelId, config.prefix );
+			_createTranslateItem ( this.divLabel, config );
 		}
 
 		// data
@@ -3162,6 +3162,19 @@ const Els = {
 };
 
 export default Els;
+
+function _createTranslateItem ( out, config )
+{
+	let json = {
+		textId: config?.text_id,
+		prefix: config?.prefix
+	};
+
+	let span = document.createElement ( "span" )
+	span.classList.add ( "translate" );
+	span.dataset.translate = JSON.stringify ( json );
+	out.appendChild ( span )
+}
 
 /// \brief Create select entry
 /// \param [ in ] array : array of String what represent the option list

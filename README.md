@@ -92,7 +92,7 @@ Créait une image qui sera automatiquement chargé, avec la source passé en par
 ### title_id:
 ```javascript
 {
-	type:"titile_id",
+	type:"title_id",
 	text_id:"id du titre",
 	prefix:"prefix"
 }
