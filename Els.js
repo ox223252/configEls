@@ -668,7 +668,7 @@ class Els_io extends Els_Back {
 						{
 							value = temperatureConvert ( value, this._config.unitCurrent.temperature, this._config.unit );
 						}
-						this.divData.innerText = refactor ( value, "T_"+this._config.unitCurrent.temperature );
+						this.divData.innerText = refactor ( value, this._config.unitCurrent.temperature );
 
 						if ( this._config.unit )
 						{
