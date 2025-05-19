@@ -2059,7 +2059,13 @@ class Els_graph extends Els_Back {
 								} 
 							}
 						},
-						plugins:{}
+						plugins:{
+							legend: {
+								labels: {
+									color: undefined,
+								}
+							}
+						}
 					},
 					plugins:[]
 				}
@@ -2268,7 +2274,6 @@ class Els_graph extends Els_Back {
 				label:c.name,
 				data:[], // value with coef
 				trueData:[], // value without coef applyed (directly from device)
-				borderColor:c.color||defaultColor[i],
 				tension:c.tension||0.1,
 				showLine:c.showLine || true,
 				pointRadius: c.pointRadius || 0,
@@ -2361,15 +2366,7 @@ class Els_graph extends Els_Back {
 						}
 					}
 
-					let color = getComputedStyle( this.graph.main.canvas ).getPropertyValue("--main-text");
-
-					this.graph.main.config.options.scales.x.ticks.color = color;
-					this.graph.main.config.options.scales.y.ticks.color = color;
-
 					this._updateGraph ( "main" );
-					
-					zoomData.color = color;
-
 					this._updateZoom ( zoomData );
 				}
 			});
@@ -2429,6 +2426,8 @@ class Els_graph extends Els_Back {
 				}
 			}
 		}
+
+		this.update ( );
 	}
 
 	_updateGraph ( id, force = false )
@@ -2442,8 +2441,12 @@ class Els_graph extends Els_Back {
 		{
 			return;
 		}
+		else if ( !this.graph?.[ id ]?.canvas )
+		{
+			return;
+		}
 
-		if ( !this.graph[ id ].chart )
+		if ( !this.graph?.[ id ]?.chart )
 		{
 			this.graph[ id ].chart = new Chart ( this.graph[ id ].canvas.getContext('2d'), this.graph[ id ].config );
 			this.height = undefined;
@@ -2453,6 +2456,7 @@ class Els_graph extends Els_Back {
 		if ( this.graph[ id ].chart.width == 0 )
 		{
 			this.graph[ id ].chart.destroy ( );
+			this.graph[ id ].chart = undefined;
 		}
 		else
 		{
@@ -2533,6 +2537,40 @@ class Els_graph extends Els_Back {
 			this.graph.zoom.config.options.scales.y.max = Math.max ( ...y.max );
 			
 			this._updateGraph ( "zoom" );
+		}
+	}
+
+	update ( )
+	{
+		this.graph.main.config.data.datasets.map ( (d,i)=>{
+			let color = this.config.curve[ i ].color;
+
+			if ( 0 == color.indexOf ( "--" ) )
+			{
+				color = getComputedStyle( document.body ).getPropertyValue( color );
+			}
+
+			d.borderColor = color;
+		});
+
+		{ // labels colors
+			let color = this.config.textColor;
+			if ( 0 == color?.indexOf ( "--" ) )
+			{
+				color = getComputedStyle( document.body ).getPropertyValue( color );
+			}
+
+			this.graph.main.config.options.scales.x.ticks.color = color;
+			this.graph.main.config.options.scales.y.ticks.color = color;
+
+			this.graph.main.config.options.plugins.legend.labels.color = color;
+			
+			this._updateZoom ( { color: color } );
+		}
+
+		for ( let item in this.graph )
+		{
+			this._updateGraph ( item, true );
 		}
 	}
 }
