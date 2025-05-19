@@ -1326,12 +1326,24 @@ class Els_gauge extends Els_Back {
 		{
 			case "temp":
 			case "volume":
+			{
+				this.config.unitCurrent.event.addEventListener ( this._config.valueType, (event)=>{
+					let {offset,coef} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
+					this.gauge.coef = coef;
+					this.gauge.offset = offset;
+				});
+
+				let {offset,coef} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
+				this.gauge.coef = coef;
+				this.gauge.offset = offset;
+				break;
+			}
 			case "flow":
 			{
 				for ( let u in this._config.unit )
 				{
 					this.config.unitCurrent.event.addEventListener ( u, (event)=>{
-						let {coef} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
+						let {coef} = _calcCoef ( this._config.valueType, this._config.unit[ u ], this._config.unitCurrent );
 						this.gauge.coef = coef;
 					});
 
@@ -3475,6 +3487,9 @@ function _calcCoef ( type, baseUnit, currentUnit )
 {
 	let coef = 1;
 	let print = "";
+	let offset = 0;
+
+
 
 	switch ( type )
 	{
@@ -3483,7 +3498,9 @@ function _calcCoef ( type, baseUnit, currentUnit )
 			if ( currentUnit
 				&& baseUnit )
 			{
-				coef = volumeConvert ( 1, currentUnit.volume, baseUnit.volume )
+				coef = volumeConvert ( 1,
+					currentUnit.volume || currentUnit,
+					baseUnit.volume || baseUnit )
 			}
 			break;
 		}
@@ -3507,10 +3524,17 @@ function _calcCoef ( type, baseUnit, currentUnit )
 		}
 		case "temp":
 		{
+			offset = temperatureConvert ( 0,
+				currentUnit.temperature || currentUnit,
+				baseUnit.temperature || baseUnit );
+
 			if ( currentUnit
 				&& baseUnit )
 			{
-				coef = temperatureConvert ( 1, currentUnit.temperature, baseUnit.temperature );
+				coef = temperatureConvert ( 1,
+					currentUnit.temperature || currentUnit,
+					baseUnit.temperature || baseUnit )
+					- offset;
 			}
 
 			if ( baseUnit )
@@ -3520,7 +3544,7 @@ function _calcCoef ( type, baseUnit, currentUnit )
 			break;
 		}
 	}
-	return {coef,print}
+	return {coef,print,offset}
 }
 
 /// \brief Create a debounce methode to avoid multiples events
