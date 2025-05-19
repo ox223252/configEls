@@ -205,7 +205,7 @@ dans le cas ou l'on souhaite afficher la valeur la plus petite / grande ou moyen
 Créait un texte qui sera colorisé en rouge / vert selon la donnée sur le channel, 0 : rouge, 1 : vert
 
 #### Note :
-Attention, le texte n'est pas directement colorisé en rouge ou vert, c'est une variable qui est mise à jour. Il faut donc affecté cette variable au texte ou à un autre élément.
+Attention, le texte n'est pas directement colorisé en rouge ou vert, c'est une variable qui est mise à jour. Il faut donc affecter cette variable au texte ou à un autre élément.
 
 ```
 --status-color
@@ -540,6 +540,7 @@ les  options sont les même pour tous les graphs :
 	type:"graph",
 	subType:"sync", // sync/signam/async
 	channel:"WEBSOCKET CHANNEL X",
+	textColor:"black", // color of graph's text (cf Colors section)
 	coef: 1, // coeficient multiplicateur pour la donnée en X
 	xAxisType: "date", // type de donnée sur l'axe X (unituquement date number pour le moment)
 	periode:0,
@@ -603,12 +604,14 @@ L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les do
 }
 ````
 
-## valueType and unit:
+## Shared configs:
 ```javascript
 {
 	...,
 	valueType: <Data>,
-	unit: <Data>
+	unit: <Data>,
+	color: <Data>,
+	textColor: <Data>
 }
 ````
 
@@ -672,3 +675,12 @@ value type permet de déterminer comment doit être interpréter la donnée et p
 
 ### Validité:
 tous les objets n'ont pas accès à tous les types de valeurs.
+
+### Colors:
+Colors values can be `red / blue / gren...`, `rgb`, `rgba`, `#fff` or CSS var like `--color-1`, if the color is defined for the body element like :
+
+```CSS
+:root {
+	--color-1: rgb( 128, 128, 128 );
+}
+```
