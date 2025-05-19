@@ -1358,12 +1358,6 @@ class Els_gauge extends Els_Back {
 			periode: config.periode || 0,
 			channel: config.channel,
 			f: (msg)=>{
-				if ( textColor != getComputedStyle(document.body).getPropertyValue('--main-text') )
-				{
-					textColor = getComputedStyle(document.body).getPropertyValue('--main-text');
-					this.gauge.textColor = textColor;
-				}
-
 				this.gauge.value = msg.value;
 			}
 		};
