@@ -17,6 +17,7 @@ export default class Config {
 		this._config = config;
 		this._id = id;
 		this._params = params;
+		this._entries = [];
 
 		this.update ( );
 	}
@@ -145,6 +146,8 @@ export default class Config {
 				continue;
 			}
 
+			let entries = [];
+
 			for ( let [j,da] of ds.data.entries() )
 			{
 				if ( !Els[ da.type ] )
@@ -168,7 +171,10 @@ export default class Config {
 				ds.el.appendChild ( entry.dom );
 
 				this._callbacksFunctions.push ( ...entry.callbacks );
+				entries.push ( entry );
 			}
+			
+			this._entries.push ( entries );
 		}
 	}
 }
