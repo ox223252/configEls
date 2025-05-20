@@ -971,8 +971,30 @@ class Els_bin extends Els_Back {
 			f: (msg)=>{
 				let v = ( this._config.revert )? ~msg.value: msg.value;
 				v &= this._config.mask;
+				v = !!v;
 
-				this.div.style="--status-color:"+((v)?"green":"red");
+				if ( v )
+				{
+					this.div.classList.add( "active" );
+				}
+				else
+				{
+					this.div.classList.remove( "active" );
+				}
+
+				if ( !this._config?.color )
+				{ // no color defined
+					return;
+				}
+				else if ( 0 == this._config.color[ v?1:0 ].indexOf ( "--" ) )
+				{
+					let color = getComputedStyle( document.body ).getPropertyValue( this._config.color[ v?1:0 ] )
+					this.div.style="--status-color:"+color;
+				}
+				else
+				{
+					this.div.style="--status-color:"+this._config.color[ v?1:0 ];
+				}
 			}
 		};
 

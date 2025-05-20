@@ -198,17 +198,29 @@ dans le cas ou l'on souhaite afficher la valeur la plus petite / grande ou moyen
 	text:"texte affiché",
 	periode:0,
 	mask: 0x01, // masque a appliquer sur la donnée
-	revert: false // inversion ou non de la donnée
+	revert: false // inversion ou non de la donnée,
+	color:[ // cf colors section
+		"--color-inactive",
+		"green"
+	]
 }
 ```
 
 Créait un texte qui sera colorisé en rouge / vert selon la donnée sur le channel, 0 : rouge, 1 : vert
 
 #### Note :
-Attention, le texte n'est pas directement colorisé en rouge ou vert, c'est une variable qui est mise à jour. Il faut donc affecter cette variable au texte ou à un autre élément.
+Attention, le texte n'est pas directement colorisé, c'est une classe qui est ajouté ou non, `active` si `value & mask != 0`.
+Dans le cas ou les couleurs sont definie manuellement c'est un variable (`--status-color`) qui est mise à jour. Il faut donc affecter cette variable au texte ou à un autre élément.
 
-```
---status-color
+Pour exemple le CSS pourrait ressembler à ceci :
+```CSS
+.items .status {
+	--status-color: red;
+}
+
+.items .status.active {
+	--status-color: green;
+}
 ```
 
 pour changer la coueur du texte
@@ -222,7 +234,7 @@ ou encore pour afficher un point devant le texte qui lui seul changera de couleu
 ```CSS
 .status::before {
   color: var(--status-color);
-  content: "● ";
+  content: "●";
   font-size: 1em;
 }
 ```
