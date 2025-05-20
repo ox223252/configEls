@@ -242,12 +242,11 @@ ou encore pour afficher un point devant le texte qui lui seul changera de couleu
 ### multi:
 ```javascript
 {
-	type:"bin",
+	type:"multi",
 	channel:"WEBSOCKET CHANNEL",
 	text:"texte affiché",
 	periode:0, // temps de rafraichissement
-	threshold:[],
-	color:[]
+	color:[],
 }
 ```
 
@@ -257,10 +256,9 @@ Créait un texte qui sera colorisé en fonction de la donnée sur le channel ain
 ```javascript
 {
 	//...
-	threshold:[ 1, 2.6, 312 ],
-	color:[ "green", "blue", "rgba(128,128,128,0.5)", "#ff0" ]
+	color:[ "green", 1 , "blue", 2.5, "rgba(128,128,128,0.5)", 312, "#ff0" ]
 }
-````
+```
 ```
 value  <= 1 : color == green
 1 < value  <= 2.5 : color == "blue"

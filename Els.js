@@ -1090,17 +1090,39 @@ class Els_multi extends Els_Back {
 		let cb = {
 			periode: config.periode || 0,
 			channel: config.channel,
-			f: function f(msg){
-				this.div.style = "--status-color:"+config.color[ 0 ];
-				for ( let i = 0; i < config.threshold.length; i++ )
-				{
-					if ( msg.value <= config.threshold[ i ] )
-					{
-						break;
-					}
-
-					this.div.style = "--status-color:"+(config.color[ i+1 ] || "red");
+			f: (msg)=>{
+				if ( !this._config?.color )
+				{ // no color defined
+					return;
 				}
+
+				let upValue = this._config.color
+					.filter ( c=>!isNaN ( c ) )
+					.filter ( c=>c>msg.value )
+					.sort ( (a,b)=>a-b )?.[ 0 ];
+
+				if ( undefined == upValue )
+				{
+					this.div.style = "--status-color:red";
+					return;
+				}
+
+				let indexUp = this._config.color.indexOf ( upValue );
+
+				if ( 0 == indexUp )
+				{
+					this.div.style = "--status-color:red";
+					return;
+				}
+
+				let color = this._config.color[ indexUp - 1 ];
+
+				if ( 0 == color.indexOf ( "--" ) )
+				{
+					color = getComputedStyle( document.body ).getPropertyValue( color )
+				}
+				
+				this.div.style="--status-color:"+color;
 			}
 		};
 
