@@ -652,7 +652,7 @@ class Els_io extends Els_Back {
 					}
 					break;
 				}
-				case "temp":
+				case "temperature":
 				{
 					return (msg)=>{
 						if ( isNaN ( msg.value ) )
@@ -895,7 +895,7 @@ class Els_io extends Els_Back {
 			}
 			inDef.onkeyup = inDef.onchange;
 
-			let [divTyp,inTyp] = _createInput ( "type", [ "volume", "flow", "temp", "date" ] );
+			let [divTyp,inTyp] = _createInput ( "type", [ "volume", "flow", "temperature", "date" ] );
 			configDiv.appendChild ( divTyp );
 			inTyp.value = json.valueType || "";
 			inTyp.placeholder = "nb digit / type";
@@ -1400,7 +1400,7 @@ class Els_gauge extends Els_Back {
 
 		switch ( this._config.valueType )
 		{
-			case "temp":
+			case "temperature":
 			case "volume":
 			{
 				this.config.unitCurrent.event.addEventListener ( this._config.valueType, (event)=>{
@@ -2444,7 +2444,7 @@ class Els_graph extends Els_Back {
 			}
 			else switch ( c.valueType )
 			{
-				case "temp":
+				case "temperature":
 				case "volume":
 				case "flow":
 				{
@@ -3668,7 +3668,7 @@ function _calcCoef ( type, baseUnit, currentUnit )
 			}
 			break;
 		}
-		case "temp":
+		case "temperature":
 		{
 			offset = temperatureConvert ( 0,
 				currentUnit.temperature || currentUnit,
