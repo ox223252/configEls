@@ -551,6 +551,7 @@ les  options sont les même pour tous les graphs :
 	subType:"sync", // sync/signam/async
 	channel:"WEBSOCKET CHANNEL X",
 	textColor:"black", // color of graph's text (cf Colors section)
+	gridColor:"rgba(128,128,128,0.4)", // color of grid (cf Colors section)
 	coef: 1, // coeficient multiplicateur pour la donnée en X
 	xAxisType: "date", // type de donnée sur l'axe X (unituquement date number pour le moment)
 	periode:0,

@@ -2612,6 +2612,22 @@ class Els_graph extends Els_Back {
 			this._updateZoom ( { color: color } );
 		}
 
+		{ // grid colors
+			if ( this.config.gridColor )
+			{
+				let color = this.config.gridColor;
+				if ( 0 == color?.indexOf ( "--" ) )
+				{
+					color = getComputedStyle( document.body ).getPropertyValue( color );
+				}
+
+				this.graph.main.config.options.scales.x.grid.color = color;
+				this.graph.main.config.options.scales.y.grid.color = color;
+				
+				this._updateZoom ( { color: color } );
+			}
+		}
+
 		for ( let item in this.graph )
 		{
 			this._updateGraph ( item, true );
