@@ -606,6 +606,8 @@ L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les do
 	prompt: false, // demande le nom du fichier de sortie
 	file: undefined, // nom du fichier de sortie
 	periode: 0, // période of data transmission
+	maxSize: 1000000, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
+		// pour eviter l'augmentation infinie de la taille du CSV
 	channel:{
 		synchro:"CHANNEL TIME", // channel de synchro (horodatage)
 		title:"chrono", // titre de la colone de synchro dans le CSV

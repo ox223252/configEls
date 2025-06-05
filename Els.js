@@ -2641,6 +2641,7 @@ class Els_csv extends Els_Back {
 		super( config, id );
 
 		this.config.separator ||= ',';
+		this.config.maxSize ||= 100000;
 
 		this.title = document.createElement ( "h3" );
 		this._domEl.appendChild ( this.title );
@@ -2692,6 +2693,23 @@ class Els_csv extends Els_Back {
 							this.last.value = nb;
 						}
 						this.entries.value = nb;
+						
+						if ( "" == this.periode.value )
+						{
+							do
+							{
+								let firstKey = Object.keys(this.csv)[ 0 ];
+								let size = new Blob(this.csv[ firstKey ]).size * nb;
+
+								if ( this.config.maxSize > size )
+								{
+									break;
+								}
+
+								delete this.csv[ firstKey ];
+							}
+							while ( 0 < Object.keys ( this.csv ).length );
+						}
 					}
 				};
 
@@ -2838,7 +2856,10 @@ class Els_csv extends Els_Back {
 				clearInterval ( this.interval );
 			}
 
-			if ( 0.01666 < this.periode.value )
+			if ( "" == this.periode.value )
+			{ // deactive csv log
+			}
+			else if ( 0.01666 < this.periode.value )
 			{
 				this.interval = setInterval ( ()=>{
 					let prompt  = this.config.prompt;
@@ -2852,6 +2873,10 @@ class Els_csv extends Els_Back {
 
 					this.config.prompt  = prompt;
 				},  this.periode.value * 3600 * 1000 );
+			}
+			else
+			{
+				this.periode.value = 0.01666;
 			}
 		})
 	}
