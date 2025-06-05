@@ -2636,12 +2636,34 @@ class Els_graph extends Els_Back {
 }
 
 class Els_csv extends Els_Back {
+	#defaultConfig = {
+		type:"csv",
+		separator:",", // séparateur utilisé pour la génération du CSV
+		display:{
+			entries:true, // affiche ou non le nombre de lignes du fichier
+			clean:true, // affiche un bouton de RAZ du CSV
+			last:true, // affiche un bouton permettant de limiter le nombre de lignes a générer
+			download:true, // cache le bouton le teléchargement
+			every:true, // cache le champ de sauvegarde automatique
+		},
+		prompt: true, // demande le nom du fichier de sortie
+		file: undefined, // nom du fichier de sortie
+		periode: 0, // période of data transmission
+		maxSize: 1000000, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
+			// pour eviter l'augmentation infinie de la taille du CSV
+		channel:{
+			// synchro:"CHANNEL TIME", // channel de synchro (horodatage)
+			// title:"chrono", // titre de la colone de synchro dans le CSV
+			// data:["DATA_1","DATA_2"], // channels de donnés
+			// titles:["TItle 1","Title 1"] // titres des colonnes dans le CSV
+		}
+	}
+
 	constructor ( config, id )
 	{
-		super( config, id );
+		config = _objMerge ( this.#defaultConfig, config );
 
-		this.config.separator ||= ',';
-		this.config.maxSize ||= 100000;
+		super( config, id );
 
 		this.title = document.createElement ( "h3" );
 		this._domEl.appendChild ( this.title );
@@ -2649,12 +2671,15 @@ class Els_csv extends Els_Back {
 
 		[this.divEntries,this.entries] = _createInput ( "Nb Entries" );
 		this._domEl.appendChild ( this.divEntries );
+		this.entries.type = "number";
 		this.entries.disabled = true;
 		this.entries.value = 0;
 
 		[this.divLast,this.last] = _createInput ( "Save Last" );
 		this._domEl.appendChild ( this.divLast );
-		this.last.value = 0;
+		this.last.type = "number";
+		this.last.value = undefined;
+		this.last.placeholder = undefined;
 
 		[this.periodeDiv,this.periode]= _createInput ( "Save Every" );
 		this._domEl.appendChild ( this.periodeDiv );
@@ -2673,43 +2698,54 @@ class Els_csv extends Els_Back {
 		this.mode = undefined;
 		this.lastIndex = undefined;
 
-		if ( config.channel )
+		if ( this.config.channel )
 		{
-			if ( config.channel.synchro )
+			if ( this.config.channel.synchro )
 			{
 				this.csv = {};
 				this.mode = "obj";
 				
 				let cb = {
-					periode: config.periode || 0,
-					channel: config.channel.synchro,
+					periode: this.config.periode,
+					channel: this.config.channel.synchro,
 					f: (msg)=>{
+
 						this.csv[ msg.value ] = [];
 						this.lastIndex = msg.value;
 
-						let nb = Object.keys ( this.csv ).length
-						if ( this.last.value == this.entries.value )
+						let keys = Object.keys ( this.csv )
+						let nb = keys.length
+
+						if ( "" != this.last.value )
 						{
-							this.last.value = nb;
+							while ( Number ( this.last.value ) < nb )
+							{
+								delete this.csv[ keys[ 0 ] ];
+								keys.shift ( )
+								nb = keys.length;
+							}
 						}
-						this.entries.value = nb;
-						
+
 						if ( "" == this.periode.value )
 						{
 							do
 							{
-								let firstKey = Object.keys(this.csv)[ 0 ];
-								let size = new Blob(this.csv[ firstKey ]).size * nb;
+								let size = new Blob(this.csv[ keys[ 0 ] ]).size * nb;
 
 								if ( this.config.maxSize > size )
 								{
 									break;
 								}
 
-								delete this.csv[ firstKey ];
+								delete this.csv[ keys[ 0 ] ];
+								keys.shift ( );
+								nb = keys.length;
 							}
 							while ( 0 < Object.keys ( this.csv ).length );
 						}
+
+						this.last.placeholder = nb;
+						this.entries.value = nb;
 					}
 				};
 
@@ -2724,7 +2760,7 @@ class Els_csv extends Els_Back {
 			for ( let [i,c] of config.channel.data.entries() )
 			{
 				let cb = {
-					periode: config.periode || 0,
+					periode: this.config.periode,
 					channel: c,
 					f: (msg)=>{
 						if ( "array" == this.mode )
@@ -2737,10 +2773,7 @@ class Els_csv extends Els_Back {
 
 							if ( this.entries.value < this.csv[ i ].length )
 							{
-								if ( this.last.value == this.entries.value )
-								{
-									this.last.value = this.csv[ i ].length;
-								}
+								this.last.placeholder = this.csv[ i ].length;
 								this.entries.value = this.csv[ i ].length;
 							}
 						}
@@ -2756,7 +2789,6 @@ class Els_csv extends Els_Back {
 		}
 
 		this.clean.addEventListener ('click', ()=>{
-			console.log( "clean")
 			if ( "obj" == this.mode )
 			{
 				this.csv = {};
@@ -3694,4 +3726,49 @@ function _debounceEvent ( id, cb, arg, delay = 100 )
 
 		delete Els_debounce[ id ]
 	}, delay );
+}
+
+/// \brief Merge two elements to e new one
+/// \param[ in ] obj1 : base object 
+/// \param[ in ] obj2 : second object
+/// \note if obj1.foo and obj2.foo exist obj2 will overwrite obj1 in the new one
+function _objMerge ( obj1, obj2 )
+{
+	let d = {...obj1};
+
+	for ( let s in obj2 )
+	{
+		switch ( obj2[s].constructor.name )
+		{
+			case "Object":
+			{
+				if ( !d[s] )
+				{ // if property doesn't exist deep cpy
+					d[s]={...obj2[s]};
+				}
+				else
+				{
+					d[s] = _objMerge ( obj1[s], obj2[s] );
+				}
+				break;
+			}
+			case "Array":
+			{
+				d[s]=[...obj2[s]];
+				break;
+			}
+			default:
+			{
+				console.log( obj2[s].constructor.name )
+			}
+			case 'Number':
+			case 'String':
+			{
+				d[s]=obj2[s];
+				break;
+			}
+		}
+	}
+
+	return d
 }

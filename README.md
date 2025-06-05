@@ -600,10 +600,10 @@ L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les do
 		entries:true, // affiche ou non le nombre de lignes du fichier
 		clean:true, // affiche un bouton de RAZ du CSV
 		last:true // affiche un bouton permettant de limiter le nombre de lignes a générer
-		download:false, // cache le bouton le teléchargement
-		every:false, // cache le champ de sauvegarde automatique
+		download:true, // cache le bouton le teléchargement
+		every:true, // cache le champ de sauvegarde automatique
 	},
-	prompt: false, // demande le nom du fichier de sortie
+	prompt: true, // demande le nom du fichier de sortie
 	file: undefined, // nom du fichier de sortie
 	periode: 0, // période of data transmission
 	maxSize: 1000000, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
