@@ -3046,9 +3046,22 @@ class Els_csv extends Els_Back {
 }
 
 class Els_button extends Els_Back {
+	#defaultConfig = {
+		type: "button",
+		options:[
+			{
+				label: "X",
+				text: "Y",
+				cmd: "myCmd"
+			}
+		]
+	}
+
 	constructor ( config, id )
 	{
 		super( config, id );
+
+		this._config = _objMerge ( this.#defaultConfig, this._config );
 
 		this._tab = [];
 		this.update ( );
@@ -3058,7 +3071,7 @@ class Els_button extends Els_Back {
 	{
 		if ( config )
 		{
-			this._config = config;;
+			this._config = config;
 		}
 
 		if ( undefined == this._config?.options )
@@ -3194,21 +3207,7 @@ class Els_button extends Els_Back {
 			params.id = Math.random ( );
 		}
 
-		let json = {
-			type: "button",
-			options:[
-				{
-					label: "X",
-					text: "Y",
-					cmd: "visuEcho"
-				}
-			]
-		};
-
-		if ( undefined != config )
-		{
-			Object.assign ( json, config );
-		}
+		let json = _objMerge ( this.#defaultConfig, config );
 
 		try
 		{
