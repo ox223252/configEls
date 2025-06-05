@@ -1353,15 +1353,47 @@ class Els_multi extends Els_Back {
 }
 
 class Els_gauge extends Els_Back {
+	#defaultConfig = {
+		type:"gauge",
+		channel:"WEBSOCKET CHANNEL",
+		periode:0, // temps de rafraichissement
+		valueType: undefined, // cf Chapter valueType
+		unit: undefined, // cf Chapter valueTypet
+		options:{
+			values: [ 0, "yellow", 100 ],
+			curve: {
+				min: 0, // angle start (left)
+				max: 180, // angle stop (right)
+				size: 300, // graph width (px)
+				width: 30, // line width (px)
+				label: {
+					color: "black", // text color
+					height: 20, // text height (px)
+					line: 1, // number of line for bound print
+				},
+				backColor: "transparent", // line color in case of no color provided in values
+			},
+			coef: 1, // coefficeint need to be applied on gauge label value
+			offset: 0, // offset need to be applied on gauge label value
+			errorColor: "red", // Out Of Limit error color
+			needleColor: "black", // ...
+		}
+	}
+
 	constructor ( config,  id )
 	{
 		super( config, id );
 
-		let textColor = getComputedStyle(document.body).getPropertyValue('--main-text') || "#000";
+		this._config = _objMerge ( this.#defaultConfig, this._config );
 
-		this.gauge = new Gauge ( config.options );
+		this.gauge = new Gauge ( this._config.options );
 		
-		this.gauge.textColor = textColor || "#000";
+		let textColor = this._config.options.curve.label.color;
+		if ( 0 == textColor?.indexOf ( "--" ) )
+		{
+			textColor = getComputedStyle(document.body).getPropertyValue(textColor)
+		}
+		this.gauge.textColor = textColor ;
 		
 		this._domEl.appendChild ( this.gauge.domEl );
 		this._domEl.style.textAlign = "center";
@@ -1425,7 +1457,12 @@ class Els_gauge extends Els_Back {
 	update ( config )
 	{
 		this._update ( config );
-		this.gauge.textColor = getComputedStyle(document.body).getPropertyValue('--main-text');
+		let textColor = this._config.options.curve.label.color;
+		if ( 0 == textColor.indexOf ( "--" ) )
+		{
+			textColor = getComputedStyle(document.body).getPropertyValue(textColor)
+		}
+		this.gauge.textColor = textColor ;
 	}
 
 	static canCreateNew ( )
@@ -1440,31 +1477,11 @@ class Els_gauge extends Els_Back {
 			params.id = Math.random ( );
 		}
 
-		let json = {
-			type: "gauge",
-			channel: "WS_DATA_CHANNEL",
-			periode: 0,
-			options:{
-				values: [ 0, "yellow", 100 ],
-				curve:{
-					min: 0,
-					max: 180,
-					label:{
-						height: 20,
-						line: 1
-					}
-				}
-			}
-		}
-
 		let domEls = {
 			line: [],
 		};
 
-		if ( undefined != config )
-		{
-			Object.assign ( json, config );
-		}
+		let json = _objMerge ( this.#defaultConfig, config )
 
 		try // config
 		{
