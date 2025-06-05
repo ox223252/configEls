@@ -2639,6 +2639,7 @@ class Els_csv extends Els_Back {
 	#defaultConfig = {
 		type:"csv",
 		separator:",", // séparateur utilisé pour la génération du CSV
+		title:'Download CSV',
 		display:{
 			entries:true, // affiche ou non le nombre de lignes du fichier
 			clean:true, // affiche un bouton de RAZ du CSV
@@ -2661,13 +2662,13 @@ class Els_csv extends Els_Back {
 
 	constructor ( config, id )
 	{
-		config = _objMerge ( this.#defaultConfig, config );
-
 		super( config, id );
+
+		this._config = _objMerge ( this.#defaultConfig, this._config );
 
 		this.title = document.createElement ( "h3" );
 		this._domEl.appendChild ( this.title );
-		this.title.innerHTML = config.title || 'Download CSV';
+		this.title.innerHTML = this._config.title;
 
 		[this.divEntries,this.entries] = _createInput ( "Nb Entries" );
 		this._domEl.appendChild ( this.divEntries );
@@ -2698,16 +2699,16 @@ class Els_csv extends Els_Back {
 		this.mode = undefined;
 		this.lastIndex = undefined;
 
-		if ( this.config.channel )
+		if ( this._config.channel )
 		{
-			if ( this.config.channel.synchro )
+			if ( this._config.channel.synchro )
 			{
 				this.csv = {};
 				this.mode = "obj";
 				
 				let cb = {
-					periode: this.config.periode,
-					channel: this.config.channel.synchro,
+					periode: this._config.periode,
+					channel: this._config.channel.synchro,
 					f: (msg)=>{
 
 						this.csv[ msg.value ] = [];
@@ -2732,7 +2733,7 @@ class Els_csv extends Els_Back {
 							{
 								let size = new Blob(this.csv[ keys[ 0 ] ]).size * nb;
 
-								if ( this.config.maxSize > size )
+								if ( this._config.maxSize > size )
 								{
 									break;
 								}
@@ -2757,10 +2758,10 @@ class Els_csv extends Els_Back {
 				this.mode = "array";
 			}
 
-			for ( let [i,c] of config.channel.data.entries() )
+			for ( let [i,c] of this._config.channel.data.entries() )
 			{
 				let cb = {
-					periode: this.config.periode,
+					periode: this._config.periode,
 					channel: c,
 					f: (msg)=>{
 						if ( "array" == this.mode )
@@ -2809,10 +2810,10 @@ class Els_csv extends Els_Back {
 			{
 				for ( let k in this.csv )
 				{
-					out.push ( k+this.config.separator+this.csv[ k ].join ( this.config.separator ) );
+					out.push ( k+this._config.separator+this.csv[ k ].join ( this._config.separator ) );
 				}
 
-				keys = (this.config.channel.title || this.config.channel.synchro) + this.config.separator;
+				keys = (this._config.channel.title || this._config.channel.synchro) + this._config.separator;
 			}
 			else if ( "array" == this.mode )
 			{
@@ -2828,11 +2829,11 @@ class Els_csv extends Els_Back {
 						if ( ( undefined == data )
 							|| ( undefined == data[ i ] ) )
 						{
-							out[ i ] += this.config.separator;
+							out[ i ] += this._config.separator;
 						}
 						else
 						{
-							out[ i ] += data[ i ]+this.config.separator;
+							out[ i ] += data[ i ]+this._config.separator;
 						}
 					}
 				}
@@ -2845,13 +2846,13 @@ class Els_csv extends Els_Back {
 			}
 
 			// create the columnt headers
-			if ( this.config.channel.titles )
+			if ( this._config.channel.titles )
 			{
-				keys += this.config.channel.titles.join ( this.config.separator )
+				keys += this._config.channel.titles.join ( this._config.separator )
 			}
 			else
 			{
-				keys += this.config.channel.data.join ( this.config.separator );
+				keys += this._config.channel.data.join ( this._config.separator );
 			}
 			out.unshift ( keys );
 
@@ -2859,7 +2860,7 @@ class Els_csv extends Els_Back {
 
 			let downloadLink = document.createElement ( "a" );
 			downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURI( out );
-			if ( true == this.config.prompt )
+			if ( true == this._config.prompt )
 			{
 				downloadLink.download = prompt ( "nom du fichier ?", this.config.file || "CSV_"+new Date().toISOString() )
 
@@ -2868,9 +2869,9 @@ class Els_csv extends Els_Back {
 					return;
 				}
 			}
-			else if ( this.config.file )
+			else if ( this._config.file )
 			{
-				downloadLink.download = this.config.file+'.csv'
+				downloadLink.download = this._config.file+'.csv'
 			}
 			else
 			{
@@ -2894,8 +2895,8 @@ class Els_csv extends Els_Back {
 			else if ( 0.01666 < this.periode.value )
 			{
 				this.interval = setInterval ( ()=>{
-					let prompt  = this.config.prompt;
-					this.config.prompt = false;
+					let prompt  = this._config.prompt;
+					this._config.prompt = false;
 
 					this.download.dispatchEvent ( new Event ( "click" ) );
 
@@ -2903,7 +2904,7 @@ class Els_csv extends Els_Back {
 						this.clean.dispatchEvent ( new Event ( "click" ) );
 					}, 1000 );
 
-					this.config.prompt  = prompt;
+					this._config.prompt  = prompt;
 				},  this.periode.value * 3600 * 1000 );
 			}
 			else
@@ -2916,19 +2917,12 @@ class Els_csv extends Els_Back {
 	update ( config )
 	{
 		this._update ( config );
-		if ( config )
-		{
-			for ( let key in config )
-			{
 
-			}
-		}
-
-		this.divEntries.style.display  = ( true  == this.config?.display?.entries )? "flex" : "none";
-		this.divLast.style.display     = ( true  == this.config?.display?.last )?    "flex" : "none";
-		this.divClean.style.display    = ( true  == this.config?.display?.clean )?   "flex" : "none";
-		this.divDownload.style.display = ( false == this.config?.display?.download )? "none" : "flex";
-		this.periodeDiv.style.display  = ( false == this.config?.display?.every )?    "none" : "flex";
+		this.divEntries.style.display  = ( true  == this._config?.display?.entries )? "flex" : "none";
+		this.divLast.style.display     = ( true  == this._config?.display?.last )?    "flex" : "none";
+		this.divClean.style.display    = ( true  == this._config?.display?.clean )?   "flex" : "none";
+		this.divDownload.style.display = ( false == this._config?.display?.download )? "none" : "flex";
+		this.periodeDiv.style.display  = ( false == this._config?.display?.every )?    "none" : "flex";
 	}
 
 	static canCreateNew ( )
@@ -2943,29 +2937,16 @@ class Els_csv extends Els_Back {
 			params.id = Math.random ( );
 		}
 
-		let json = {
-			type:"csv",
-			separator:",",
-			display:{
-				entries:true, // affiche ou non le nombre de lignes du fichier
-				clean:true, // affiche un bouton de RAZ du CSV
-				last:true // affiche un bouton permettant de limiter le nombre de lignes a générer
-			},
-			prompt: false, // demande le nom du fichier de sortie
-			file: undefined, // nom du fichier de sortie
-			periode: 0,
+		let json = _objMerge ( this.#defaultConfig, {
 			channel:{
 				synchro:"WS_DATA_CHANNEL", // channel de synchro (horodatage)
 				title:"chrono", // titre de la colone de synchro dans le CSV
 				data:[], // channels de donnés
 				titles:[] // titres des colonnes dans le CSV
 			}
-		}
+		});
 
-		if ( undefined != config )
-		{
-			Object.assign ( json, config );
-		}
+		json = _objMerge ( json, config );
 
 		try // config
 		{
