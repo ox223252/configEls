@@ -247,24 +247,25 @@ ou encore pour afficher un point devant le texte qui lui seul changera de couleu
 	text:"texte affiché",
 	periode:0, // temps de rafraichissement
 	color:[],
+	defaultColor: "red"
 }
 ```
 
-Créait un texte qui sera colorisé en fonction de la donnée sur le channel ainsi que du couple seuil/couleur passé en paramètres.
+Créait un texte qui sera colorisé en fonction de la donnée sur le channel ainsi que du couple seuil/couleur passé en paramètres. Si le texte n'est pas defini, la donnée sera affichée.
 
 #### Exemple:
 ```javascript
 {
 	//...
-	color:[ "green", 1 , "blue", 2.5, "rgba(128,128,128,0.5)", 312, "#ff0" ]
+	color:[ "green", 1 , "blue", 2.5 ]
 }
 ```
 ```
 value  <= 1 : color == green
 1 < value  <= 2.5 : color == "blue"
-2.5 < value  <= 312 : color == "rgba(128,128,128,0.5)"
-312 < value : color == "#ff0"
+2.5 > couleur par defaut
 ```
+Voir la section sur le management des couleurs.
 
 #### Note :
 Attention, le texte n'est pas directement colorisé selon les seuils définis, c'est une variable qui est mise à jour. Il faut donc affecté cette variable au texte ou à un autre élément.

@@ -958,7 +958,7 @@ class Els_bin extends Els_Back {
 		this.div = document.createElement ( "p" );
 		this.div.className = "status"
 		this._domEl.appendChild ( this.div );
-		this.div.innerHTML = config.text;
+		this.div.innerHTML = this._config.text;
 
 		if ( undefined == this._config.mask )
 		{
@@ -966,8 +966,8 @@ class Els_bin extends Els_Back {
 		}
 
 		let cb = {
-			periode: config.periode || 0,
-			channel: config.channel,
+			periode: this._config.periode || 0,
+			channel: this._config.channel,
 			f: (msg)=>{
 				let v = ( this._config.revert )? ~msg.value: msg.value;
 				v &= this._config.mask;
@@ -1077,15 +1077,28 @@ class Els_bin extends Els_Back {
 }
 
 class Els_multi extends Els_Back {
+	#defaultConfig = {
+		type:"multi",
+		text:undefined,
+		periode: 0, // période of data transmission
+		color:[],
+		defaultColor: "red", // default color if no color available
+	}
+
 	constructor ( config, id )
 	{
 		super( config, id );
 
+		this._config = _objMerge ( this.#defaultConfig, this._config );
+
 		this.div = document.createElement ( "p" );
 		this.div.className = "status"
 		this._domEl.appendChild ( this.div );
-		this.div.innerHTML = config.text;
 
+		if ( this._config.text )
+		{
+			this.div.innerHTML = this._config.text;
+		}
 
 		let cb = {
 			periode: config.periode || 0,
@@ -1096,26 +1109,31 @@ class Els_multi extends Els_Back {
 					return;
 				}
 
+				if ( undefined == this._config.text )
+				{
+					this.div.innerHTML = msg.value;
+				}
+
 				let upValue = this._config.color
 					.filter ( c=>!isNaN ( c ) )
 					.filter ( c=>c>msg.value )
 					.sort ( (a,b)=>a-b )?.[ 0 ];
 
+				let color = undefined;
 				if ( undefined == upValue )
 				{
-					this.div.style = "--status-color:red";
-					return;
+					color = this._config?.color[ this._config?.color.length - 1 ];
 				}
-
-				let indexUp = this._config.color.indexOf ( upValue );
-
-				if ( 0 == indexUp )
+				else
 				{
-					this.div.style = "--status-color:red";
-					return;
+					color = this._config.color[ this._config?.color?.indexOf ( upValue ) - 1 ];
 				}
 
-				let color = this._config.color[ indexUp - 1 ];
+				if ( ( undefined == color )
+					|| ( "String" != color.constructor.name ) )
+				{
+					color = this._config.defaultColor || "red";
+				}
 
 				if ( 0 == color.indexOf ( "--" ) )
 				{
