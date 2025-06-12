@@ -2675,18 +2675,16 @@ class Els_csv extends Els_Back {
 		type:"csv",
 		separator:",", // séparateur utilisé pour la génération du CSV
 		title:'Download CSV',
-		display:{
-			entries:true, // affiche ou non le nombre de lignes du fichier
-			clean:true, // affiche un bouton de RAZ du CSV
-			last:true, // affiche un bouton permettant de limiter le nombre de lignes a générer
-			download:true, // cache le bouton le teléchargement
-			every:true, // cache le champ de sauvegarde automatique
-		},
 		prompt: true, // demande le nom du fichier de sortie
 		file: undefined, // nom du fichier de sortie
 		periode: 0, // période of data transmission
-		maxSize: 1000000, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
-			// pour eviter l'augmentation infinie de la taille du CSV
+		max:{ // pour eviter l'augmentation infinie de la taille du CSV
+			size: 1000, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
+			time: 1, // temps maximum d'enregistrement (h)
+			line: 100, // nombre maximum de ligne enregistré dans le CSV
+		},
+		download: false,
+		limitSelected: undefined,
 		channel:{
 			// synchro:"CHANNEL TIME", // channel de synchro (horodatage)
 			// title:"chrono", // titre de la colone de synchro dans le CSV
@@ -2701,26 +2699,79 @@ class Els_csv extends Els_Back {
 
 		this._config = _objMerge ( this.#defaultConfig, this._config );
 
+		this.csv = undefined;
+		this.id = Math.random ( ) + "_csv";
+
 		this.title = document.createElement ( "h3" );
 		this._domEl.appendChild ( this.title );
 		this.title.innerHTML = this._config.title;
 
-		[this.divEntries,this.entries] = _createInput ( "Nb Entries" );
-		this._domEl.appendChild ( this.divEntries );
-		this.entries.type = "number";
-		this.entries.disabled = true;
-		this.entries.value = 0;
+		this.table = document.createElement ( "table" );
+		this.table.style.height = "auto";
+		this._domEl.appendChild ( this.table );
 
-		[this.divLast,this.last] = _createInput ( "Save Last" );
-		this._domEl.appendChild ( this.divLast );
-		this.last.type = "number";
-		this.last.value = undefined;
-		this.last.placeholder = undefined;
+		{ // table header
+			let line = document.createElement ( "tr" );
+			let cell = document.createElement ( "th" );
+			line.appendChild ( cell );
+			cell.colSpan = 3;
+			cell.innerText = "Limit selection"
 
-		[this.periodeDiv,this.periode]= _createInput ( "Save Every" );
-		this._domEl.appendChild ( this.periodeDiv );
-		this.periode.min = 0;
-		this.periode.placeholder = "hours";
+			this.table.appendChild ( line );
+		}
+
+		this.tableConfig = [
+			{name:"size",label:"Size (Mo)"},
+			{name:"time",label:"Time (h)"},
+			{name:"line",label:"Line"},
+		];
+
+		for ( let item of this.tableConfig )
+		{
+			let line = document.createElement ( "tr" );
+			
+			let cell = document.createElement ( "td" );
+			line.appendChild ( cell );
+			cell.innerText = item.label;
+
+			cell = document.createElement ( "td" );
+			line.appendChild ( cell );
+			item.input = document.createElement ( "input" );
+			cell.appendChild ( item.input );
+			item.input.type = "number";
+			item.input.placeholder = item.label;
+			item.input.value = this._config?.max?.[ item.name ] || "";
+			
+			cell = document.createElement ( "td" );
+			line.appendChild ( cell );
+			item.radio = document.createElement ( "input" );
+			cell.appendChild ( item.radio );
+			item.radio.type = "radio";
+			item.radio.name = this.id;
+			
+			this.table.appendChild ( line );
+		}
+
+		{ // table footer
+			let line = document.createElement ( "tr" );
+			let cell = document.createElement ( "td" );
+			line.appendChild ( cell );
+			cell.colSpan = 2;
+			cell.innerText = "Auto download at limit:"
+
+			cell = document.createElement ( "td" );
+			line.appendChild ( cell );
+			let input = document.createElement ( "input" );
+			cell.appendChild ( input );
+			input.type = "checkbox";
+			input.checked = this._config.download;
+
+			input.addEventListener ( "change", (ev)=>{
+				this.download = ev.target.checked;
+			});
+
+			this.table.appendChild ( line );
+		}
 
 		[this.divDownload,this.download] = _createIconButton ( "Download", "download" );
 		this._domEl.appendChild ( this.divDownload );
@@ -2728,241 +2779,250 @@ class Els_csv extends Els_Back {
 		[this.divClean,this.clean] = _createIconButton ( "Clean log", "trash" );
 		this._domEl.appendChild ( this.divClean );
 
-		this.update ( );
-
-		this.csv = undefined;
-		this.mode = undefined;
-		this.lastIndex = undefined;
-
-		if ( this._config.channel )
+		// init what limit should be used following config
+		if ( this._config.limitSelected )
 		{
-			if ( this._config.channel.synchro )
+			let el = this.tableConfig.filter ( t=>t.name == this._cofnig.limitSelected );
+			if ( undefined == el.length )
 			{
-				this.csv = {};
-				this.mode = "obj";
-				
-				let cb = {
-					periode: this._config.periode,
-					channel: this._config.channel.synchro,
-					f: (msg)=>{
-
-						this.csv[ msg.value ] = [];
-						this.lastIndex = msg.value;
-
-						let keys = Object.keys ( this.csv )
-						let nb = keys.length
-
-						if ( "" != this.last.value )
-						{
-							while ( Number ( this.last.value ) < nb )
-							{
-								delete this.csv[ keys[ 0 ] ];
-								keys.shift ( )
-								nb = keys.length;
-							}
-						}
-
-						if ( "" == this.periode.value )
-						{
-							do
-							{
-								let size = new Blob(this.csv[ keys[ 0 ] ]).size * nb;
-
-								if ( this._config.maxSize > size )
-								{
-									break;
-								}
-
-								delete this.csv[ keys[ 0 ] ];
-								keys.shift ( );
-								nb = keys.length;
-							}
-							while ( 0 < Object.keys ( this.csv ).length );
-						}
-
-						this.last.placeholder = nb;
-						this.entries.value = nb;
-					}
-				};
-
-				this._callArgs.push ( cb );
+				this.tableConfig[ 0 ].radio.checked = true;
 			}
 			else
 			{
-				this.csv = [];
-				this.mode = "array";
+				el.radio.checked = true;
 			}
 
-			for ( let [i,c] of this._config.channel.data.entries() )
-			{
-				let cb = {
-					periode: this._config.periode,
-					channel: c,
-					f: (msg)=>{
-						if ( "array" == this.mode )
-						{
-							if ( undefined == this.csv[ i ] )
-							{
-								this.csv[ i ] = [];
-							}
-							this.csv[ i ].push ( msg.value );
+			delete this._config.limitSelected;
+		}
+		else
+		{
+			this.tableConfig[ 0 ].radio.checked = true;
+			this._config.limitSelected = this.tableConfig[ 0 ].name;
+		}
 
-							if ( this.entries.value < this.csv[ i ].length )
-							{
-								this.last.placeholder = this.csv[ i ].length;
-								this.entries.value = this.csv[ i ].length;
-							}
-						}
-						else if ( undefined != this.lastIndex )
-						{
-							this.csv[ this.lastIndex ][ i ] = msg.value;
-						}
+		// radio event to select what limit is used
+		for ( let item of this.tableConfig )
+		{
+			item.radio.addEventListener ( "change", (ev)=>{
+				this.limit = item;
+				this.#checkLimit ( );
+			});
+
+			item.input.addEventListener ( "change", (ev)=>{
+
+				switch ( item.name )
+				{
+					case "size":
+					{
+						this._config.max.size = ev.target.value * 1024 * 1024;
+						break;
 					}
-				};
+					case "time":
+					case "line":
+					{
+						this._config.max[ item.name ] = ev.target.value
+						break;
+					}
+				}
+			});
+		}
 
-				this._callArgs.push ( cb );
+		this.limit = this.tableConfig[ 0 ];
+		this.#checkLimit ( );
+
+		this.entryDate = [];
+
+		this.csv = {};
+		
+		let cb = {
+			periode: this._config.periode,
+			channel: this._config.channel.synchro,
+			f: (msg)=>{
+				this.lastIndex = msg.value;
+				this.csv[ this.lastIndex ] = [];
+
+				this.entryDate.push ( {date:new Date ( ), index:this.lastIndex} );
+
+				this.#checkLimit ( );
 			}
+		};
+
+		this._callArgs.push ( cb );
+
+		for ( let [i,c] of this._config.channel.data.entries() )
+		{
+			let cb = {
+				periode: this._config.periode,
+				channel: c,
+				f: (msg)=>{
+					if ( ( undefined != this.lastIndex )
+						&& ( this.csv?.[ this.lastIndex ] ) )
+					{
+						this.csv[ this.lastIndex ][ i ] = msg.value;
+					}
+
+					this.#checkLimit ( );
+				}
+			};
+
+			this._callArgs.push ( cb );
 		}
 
 		this.clean.addEventListener ('click', ()=>{
-			if ( "obj" == this.mode )
-			{
-				this.csv = {};
-				this.lastIndex = undefined;
-			}
-			else if ( "array" == this.mode )
-			{
-				this.csv = [];
-			}
-			this.entries.value = 0;
-			this.last.value = 0;
+			this.#cleanData ( );
 		});
 
 		this.download.addEventListener ('click', ()=>{
-			let keys = "";
-			let out = [];
-			if ( "obj" == this.mode )
-			{
-				for ( let k in this.csv )
-				{
-					out.push ( k+this._config.separator+this.csv[ k ].join ( this._config.separator ) );
-				}
-
-				keys = (this._config.channel.title || this._config.channel.synchro) + this._config.separator;
-			}
-			else if ( "array" == this.mode )
-			{
-				for ( let data of this.csv )
-				{
-					for ( let i = 0; i < this.entries.value; i++ )
-					{
-						if ( undefined == out[ i ] )
-						{
-							out[ i ] = "";
-						}
-						
-						if ( ( undefined == data )
-							|| ( undefined == data[ i ] ) )
-						{
-							out[ i ] += this._config.separator;
-						}
-						else
-						{
-							out[ i ] += data[ i ]+this._config.separator;
-						}
-					}
-				}
-			}
-
-			// reduce the number of line following the "x last" value
-			while ( out.length > ( this.last.value ) )
-			{
-				out.shift ( );
-			}
-
-			// create the columnt headers
-			if ( this._config.channel.titles )
-			{
-				keys += this._config.channel.titles.join ( this._config.separator )
-			}
-			else
-			{
-				keys += this._config.channel.data.join ( this._config.separator );
-			}
-			out.unshift ( keys );
-
-			out = out.join ( "\n" );
-
-			let downloadLink = document.createElement ( "a" );
-			downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURI( out );
-			if ( true == this._config.prompt )
-			{
-				downloadLink.download = prompt ( "nom du fichier ?", this.config.file || "CSV_"+new Date().toISOString() )
-
-				if ( "null" == downloadLink.download )
-				{
-					return;
-				}
-			}
-			else if ( this._config.file )
-			{
-				downloadLink.download = this._config.file+'.csv'
-			}
-			else
-			{
-				downloadLink.download = "CSV_"+new Date().toISOString()+".csv";
-			}
-
-			document.body.appendChild(downloadLink);
-			downloadLink.click();
-			document.body.removeChild(downloadLink);
+			this.#saveData ( );
 		});
+	}
 
-		this.periode.addEventListener ( "change", ()=>{
-			if ( this.interval )
+	#removeOneLine ( )
+	{
+		let keys = Object.keys ( this.csv );
+		if ( keys[ 0 ] != this.lastIndex )
+		{
+			delete this.csv[ keys[ 0 ] ];
+		}
+	}
+
+	#checkLimit ( )
+	{
+
+		if ( !this.csv )
+		{
+			return;
+		}
+		switch ( this.limit.name )
+		{
+			case "time":
 			{
-				clearInterval ( this.interval );
+				let toOld = this.entryDate.filter ( item=>new Date ( )- item.date > this._config.max.time * 1000*60*60 )
+				if ( !toOld.length )
+				{
+					break;
+				}
+				else if ( this.download == true )
+				{
+					this.#saveData ( false );
+					break;
+				}
+				else
+				{
+					toOld.map ( item=>delete this.csv[ item.index ] );
+				}
+				break;
 			}
-
-			if ( "" == this.periode.value )
-			{ // deactive csv log
-			}
-			else if ( 0.01666 < this.periode.value )
+			case "size":
 			{
-				this.interval = setInterval ( ()=>{
-					let prompt  = this._config.prompt;
-					this._config.prompt = false;
-
-					this.download.dispatchEvent ( new Event ( "click" ) );
-
-					setTimeout ( ()=>{
-						this.clean.dispatchEvent ( new Event ( "click" ) );
-					}, 1000 );
-
-					this._config.prompt  = prompt;
-				},  this.periode.value * 3600 * 1000 );
+				if ( JSON.stringify ( this.csv ).length < this._config.max.size )
+				{
+				}
+				else if ( this.download == true )
+				{
+					this.#saveData ( false );
+					break;
+				}
+				else
+				{
+					this.#removeOneLine ( );
+				}
+				break;
 			}
-			else
+			case "line":
 			{
-				this.periode.value = 0.01666;
+				if ( ( undefined == this.csv.length )
+					&& Object.keys ( this.csv ).length < this._config.max.line )
+				{
+				}
+				else if ( this.csv.length < this._config.max.line )
+				{
+				}
+				else if ( this.download == true )
+				{
+					this.#saveData ( false );
+					break;
+				}
+				else
+				{
+					this.#removeOneLine ( );
+				}
+				break;
 			}
-		})
+		}
+	}
+
+	#saveData ( callPrompt = this._config.prompt )
+	{
+		let keys = "";
+		let out = [];
+
+		for ( let k in this.csv )
+		{
+			if ( k == this.lastIndex )
+			{
+				continue;
+			}
+			let data = this.csv[ k ];
+			delete this.csv[ k ];
+			this.entryDate.splice ( this.entryDate.map ( e=>e.index ).indexOf ( k ), 1 );
+
+			out.push ( k+this._config.separator+data.join ( this._config.separator ) );
+		}
+		let tKeys = Object.keys ( this.csv );
+
+		// clear the entries dates
+		this.entryDate = this.entryDate.filter ( e=>tKeys.includes ( e.index ) );
+
+		keys = (this._config.channel.title || this._config.channel.synchro) + this._config.separator;
+
+		// create the columnt headers
+		if ( this._config.channel.titles )
+		{
+			keys += this._config.channel.titles.join ( this._config.separator )
+		}
+		else
+		{
+			keys += this._config.channel.data.join ( this._config.separator );
+		}
+		out.unshift ( keys );
+
+		out = out.join ( "\n" );
+
+		let downloadLink = document.createElement ( "a" );
+		downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURI( out );
+
+		let fileName = ( this._config.file )
+			? this._config.file+'.csv'
+			: "CSV_"+new Date().toISOString()+".csv";
+
+		downloadLink.download = ( true == callPrompt )
+			? prompt ( "nom du fichier ?", fileName )
+			: fileName;
+
+		if ( "null" == downloadLink.download )
+		{
+			return;
+		}
+
+		document.body.appendChild(downloadLink);
+		downloadLink.click();
+		document.body.removeChild(downloadLink);
+	}
+
+	#cleanData ( )
+	{
+		this.csv = {};
 	}
 
 	update ( config )
 	{
 		this._update ( config );
-
-		this.divEntries.style.display  = ( true  == this._config?.display?.entries )? "flex" : "none";
-		this.divLast.style.display     = ( true  == this._config?.display?.last )?    "flex" : "none";
-		this.divClean.style.display    = ( true  == this._config?.display?.clean )?   "flex" : "none";
-		this.divDownload.style.display = ( false == this._config?.display?.download )? "none" : "flex";
-		this.periodeDiv.style.display  = ( false == this._config?.display?.every )?    "none" : "flex";
 	}
 
 	static canCreateNew ( )
 	{
-		return true;
+		return false;
 	}
 
 	static new ( params = {}, config = undefined )

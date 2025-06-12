@@ -597,18 +597,15 @@ L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les do
 {
 	type:"csv",
 	separator:",", // séparateur utilisé pour la génération du CSV
-	display:{
-		entries:true, // affiche ou non le nombre de lignes du fichier
-		clean:true, // affiche un bouton de RAZ du CSV
-		last:true // affiche un bouton permettant de limiter le nombre de lignes a générer
-		download:true, // cache le bouton le teléchargement
-		every:true, // cache le champ de sauvegarde automatique
-	},
+	title:'Download CSV',
 	prompt: true, // demande le nom du fichier de sortie
 	file: undefined, // nom du fichier de sortie
 	periode: 0, // période of data transmission
-	maxSize: 1000000, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
-		// pour eviter l'augmentation infinie de la taille du CSV
+	max:{ // pour eviter l'augmentation infinie de la taille du CSV
+		size: 1000000, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
+		time: undefined, // temps maximum d'enregistrement (h)
+		line: undefined,
+	},
 	channel:{
 		synchro:"CHANNEL TIME", // channel de synchro (horodatage)
 		title:"chrono", // titre de la colone de synchro dans le CSV
