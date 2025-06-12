@@ -465,8 +465,16 @@ Affiche un svg, et permet la colorisation d'items en fonction d'une donnée
 {
 	type:"svg",
 	/* ... */
+	colors:{ // applicable à toutes les entrées de type bin en même temps
+		undefined: "grey", // si la valeur n'est pas un nombre ou pas definie
+		false: "red", // si la valeur masqué est 0
+		true: "green", // si la valeur masqué est deferente de 0
+	},
 	data:[
 		{
+			id:"id_Path1",
+			type:"bin",
+			/* ... */
 			onclik:
 			{ // send over socket 'userCmd'
 				cmd:"********", // cmd param
@@ -475,10 +483,9 @@ Affiche un svg, et permet la colorisation d'items en fonction d'une donnée
 					value:undefined
 				}
 			},
-			/* ... */
 			colors:
-			{
-				undeifned: "grey", // si la valeur n'est pas un nombre ou pas definie
+			{ // applicable que pour une entrée bin
+				undefined: "grey", // si la valeur n'est pas un nombre ou pas definie
 				false: "red", // si la valeur masqué est 0
 				true: "green" // si la valeur masqué est deferente de 0
 			},

@@ -1881,16 +1881,49 @@ class Els_log extends Els_Back {
 }
 
 class Els_svg extends Els_Back {
+	#defaultConfig = {
+		type:"svg",
+		src:"imgs/img.svg", // le svg itself
+		backImg:"imgs/img.png", // background if needed
+		colors:{
+			undefined: "grey",
+			false: "red",
+			true: "green",
+			border: "black",
+		},
+		data:[
+			{
+				id:"id_Path1",
+				type:"bin",
+				channel:"WEBSOCKET CHANNEL",
+				periode:0,
+				revert: false, // complement a 1 sur la donnée
+				mask: 0x01 // masque sur la donnée pour savori quel bits observer
+				// onclick: { // send over socket 'userCmd'
+				// 	cmd:"********", // cmd param
+				// 	toogle: false, // for bin only onclick toogle value of input and esend it 
+				// 	arg:{ // reserved
+				// 		value:undefined
+				// 	}
+				// },
+				// colors:
+				// {
+				// 	undefined: "grey", // si la valeur n'est pas un nombre ou pas definie
+				// 	false: "red", // si la valeur masqué est 0
+				// 	true: "green" // si la valeur masqué est deferente de 0
+				//	stroke: "black"
+				// }
+			}
+		]
+	}
+
 	constructor ( config, id )
 	{
 		super( config, id );
 
+		this._config = _objMerge ( this.#defaultConfig, this._config );
+
 		let img = document.createElement("img");
-		const baseColors = {
-			undefined: "grey",
-			false: "red",
-			true: "green"
-		};
 
 		this._domEl.appendChild ( img );
 		this.cbEvents = [];
@@ -1946,7 +1979,7 @@ class Els_svg extends Els_Back {
 			let style = document.createElement("style");
 			this._domEl.appendChild ( style );
 			style.id = "css_"+id+"_"+d.id;
-			style.innerHTML = "#"+d.id+"{stroke:black}";
+			style.innerHTML = "#"+d.id+"{stroke:"+_getColor ( d.colors?.stroke || this.config?.colors?.stroke )+"}";
 
 			let cb = {
 				periode: d.periode || 0,
@@ -1975,9 +2008,9 @@ class Els_svg extends Els_Back {
 							v = v != 0
 						}
 
-						let color = d?.colors?.[ v ] || baseColors[ v ];
+						let color = d?.colors?.[ v ] || this._config?.colors?.[ v ];
 
-						style.innerHTML="#"+d.id+"{fill:"+color+"}";
+						style.innerHTML="#"+d.id+"{fill:"+_getColor ( color )+"}";
 
 						if ( d.arg )
 						{
@@ -1998,7 +2031,7 @@ class Els_svg extends Els_Back {
 								color = d.color[ i + 1 ] || color;
 							}
 						}
-						style.innerHTML = "#"+d.id+"{fill:"+color+"}";
+						style.innerHTML = "#"+d.id+"{fill:"+_getColor ( color )+"}";
 					}
 					break;
 				}
