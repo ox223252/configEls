@@ -986,14 +986,9 @@ class Els_bin extends Els_Back {
 				{ // no color defined
 					return;
 				}
-				else if ( 0 == this._config.color[ v?1:0 ].indexOf ( "--" ) )
-				{
-					let color = getComputedStyle( document.body ).getPropertyValue( this._config.color[ v?1:0 ] )
-					this.div.style="--status-color:"+color;
-				}
 				else
 				{
-					this.div.style="--status-color:"+this._config.color[ v?1:0 ];
+					this.div.style="--status-color:"+_getColor ( this._config.color[ v?1:0 ] );
 				}
 			}
 		};
@@ -1135,12 +1130,7 @@ class Els_multi extends Els_Back {
 					color = this._config.defaultColor || "red";
 				}
 
-				if ( 0 == color.indexOf ( "--" ) )
-				{
-					color = getComputedStyle( document.body ).getPropertyValue( color )
-				}
-				
-				this.div.style="--status-color:"+color;
+				this.div.style="--status-color:"+_getColor ( color );
 			}
 		};
 
@@ -1405,13 +1395,8 @@ class Els_gauge extends Els_Back {
 		this._config = _objMerge ( this.#defaultConfig, this._config );
 
 		this.gauge = new Gauge ( this._config.options );
-		
-		let textColor = this._config.options.curve.label.color;
-		if ( 0 == textColor?.indexOf ( "--" ) )
-		{
-			textColor = getComputedStyle(document.body).getPropertyValue(textColor)
-		}
-		this.gauge.textColor = textColor ;
+
+		this.gauge.textColor =  _getColor ( this._config.options?.curve?.label?.color ) ;
 		
 		this._domEl.appendChild ( this.gauge.domEl );
 		this._domEl.style.textAlign = "center";
@@ -1475,12 +1460,7 @@ class Els_gauge extends Els_Back {
 	update ( config )
 	{
 		this._update ( config );
-		let textColor = this._config.options.curve.label.color;
-		if ( 0 == textColor.indexOf ( "--" ) )
-		{
-			textColor = getComputedStyle(document.body).getPropertyValue(textColor)
-		}
-		this.gauge.textColor = textColor ;
+		this.gauge.textColor = _getColor ( this._config.options?.curve?.label?.color );
 	}
 
 	static canCreateNew ( )
@@ -2622,22 +2602,11 @@ class Els_graph extends Els_Back {
 	update ( )
 	{
 		this.graph.main.config.data.datasets.map ( (d,i)=>{
-			let color = this.config.curve[ i ].color;
-
-			if ( 0 == color.indexOf ( "--" ) )
-			{
-				color = getComputedStyle( document.body ).getPropertyValue( color );
-			}
-
-			d.borderColor = color;
+			d.borderColor = _getColor ( this.config.curve[ i ].color );
 		});
 
 		{ // labels colors
-			let color = this.config.textColor;
-			if ( 0 == color?.indexOf ( "--" ) )
-			{
-				color = getComputedStyle( document.body ).getPropertyValue( color );
-			}
+			let color = _getColor ( this.config.textColor );
 
 			this.graph.main.config.options.scales.x.ticks.color = color;
 			this.graph.main.config.options.scales.y.ticks.color = color;
@@ -2650,11 +2619,7 @@ class Els_graph extends Els_Back {
 		{ // grid colors
 			if ( this.config.gridColor )
 			{
-				let color = this.config.gridColor;
-				if ( 0 == color?.indexOf ( "--" ) )
-				{
-					color = getComputedStyle( document.body ).getPropertyValue( color );
-				}
+				let color = _getColor ( this.config.gridColor )
 
 				this.graph.main.config.options.scales.x.grid.color = color;
 				this.graph.main.config.options.scales.y.grid.color = color;
@@ -3846,4 +3811,17 @@ function _objMerge ( obj1, obj2 )
 	}
 
 	return d
+}
+
+/// \brief function to return color, can be name : "red", or code : "#f000" or a var : "--color1"
+/// \param[ in ] txt: text color
+/// \return color
+function _getColor ( txt )
+{
+	let color = txt;
+	if ( 0 == color?.indexOf ( "--" ) )
+	{
+		color = getComputedStyle(document.body).getPropertyValue(color)
+	}
+	return color;
 }
