@@ -2104,7 +2104,6 @@ class Els_graph extends Els_Back {
 
 		// reset Zoom
 		const resetZoom = ( )=>{
-			console.log ( "reset" )
 			zoomData = this.graph.main.chart.getInitialScaleBounds ( );
 			zoomData.zoom = false;
 			this.graph.main.chart.resetZoom ( );
@@ -2635,7 +2634,7 @@ class Els_graph extends Els_Back {
 	update ( )
 	{
 		this.graph.main.config.data.datasets.map ( (d,i)=>{
-			d.borderColor = _getColor ( this.config.curve[ i ].color );
+			d.borderColor = _getColor ( this.config?.curve?.[ i ]?.color );
 		});
 
 		{ // labels colors
@@ -2677,7 +2676,7 @@ class Els_csv extends Els_Back {
 		file: undefined, // nom du fichier de sortie
 		periode: 0, // période of data transmission
 		max:{ // pour eviter l'augmentation infinie de la taille du CSV
-			size: 1000, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
+			size: 100, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
 			time: 1, // temps maximum d'enregistrement (h)
 			line: 100, // nombre maximum de ligne enregistré dans le CSV
 		},
@@ -2712,14 +2711,17 @@ class Els_csv extends Els_Back {
 			let line = document.createElement ( "tr" );
 			let cell = document.createElement ( "th" );
 			line.appendChild ( cell );
-			cell.colSpan = 3;
+			cell.colSpan = 2;
 			cell.innerText = "Limit selection"
+
+			this.cellNbLines = document.createElement ( "th" );
+			line.appendChild ( this.cellNbLines )
 
 			this.table.appendChild ( line );
 		}
 
 		this.tableConfig = [
-			{name:"size",label:"Size (Mo)"},
+			{name:"size",label:"Size (Ko)"},
 			{name:"time",label:"Time (h)"},
 			{name:"line",label:"Line"},
 		];
@@ -2798,6 +2800,8 @@ class Els_csv extends Els_Back {
 			this._config.limitSelected = this.tableConfig[ 0 ].name;
 		}
 
+		this._config.max.size *= 1024;
+
 		// radio event to select what limit is used
 		for ( let item of this.tableConfig )
 		{
@@ -2807,12 +2811,11 @@ class Els_csv extends Els_Back {
 			});
 
 			item.input.addEventListener ( "change", (ev)=>{
-
 				switch ( item.name )
 				{
 					case "size":
 					{
-						this._config.max.size = ev.target.value * 1024 * 1024;
+						this._config.max.size = ev.target.value * 1024;
 						break;
 					}
 					case "time":
@@ -2948,6 +2951,8 @@ class Els_csv extends Els_Back {
 				break;
 			}
 		}
+
+		this.cellNbLines.innerText = Object.keys ( this.csv ).length;
 	}
 
 	#saveData ( callPrompt = this._config.prompt )
