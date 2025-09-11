@@ -2676,7 +2676,7 @@ class Els_csv extends Els_Back {
 		file: undefined, // nom du fichier de sortie
 		periode: 0, // période of data transmission
 		max:{ // pour eviter l'augmentation infinie de la taille du CSV
-			size: 100, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
+			size: 100 * 1024, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
 			time: 1, // temps maximum d'enregistrement (h)
 			line: 100, // nombre maximum de ligne enregistré dans le CSV
 		},
@@ -2740,7 +2740,15 @@ class Els_csv extends Els_Back {
 			cell.appendChild ( item.input );
 			item.input.type = "number";
 			item.input.placeholder = item.label;
-			item.input.value = this._config?.max?.[ item.name ] || "";
+
+			if ( item.name == "size" )
+			{
+				item.input.value = this._config?.max?.[ item.name ] / 1024 || "";
+			}
+			else
+			{
+				item.input.value = this._config?.max?.[ item.name ] || "";
+			}
 			
 			cell = document.createElement ( "td" );
 			line.appendChild ( cell );
@@ -2799,8 +2807,6 @@ class Els_csv extends Els_Back {
 			this.tableConfig[ 0 ].radio.checked = true;
 			this._config.limitSelected = this.tableConfig[ 0 ].name;
 		}
-
-		this._config.max.size *= 1024;
 
 		// radio event to select what limit is used
 		for ( let item of this.tableConfig )
