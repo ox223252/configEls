@@ -2716,6 +2716,7 @@ class Els_csv extends Els_Back {
 
 			this.cellNbLines = document.createElement ( "th" );
 			line.appendChild ( this.cellNbLines )
+			this.cellNbLines.classList.add ( "data" );
 
 			this.table.appendChild ( line );
 		}
