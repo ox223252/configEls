@@ -2677,9 +2677,9 @@ class Els_csv extends Els_Back {
 		file: undefined, // nom du fichier de sortie
 		periode: 0, // période of data transmission
 		max:{ // pour eviter l'augmentation infinie de la taille du CSV
-			size: 100 * 1024, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
+			size: 10 * 1024 * 1024, /// taille maximun du CSV en octet si le champ de telechargement recurent n'est pas configuré
 			time: 1, // temps maximum d'enregistrement (h)
-			line: 100, // nombre maximum de ligne enregistré dans le CSV
+			line: 7200, // nombre maximum de ligne enregistré dans le CSV
 		},
 		download: false,
 		limitSelected: undefined,
@@ -2729,7 +2729,7 @@ class Els_csv extends Els_Back {
 		}
 
 		this.tableConfig = [
-			{name:"size",label:"Size (Ko)"},
+			{name:"size",label:"Size (Mo)"},
 			{name:"time",label:"Time (h)"},
 			{name:"line",label:"Line"},
 		];
@@ -2751,7 +2751,7 @@ class Els_csv extends Els_Back {
 
 			if ( item.name == "size" )
 			{
-				item.input.value = this._config?.max?.[ item.name ] / 1024 || "";
+				item.input.value = this._config?.max?.[ item.name ] / 1024 / 1024 || "";
 			}
 			else
 			{
@@ -2829,7 +2829,7 @@ class Els_csv extends Els_Back {
 				{
 					case "size":
 					{
-						this._config.max.size = ev.target.value * 1024;
+						this._config.max.size = ev.target.value * 1024 * 1024;
 						break;
 					}
 					case "time":
