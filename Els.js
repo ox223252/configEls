@@ -2940,20 +2940,22 @@ class Els_csv extends Els_Back {
 					this.#saveData ( false );
 					break;
 				}
-				else
+				else while ( size > this._config.max.size )
 				{
 					this.#removeOneLine ( );
 					keys.shift ( );
+
+					size = _getSize ( this.csv[ keys[ 0 ] ] ) * keys.length;
 				}
 				break;
 			}
 			case "line":
 			{
-				if ( ( undefined == this.csv.length )
-					&& Object.keys ( this.csv ).length < this._config.max.line )
+				if ( ( undefined == keys.length )
+					&& keys.length < this._config.max.line )
 				{
 				}
-				else if ( this.csv.length < this._config.max.line )
+				else if ( keys.length < this._config.max.line )
 				{
 				}
 				else if ( this.download == true )
@@ -2961,9 +2963,10 @@ class Els_csv extends Els_Back {
 					this.#saveData ( false );
 					break;
 				}
-				else
+				else while ( keys.length > this._config.max.line )
 				{
 					this.#removeOneLine ( );
+					keys.shift ( );
 				}
 				break;
 			}
