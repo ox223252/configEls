@@ -2711,12 +2711,17 @@ class Els_csv extends Els_Back {
 			let line = document.createElement ( "tr" );
 			let cell = document.createElement ( "th" );
 			line.appendChild ( cell );
-			cell.colSpan = 2;
+			cell.colSpan = 3;
 			cell.innerText = "Limit selection"
+			cell.style.paddingLeft = "5%";
+			cell.style.textAlign = "left";
 
-			this.cellNbLines = document.createElement ( "th" );
-			line.appendChild ( this.cellNbLines )
-			this.cellNbLines.classList.add ( "data" );
+			let span = document.createElement ( "span" );
+			cell.appendChild ( span );
+			span.style.float = "right";
+			this.cellLimits = document.createElement ( "span" );
+			span.appendChild ( this.cellLimits );
+			this.cellLimits.classList.add ( "data" );
 
 			this.table.appendChild ( line );
 		}
@@ -2842,6 +2847,7 @@ class Els_csv extends Els_Back {
 
 		this.csv = {};
 		
+		// data synchro channel
 		let cb = {
 			periode: this._config.periode,
 			channel: this._config.channel.synchro,
@@ -2868,8 +2874,6 @@ class Els_csv extends Els_Back {
 					{
 						this.csv[ this.lastIndex ][ i ] = msg.value;
 					}
-
-					this.#checkLimit ( );
 				}
 			};
 
@@ -2896,11 +2900,14 @@ class Els_csv extends Els_Back {
 
 	#checkLimit ( )
 	{
-
 		if ( !this.csv )
 		{
 			return;
 		}
+
+		let keys = Object.keys ( this.csv );
+		let size = _getSize ( this.csv[ keys[ 0 ] ] ) * keys.length;
+
 		switch ( this.limit.name )
 		{
 			case "time":
@@ -2923,7 +2930,9 @@ class Els_csv extends Els_Back {
 			}
 			case "size":
 			{
-				if ( JSON.stringify ( this.csv ).length < this._config.max.size )
+				// we know the data max size is equivalent to the size of first line multiply by number of line,
+				// we don't calc the size of full object to avoid function time increase following number of line
+				if ( size < this._config.max.size )
 				{
 				}
 				else if ( this.download == true )
@@ -2934,6 +2943,7 @@ class Els_csv extends Els_Back {
 				else
 				{
 					this.#removeOneLine ( );
+					keys.shift ( );
 				}
 				break;
 			}
@@ -2959,7 +2969,9 @@ class Els_csv extends Els_Back {
 			}
 		}
 
-		this.cellNbLines.innerText = Object.keys ( this.csv ).length;
+		let p = getSIPrefix ( size );
+
+		this.cellLimits.innerText = keys.length + "L / " + p.value + p.label + "o";
 	}
 
 	#saveData ( callPrompt = this._config.prompt )
@@ -3869,4 +3881,57 @@ function _getColor ( txt )
 		color = getComputedStyle(document.body).getPropertyValue(color)
 	}
 	return color;
+}
+
+function _getSize ( object )
+{
+	const objectList = [];
+	const stack = [object];
+	let bytes = 0;
+
+	while (stack.length)
+	{
+		const value = stack.pop();
+
+		switch ( typeof value )
+		{
+			case 'boolean':
+			{
+				bytes += 4;
+				break;
+			}
+			case 'string':
+			{
+				bytes += value.length * 2;
+				break;
+			}
+			case 'number':
+			{
+				bytes += 8;
+				break;
+			}
+			case 'object':
+			{
+				if (!objectList.includes(value))
+				{
+					objectList.push(value);
+					for (const prop in value)
+					{
+						if (value.hasOwnProperty(prop))
+						{
+							stack.push(value[prop]);
+						}
+					}
+				}
+				break;
+			}
+			default:
+			{
+				console.log ( value, typeof value );
+				break;
+			}
+		}
+	}
+
+	return bytes;
 }
