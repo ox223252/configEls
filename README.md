@@ -567,6 +567,7 @@ les  options sont les même pour tous les graphs :
 	min:-1, // valeur minimum de de l'ordonnée'
 	max:1, // valeur maximum de l'ordonnée
 	zoom:true, // active le mode zoom
+	zooOverView: true, // active ou desactive le graph de zoom du bas
 	unit: false, // need to set to true if units are needed for at least one curve
 	curve:[
 		{

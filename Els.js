@@ -2107,8 +2107,8 @@ class Els_graph extends Els_Back {
 			zoomData = this.graph.main.chart.getInitialScaleBounds ( );
 			zoomData.zoom = false;
 			this.graph.main.chart.resetZoom ( );
-			this.graph.main.chart.update ( );
-			this.graph.zoom.chart.update ( );
+			this.graph.main?.chart?.update ( );
+			this.graph.zoom?.chart?.update ( );
 		}
 
 		super( config, id );
@@ -2243,57 +2243,6 @@ class Els_graph extends Els_Back {
 		// init config of zoom overview graph
 		if ( true == this.config.zoom )
 		{
-			this.divZoom = document.createElement("div");
-			this.divZoom.className = "zoom";
-			this._domEl.appendChild( this.divZoom );
-
-			this.graph.zoom.canvas = document.createElement( "canvas" );
-			this.divZoom.appendChild( this.graph.zoom.canvas );
-
-			this.graph.zoom.canvas.addEventListener ( "dblclick", resetZoom );
-			this.graph.main.canvas.addEventListener ( "dblclick", resetZoom );
-
-			this.graph.zoom.config = {
-				type: this.graph.main.config.type,
-				data: this.graph.main.config.data,
-				options: {
-					maintainAspectRatio: false,
-					animation: false,
-					scales: {
-						x: {
-							ticks: this.graph.main.config.options.scales.x.ticks
-						},
-						y: {},
-					},
-					plugins: {
-						quadrants: {
-							view: "rgba( 128, 128, 128, 0.1)",
-						},
-						legend:{
-							display:false
-						}
-					}
-				},
-				plugins: []
-			};
-
-			this.graph.zoom.config.plugins.push ({
-				id: 'quadrants',
-				beforeDraw(chart, args, opt) {
-					const {ctx, scales: {x, y}} = chart;
-
-					let left = x.getPixelForValue ( zoomData.x.min );
-					let right = x.getPixelForValue ( zoomData.x.max );
-					let bot = y.getPixelForValue ( zoomData.y.min );
-					let top = y.getPixelForValue ( zoomData.y.max );
-
-					ctx.save();
-					ctx.fillStyle = "rgba(128,128,128,0.2)";
-					ctx.fillRect( left, top, right - left, bot - top);
-					ctx.restore();
-				}
-			});
-
 			this.graph.main.config.options.plugins.zoom = {
 				pan: {
 					enabled: true,
@@ -2323,7 +2272,7 @@ class Els_graph extends Els_Back {
 
 						zoomData.zoom = true;
 
-						this.graph.zoom.chart.update ( );
+						this.graph.zoom?.chart?.update ( );
 					},
 					onZoomRejected: (c)=>{
 						zoomData.update = true;
@@ -2341,8 +2290,63 @@ class Els_graph extends Els_Back {
 					},
 				}
 			};
+			
+			this.graph.main.canvas.addEventListener ( "dblclick", resetZoom );
 
-			this.graph.zoom.chart = new Chart ( this.graph.zoom.canvas.getContext('2d'), this.graph.zoom.config );
+			if ( false != this.config.zoomOverView )
+			{
+				this.divZoom = document.createElement("div");
+				this.divZoom.className = "zoom";
+				this._domEl.appendChild( this.divZoom );
+
+				this.graph.zoom.canvas = document.createElement( "canvas" );
+				this.divZoom.appendChild( this.graph.zoom.canvas );
+
+				this.graph.zoom.canvas.addEventListener ( "dblclick", resetZoom );
+
+				this.graph.zoom.config = {
+					type: this.graph.main.config.type,
+					data: this.graph.main.config.data,
+					options: {
+						maintainAspectRatio: false,
+						animation: false,
+						scales: {
+							x: {
+								ticks: this.graph.main.config.options.scales.x.ticks
+							},
+							y: {},
+						},
+						plugins: {
+							quadrants: {
+								view: "rgba( 128, 128, 128, 0.1)",
+							},
+							legend:{
+								display:false
+							}
+						}
+					},
+					plugins: []
+				};
+
+				this.graph.zoom.config.plugins.push ({
+					id: 'quadrants',
+					beforeDraw(chart, args, opt) {
+						const {ctx, scales: {x, y}} = chart;
+
+						let left = x.getPixelForValue ( zoomData.x.min );
+						let right = x.getPixelForValue ( zoomData.x.max );
+						let bot = y.getPixelForValue ( zoomData.y.min );
+						let top = y.getPixelForValue ( zoomData.y.max );
+
+						ctx.save();
+						ctx.fillStyle = "rgba(128,128,128,0.2)";
+						ctx.fillRect( left, top, right - left, bot - top);
+						ctx.restore();
+					}
+				});
+
+				this.graph.zoom.chart = new Chart ( this.graph.zoom.canvas.getContext('2d'), this.graph.zoom.config );
+			}
 		}
 
 		// add min / max on graph
@@ -2352,7 +2356,7 @@ class Els_graph extends Els_Back {
 			
 			this.graph.main.config.options.scales.y[ "suggested"+cFL( label ) ] = config[ label ];
 
-			if ( true != config.zoom ) continue;
+			if ( !this.graph.zoom?.chart ) continue;
 		
 			this.graph.zoom.config.options.scales.y[ "suggested"+cFL( label ) ] = config[ label ];
 		}
@@ -2571,7 +2575,7 @@ class Els_graph extends Els_Back {
 
 	_updateZoom ( params )
 	{
-		if ( true != this.config.zoom )
+		if ( !this.graph.zoom?.chart )
 		{
 			return;
 		}
@@ -2619,16 +2623,13 @@ class Els_graph extends Els_Back {
 			this._updateGraph ( "main" );
 		}
 
-		if ( true == this.config.zoom )
-		{
-			this.graph.zoom.config.options.scales.x.min = Math.min ( ...x.min );
-			this.graph.zoom.config.options.scales.x.max = Math.max ( ...x.max );
+		this.graph.zoom.config.options.scales.x.min = Math.min ( ...x.min );
+		this.graph.zoom.config.options.scales.x.max = Math.max ( ...x.max );
 
-			this.graph.zoom.config.options.scales.y.min = Math.min ( ...y.min );
-			this.graph.zoom.config.options.scales.y.max = Math.max ( ...y.max );
-			
-			this._updateGraph ( "zoom" );
-		}
+		this.graph.zoom.config.options.scales.y.min = Math.min ( ...y.min );
+		this.graph.zoom.config.options.scales.y.max = Math.max ( ...y.max );
+		
+		this._updateGraph ( "zoom" );
 	}
 
 	update ( )
