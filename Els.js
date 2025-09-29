@@ -2719,6 +2719,7 @@ class Els_csv extends Els_Back {
 			let span = document.createElement ( "span" );
 			cell.appendChild ( span );
 			span.style.float = "right";
+			span.classList.add ( "right" );
 			this.cellLimits = document.createElement ( "span" );
 			span.appendChild ( this.cellLimits );
 			this.cellLimits.classList.add ( "data" );
@@ -2912,7 +2913,18 @@ class Els_csv extends Els_Back {
 		{
 			case "time":
 			{
-				let toOld = this.entryDate.filter ( item=>new Date ( )- item.date > this._config.max.time * 1000*60*60 )
+				let toOld = [];
+
+				for ( let index = 0; index < keys.length; index++ )
+				{
+					if ( ( this.lastIndex - Number ( keys[ index ] ) ) < this._config.max.time * 60 * 60 )
+					{
+						break;
+					}
+
+					toOld.push ( keys[ index ] );
+				}
+
 				if ( !toOld.length )
 				{
 					break;
@@ -2924,7 +2936,7 @@ class Els_csv extends Els_Back {
 				}
 				else
 				{
-					toOld.map ( item=>delete this.csv[ item.index ] );
+					toOld.map ( item=>delete this.csv[ item ] );
 				}
 				break;
 			}
@@ -2974,7 +2986,14 @@ class Els_csv extends Els_Back {
 
 		let p = getSIPrefix ( size );
 
-		this.cellLimits.innerText = keys.length + "L / " + p.value + p.label + "o";
+		function pad(d) {
+			return (d < 10) ? '0' + d.toString() : d.toString();
+		}
+
+		this.cellLimits.innerText = keys.length + "L / " + p.value.toFixed ( 2 ) + p.label + "o" + "\nH:M:S ";
+		let time = this.lastIndex - Number ( keys[ 0 ] );
+
+		this.cellLimits.innerText += pad ( Math.floor ( time / 3600 ) ) +":"+pad ( Math.floor ( time / 60 ) )+":"+pad ( time%60 )
 	}
 
 	#saveData ( callPrompt = this._config.prompt )
