@@ -159,7 +159,8 @@ Créait une `iframe` vers [open street map](https://www.openstreetmap.org/#map=6
 	default:"...",
 	periode:0, // temps de rafraichissement
 	action: "min", // "min" / "max" / "average" utile uniquement si channel est un tableau (cf note)
-	valueType: <Data>, // cf Chapter valueType
+	valueType: <Data>, // cf Chapter valueType or obj
+	format: "string", // uniquement utile avec valueType:"obj" (cf section io format )
 	unit: <Data> // cf Chapter valueType
 }
 ```
@@ -177,6 +178,21 @@ let unit = {
 ````
 
 `unit` peut etre defini a `false` pour les données de type : `flow` / `volume` / `temp`, cela permat de ne pas afficher l'unitée.
+
+#### format:
+
+Dans le cas ou on voudrait passer unde donnée structurée au champ, on peut definir le format d'affichage ici.  Imaginons l'objet suivant :
+
+```javascript
+{
+	label:"donnée",
+	id:6
+}
+```
+
+si nous definissons `format` comme suit : `du_Text_Avant ;label; : ;id;` l'objet sera decodé et affiché comme suis : `du_Text_Avant donnée : 6`.
+
+si vous observez bien les clées de l'objet sont utilisés comme identifiant dans le chaine `format`, précedé et suivit d'un `;`.
 
 #### note:
 dans le cas ou l'on souhaite afficher la valeur la plus petite / grande ou moyenne entre plusieurs entrée, il est possible de definir la config comme suis :

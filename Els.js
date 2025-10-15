@@ -616,6 +616,25 @@ class Els_io extends Els_Back {
 		const getCallback = ( c )=>{
 			switch ( c.valueType )
 			{
+				case "obj":
+				{
+					return (msg)=>{
+						if ( !this._config?.format )
+						{
+							return;
+						}
+						let out = "";
+						out = this._config.format;
+
+						for ( let k in msg.value )
+						{
+							out = out.replace ( ";"+k+";", msg.value[ k ] );
+						}
+
+						this.divData.innerHTML = out;
+					};
+					break;
+				}
 				case "volume":
 				{
 					return (msg)=>{
