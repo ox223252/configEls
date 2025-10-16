@@ -626,6 +626,12 @@ class Els_io extends Els_Back {
 						let out = "";
 						out = this._config.format;
 
+						if ( msg.value.label )
+						{
+							this.divLabel.innerHTML = msg.value.label;
+							delete msg.value.label;
+						}
+
 						for ( let k in msg.value )
 						{
 							out = out.replace ( ";"+k+";", msg.value[ k ] );
