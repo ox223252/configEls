@@ -3923,6 +3923,7 @@ function _objMerge ( obj1, obj2 )
 			{
 				console.log( obj2[s].constructor.name )
 			}
+			case 'Boolean':
 			case 'Number':
 			case 'String':
 			{
