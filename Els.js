@@ -577,9 +577,18 @@ class Els_map extends Els_Back {
 }
 
 class Els_io extends Els_Back {
+	#defaultConfig = {
+		type: "io",
+		channel: "WEBSOCKET CHANNEL",
+		domType: "output", // input
+		periode: 1, // temps de rafraichissement
+	}
+
 	constructor ( config,  id )
 	{
 		super( config, id );
+
+		this._config = _objMerge ( this.#defaultConfig, this._config );
 
 		// label if neeted
 		this.divLabel = document.createElement ( "div" );
@@ -886,16 +895,7 @@ class Els_io extends Els_Back {
 			params.id = Math.random ( );
 		}
 
-		let json = {
-			type:"io",
-			channel:"WEBSOCKET CHANNEL",
-			periode:0,
-		}
-
-		if ( undefined != config )
-		{
-			Object.assign ( json, config );
-		}
+		let json = _objMerge ( this.#defaultConfig, config );
 
 		try // config
 		{
