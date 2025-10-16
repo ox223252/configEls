@@ -158,9 +158,10 @@ Créait une `iframe` vers [open street map](https://www.openstreetmap.org/#map=6
 	prefix:"prefix",
 	default:"...",
 	periode:0, // temps de rafraichissement
-	action: "min", // "min" / "max" / "average" utile uniquement si channel est un tableau (cf note)
-	valueType: <Data>, // cf Chapter valueType or obj
-	format: "string", // uniquement utile avec valueType:"obj" (cf section io format )
+	action: "min", // "min" / "max" / "average" utile uniquement si channel est un tableau (cf section io.action)
+	valueType: <Data>, // cf Chapter valueType or :
+		// - obj cf section io.obj
+		// - input cf section io.input
 	unit: <Data> // cf Chapter valueType
 }
 ```
@@ -177,24 +178,10 @@ let unit = {
 }
 ````
 
-`unit` peut etre defini a `false` pour les données de type : `flow` / `volume` / `temp`, cela permat de ne pas afficher l'unitée.
+`unit` peut être défini a `false` pour les données de type : `flow` / `volume` / `temp`, cela permet de ne pas afficher l’unité.
 
-#### format:
 
-Dans le cas ou on voudrait passer unde donnée structurée au champ, on peut definir le format d'affichage ici.  Imaginons l'objet suivant :
-
-```javascript
-{
-	label:"donnée",
-	id:6
-}
-```
-
-si nous definissons `format` comme suit : `du_Text_Avant ;label; : ;id;` l'objet sera decodé et affiché comme suis : `du_Text_Avant donnée : 6`.
-
-si vous observez bien les clées de l'objet sont utilisés comme identifiant dans le chaine `format`, précedé et suivit d'un `;`.
-
-#### note:
+#### io.action:
 dans le cas ou l'on souhaite afficher la valeur la plus petite / grande ou moyenne entre plusieurs entrée, il est possible de definir la config comme suis :
 
 ```javascript
@@ -205,6 +192,31 @@ dans le cas ou l'on souhaite afficher la valeur la plus petite / grande ou moyen
 	...
 }
 ```
+
+#### io.obj:
+Dans certain cas nous voudrons afficher une donnée formaté a partir d'une structure ou objet. Dans ce cas il faut définir le format de sortie comme suis.
+
+```javascript
+{
+	type: "io",
+	...
+	valueType: "obj",
+	format: "du_Text_Avant ;label; : ;id;",
+}
+```
+
+Ici, le format déclare un text `du_Text_Avant ` suivit d'une donnée issue de l'objet `;label;`  puis un text ` : ` puis une nouvelle donnée `;id;`. pour compléter cette string il faudra un objet comme celui-ci :
+
+```javascript
+{
+	label:"donnée",
+	id:6
+}
+```
+
+Ainsi nous obtenons la chaîne suivante : `du_Text_Avant donnée : 6`
+
+Si vous observez bien les clées de l'objet sont utilisés comme identifiant dans le chaîne `format`, précédé et suivit d'un `;`.
 
 ### bin:
 ```javascript
