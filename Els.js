@@ -637,7 +637,7 @@ class Els_io extends Els_Back {
 							out = out.replace ( ";"+k+";", msg.value[ k ] );
 						}
 
-						this.divData.innerHTML = out;
+						this.value = out;
 					};
 					break;
 				}
@@ -646,7 +646,7 @@ class Els_io extends Els_Back {
 					return (msg)=>{
 						if ( isNaN ( msg.value ) )
 						{
-							this.divData.innerHTML = msg.value;
+							this.value = msg.value;
 							return;
 						}
 
@@ -654,7 +654,7 @@ class Els_io extends Els_Back {
 
 						let {coef,print} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
 
-						this.divData.innerHTML = refactor ( value * coef , "v_"+this._config.unitCurrent.volume );
+						this.value = refactor ( value * coef , "v_"+this._config.unitCurrent.volume );
 						this.divUnit.innerHTML = print;
 					};
 					break;
@@ -664,7 +664,7 @@ class Els_io extends Els_Back {
 					return (msg)=>{
 						if ( isNaN ( msg.value ) )
 						{
-							this.divData.innerHTML = msg.value;
+							this.value = msg.value;
 							return;
 						}
 
@@ -672,7 +672,7 @@ class Els_io extends Els_Back {
 						
 						let {coef,print} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
 
-						this.divData.innerHTML = refactor ( value * coef , 1 );
+						this.value = refactor ( value * coef , 1 );
 						this.divUnit.innerHTML = print;
 					}
 					break;
@@ -682,7 +682,7 @@ class Els_io extends Els_Back {
 					return (msg)=>{
 						if ( isNaN ( msg.value ) )
 						{
-							this.divData.innerHTML = msg.value;
+							this.value = msg.value;
 							return;
 						}
 
@@ -707,13 +707,13 @@ class Els_io extends Els_Back {
 					return (msg)=>{
 						if ( isNaN ( msg.value ) )
 						{
-							this.divData.innerHTML = msg.value;
+							this.value = msg.value;
 							return;
 						}
 
 						let value = msg.value * ( c.coef || 1 );
 
-						this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( /\.\d\d\dZ/, "" );
+						this.value = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( /\.\d\d\dZ/, "" );
 					};
 					break;
 				}
@@ -722,13 +722,13 @@ class Els_io extends Els_Back {
 					return (msg)=>{
 						if ( isNaN ( msg.value ) )
 						{
-							this.divData.innerHTML = msg.value;
+							this.value = msg.value;
 							return;
 						}
 
 						let value = msg.value * ( c.coef || 1 );
 
-						this.divData.innerHTML = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
+						this.value = new Date ( value ).toISOString ( ).replace ( "T"," " ).replace ( "Z", "" );
 					};
 					break;
 				}
@@ -737,7 +737,7 @@ class Els_io extends Els_Back {
 					return (msg)=>{
 						if ( isNaN ( msg.value ) )
 						{
-							this.divData.innerHTML = msg.value;
+							this.value = msg.value;
 							return;
 						}
 						
@@ -750,11 +750,11 @@ class Els_io extends Els_Back {
 							{
 								a = 1;
 							}
-							this.divData.innerHTML = refactor ( value, a );
+							this.value = refactor ( value, a );
 						}
 						else
 						{
-							this.divData.innerHTML = value;
+							this.value = value;
 						}
 
 						if ( c.unit )
@@ -834,7 +834,7 @@ class Els_io extends Els_Back {
 				}
 				case "default":
 				{
-					this.divData.innerHTML = config.default;
+					this.value = config.default;
 					break;
 				}
 				case "unit":
@@ -854,6 +854,23 @@ class Els_io extends Els_Back {
 					break;
 				}
 			}
+		}
+	}
+
+	set value ( value )
+	{
+		if ( undefined == value )
+		{
+			value = "...";
+		}
+		
+		if ( "input" == this.divData.nodeName.toLowerCase ( ) )
+		{
+			this.divData.value = value;
+		}
+		else
+		{
+			this.divData.innerHTML = value;
 		}
 	}
 
