@@ -603,11 +603,71 @@ class Els_io extends Els_Back {
 			_createTranslateItem ( this.divLabel, config );
 		}
 
+		let domType = "div"
+		if ( "input" == this._config.domType )
+		{
+			if ( "string" != config.channel?.constructor.name.toLowerCase ( ) )
+			{
+				throw "only one chanel for inputs";
+			}
+
+			domType = "input";
+		}
+
 		// data
-		this.divData = document.createElement ( "div" );
+		this.divData = document.createElement ( domType );
 		this._domEl.appendChild ( this.divData );
 		this.divData.className = "data";
-		this.divData.innerHTML = config.default || "...";
+		this.value = config.default;
+
+		if ( "input" == this._config.domType )
+		{
+			this.divData.disabled = true;
+
+			Object.assign ( this.divData, this._config.inputConfig )
+
+			this.divData.addEventListener ( "input", (ev)=>{
+				ev.target.classList.remove ( "err" );
+
+				if ( this._config.inputConfig.min > ev.target.value )
+				{
+					console.log ( "min", this._config.inputConfig.min, ev.target.value )
+					ev.stopImmediatePropagation ( );
+					ev.target.classList.add ( "err" );
+					ev.target.value = this._config.inputConfig.min;
+				}
+
+				if ( this._config.inputConfig.max < ev.target.value )
+				{
+					console.log ( "max" )
+					ev.target.classList.add ( "err" );
+					ev.stopImmediatePropagation ( );
+					ev.target.value = this._config.inputConfig.max;
+				}
+			})
+
+			// used to give min / max or other data;
+			if ( this._config?.inputConfig?.channel )
+			{
+				let cb = {
+					periode: -1, // send once
+					channel: this._config.inputConfig.channel,
+					f: (msg)=>{
+						if ( undefined != msg.value.step )
+						{
+							let p = Math.pow ( 10, Math.round ( Math.log10 ( msg.value.step ) ) - 1 )
+							msg.value.step = Math.round ( msg.value.step / p ) * p;
+						}
+						
+						Object.assign ( this.divData, msg.value );
+						Object.assign ( this._config.inputConfig, msg.value );
+						this.divData.title = JSON.stringify ( msg.value, null, 4 );
+					}
+				}
+
+				this._callArgs.push ( cb );
+			}
+		}
 
 		// unit
 		this.divUnit = document.createElement ( "div" );
@@ -823,6 +883,12 @@ class Els_io extends Els_Back {
 				channel: config.channel,
 				f: getCallback ( config )
 			};
+
+			if ( "input" == this._config.domType )
+			{
+				cb.input = true;
+				cb.obj = this.divData;
+			}
 
 			this._callArgs.push ( cb );
 		}

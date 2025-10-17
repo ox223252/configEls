@@ -53,33 +53,37 @@ export default class Config {
 	{
 		function emitter ( config )
 		{
-			if ( undefined != socket.on )
-			{ // if we-re using socket.io
-				let c = Object.keys ( config || {} )
+			let outConfig = {};
+			let outCmd = "";
+
+			if ( config.input )
+			{
+				outConfig = {
+					[ config.channel ]: config.obj.value
+				}
+				outCmd = "data-set";
+			}
+			else
+			{
+				outConfig = Object.keys ( config || {} )
 					.filter ( k=>k!="obj" )
+					.filter ( k=>config[ k ]!=undefined )
 					.reduce ( (a,k)=>{
 						a[ k ] = config[ k ];
 						return a;
 					}, {});
-				socket.emit ( "userCmd", c );
+				outCmd = "userCmd";
+			}
+
+			if ( undefined != socket.on )
+			{ // if we-re using socket.io
+				socket.emit ( outCmd, outConfig );
 			}
 			else
 			{ // if we're using basics websockets
-				let event = new Event ( "userCmd" );
+				let event = new Event ( outCmd );
 
-				for ( let k in config )
-				{
-					if ( ( "obj" == k )
-						|| ( undefined === config[ k ] ) )
-					{
-						continue;
-					}
-					if ( undefined == event.data )
-					{
-						event.data = {};
-					}
-					event.data[ k ] = config[ k ];
-				}
+				event.data = outConfig;
 
 				socket.dispatchEvent ( event );
 			}
@@ -106,7 +110,16 @@ export default class Config {
 				}
 			}
 
-			if ( c.obj )
+			if ( c.input )
+			{
+				c.obj.disabled = false;
+				c.obj.removeEventListener ( "input", c.obj.fnOnClick );
+				c.obj.addEventListener ( "input", c.obj.fnOnClick = ()=>{
+					console.log ( "config" )
+					emitter ( c );
+				});
+			}
+			else if ( c.obj )
 			{
 				c.obj.removeEventListener ( "click", c.obj.fnOnClick );
 				c.obj.addEventListener ( "click", c.obj.fnOnClick = ()=>{

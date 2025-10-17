@@ -161,7 +161,7 @@ Créait une `iframe` vers [open street map](https://www.openstreetmap.org/#map=6
 	action: "min", // "min" / "max" / "average" utile uniquement si channel est un tableau (cf section io.action)
 	valueType: <Data>, // cf Chapter valueType or :
 		// - obj cf section io.obj
-		// - input cf section io.input
+	domType: "output", // output/input cf section io.input
 	unit: <Data> // cf Chapter valueType
 }
 ```
@@ -217,6 +217,25 @@ Ici, le format déclare un text `du_Text_Avant ` suivit d'une donnée issue de l
 Ainsi nous obtenons la chaîne suivante : `du_Text_Avant donnée : 6`
 
 Si vous observez bien les clées de l'objet sont utilisés comme identifiant dans le chaîne `format`, précédé et suivit d'un `;`.
+
+#### io.input:
+Il est possible de définir l'io comme une input. auquel cas des données de configuration supplémentaires sont disponibles.
+
+```javascript
+{
+	type:"io",
+	...
+	valueType: "input",
+	inputConfig:{
+		channel:"channelConfig"
+		type: "number", // number, string, checkbox
+		min: 0, // pour les number
+		max: 12, // pour les number
+		step: 0.1, // pour les number
+		title: "string", 
+	}
+}
+```
 
 ### bin:
 ```javascript
