@@ -112,7 +112,6 @@ export default class Config {
 
 			if ( c.input )
 			{
-				c.obj.disabled = false;
 				c.obj.removeEventListener ( "input", c.obj.fnOnClick );
 				c.obj.addEventListener ( "input", c.obj.fnOnClick = ()=>{
 					console.log ( "config" )

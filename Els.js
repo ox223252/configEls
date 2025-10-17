@@ -613,6 +613,19 @@ class Els_io extends Els_Back {
 
 			domType = "input";
 		}
+		else if ( "select" == this._config.domType )
+		{
+			domType = "select";
+			this.select = {
+				options: [],
+				value: undefined,
+			};
+
+			if ( "string" != config.channel?.constructor.name.toLowerCase ( ) )
+			{
+				throw "only one chanel for inputs";
+			}
+		}
 
 		// data
 		this.divData = document.createElement ( domType );
@@ -653,15 +666,75 @@ class Els_io extends Els_Back {
 					periode: -1, // send once
 					channel: this._config.inputConfig.channel,
 					f: (msg)=>{
+						this.divData.disabled = false;
+
 						if ( undefined != msg.value.step )
 						{
 							let p = Math.pow ( 10, Math.round ( Math.log10 ( msg.value.step ) ) - 1 )
 							msg.value.step = Math.round ( msg.value.step / p ) * p;
 						}
-						
+
 						Object.assign ( this.divData, msg.value );
 						Object.assign ( this._config.inputConfig, msg.value );
 						this.divData.title = JSON.stringify ( msg.value, null, 4 );
+					}
+				}
+
+				this._callArgs.push ( cb );
+			}
+		}
+		else if ( "select" == this._config.domType )
+		{
+			this.divData.disabled = true;
+
+			// used to give min / max or other data;
+			if ( this._config?.inputConfig?.channel )
+			{
+				let cb = {
+					periode: -1, // send once
+					channel: this._config.inputConfig.channel,
+					f: (msg)=>{
+						if ( "Array" != msg.value?.constructor.name )
+						{
+							return;
+						}
+
+						this.divData.disabled = false;
+						while ( this.divData.firstChild )
+						{
+							this.divData.removeChild ( this.divData.firstChild );
+						}
+
+						msg.value.map ( (item,index)=>{
+							let opt = document.createElement ( "option" );
+
+							if ( index == 0 )
+							{
+								opt.select = true;
+							}
+
+							if ( "Object" == item.constructor.name )
+							{
+								this.select.options.push ({value:item.value,text:item.text});
+
+								opt.value = item.value;
+								opt.innerText = item.text;
+							}
+							else
+							{
+								this.select.options.push ({value:item,text:item});
+
+								opt.value = item;
+								opt.innerText = item;
+							}
+
+							this.divData.appendChild ( opt );
+						})
+
+						if ( this.select?.value )
+						{
+							this.value = this.select.value;
+						}
 					}
 				}
 
@@ -812,7 +885,11 @@ class Els_io extends Els_Back {
 						
 						let value = msg.value * ( c.coef || 1 );
 
-						if ( undefined != refactor )
+						if ( "select" == this._config.domType )
+						{
+							this.value = value;
+						}
+						else if ( undefined != refactor )
 						{
 							let a = c.valueType;
 							if ( a == undefined )
@@ -835,7 +912,6 @@ class Els_io extends Els_Back {
 							this.divUnit.style.display = "none"
 						}
 					}
-					break;
 				}
 			}
 		}
@@ -939,13 +1015,41 @@ class Els_io extends Els_Back {
 			value = "...";
 		}
 		
-		if ( "input" == this.divData.nodeName.toLowerCase ( ) )
+		switch ( this.divData.nodeName.toLowerCase ( ) )
 		{
-			this.divData.value = value;
-		}
-		else
-		{
-			this.divData.innerHTML = value;
+			case "input":
+			{
+				this.divData.value = value;
+				break;
+			}
+			case "select":
+			{
+				if ( !this.select?.options?.length )
+				{
+					while ( this.divData.firstChild )
+					{
+						this.divData.removeChild ( this.divData.firstChild );
+					}
+
+					let opt = document.createElement ( "option" );
+					opt.innerText = value;
+
+					this.divData.appendChild ( opt );
+
+					this.select.value = value;
+				}
+				else
+				{
+					let v = this.select.options.filter ( f=>f.value==value||f.text==value );
+					this.divData.value = v[ 0 ].value
+				}
+				break;
+			}
+			default:
+			{
+				this.divData.innerHTML = value;
+				break;
+			}
 		}
 	}
 

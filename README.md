@@ -161,7 +161,7 @@ Créait une `iframe` vers [open street map](https://www.openstreetmap.org/#map=6
 	action: "min", // "min" / "max" / "average" utile uniquement si channel est un tableau (cf section io.action)
 	valueType: <Data>, // cf Chapter valueType or :
 		// - obj cf section io.obj
-	domType: "output", // output/input cf section io.input
+	domType: "output", // output/input/select cf section io.input / io.select
 	unit: <Data> // cf Chapter valueType
 }
 ```
@@ -236,6 +236,22 @@ Il est possible de définir l'io comme une input. auquel cas des données de con
 	}
 }
 ```
+
+### io.select:
+Il est possible de definir l'io comme un select, auquel cas des données suprementaires de configuration suplémentaire sont disponiibles.
+
+```javascript
+{
+	type:"io",
+	...
+	valueType: "select",
+	inputConfig:{
+		channel:"channelOptions"
+	}
+}
+```
+
+Ici, le channel de config doit renvoyer soit un tableau de string, soit un tableau d'object contenant `text` qui sera affiché et `value` qui sera renvoyé en cas de modification.
 
 ### bin:
 ```javascript
