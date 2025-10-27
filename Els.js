@@ -1634,7 +1634,7 @@ class Els_gauge extends Els_Back {
 				for ( let u in this._config.unit )
 				{
 					this.config.unitCurrent.event.addEventListener ( u, (event)=>{
-						let {coef} = _calcCoef ( this._config.valueType, this._config.unit[ u ], this._config.unitCurrent );
+						let {coef} = _calcCoef ( this._config.valueType, this._config.unit, this._config.unitCurrent );
 						this.gauge.coef = coef;
 					});
 
@@ -4148,6 +4148,7 @@ function _debounceEvent ( id, cb, arg, delay = 100 )
 /// \param[ in ] obj1 : base object 
 /// \param[ in ] obj2 : second object
 /// \note if obj1.foo and obj2.foo exist obj2 will overwrite obj1 in the new one
+/// \note be care obj1 use a deep copy, obj2 overwrite it with shadowcopy
 function _objMerge ( obj1, obj2 )
 {
 	let d = {...obj1};
@@ -4160,7 +4161,7 @@ function _objMerge ( obj1, obj2 )
 			{
 				if ( !d[s] )
 				{ // if property doesn't exist deep cpy
-					d[s]={...obj2[s]};
+					d[s]=obj2[s];
 				}
 				else
 				{
@@ -4170,7 +4171,7 @@ function _objMerge ( obj1, obj2 )
 			}
 			case "Array":
 			{
-				d[s]=[...obj2[s]];
+				d[s]=obj2[s];
 				break;
 			}
 			default:
