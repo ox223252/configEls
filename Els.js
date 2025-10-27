@@ -2734,6 +2734,67 @@ class Els_graph extends Els_Back {
 			}
 		}
 
+		if ( true == this._config.csv?.exportable )
+		{
+			let exportCSV = ()=>{
+				let out = [];
+
+				if ( "line" == this.graph.main.config.type )
+				{
+					out.push ( this._config.channel + this._config.csv.separator + dataset.labels.join ( this._config.csv.separator ) );
+					this.graph.main.config.data.datasets.map ( dataset=>{
+						out.push ( "" );
+						out.push ( dataset.label + this._config.csv.separator + dataset.data.join ( this._config.csv.separator ) );
+					})
+				}
+				else
+				{
+					this.graph.main.config.data.datasets.map ( dataset=>{
+						out.push ( "X" + this._config.csv.separator + dataset.data.map ( d=>d.x ).join ( this._config.csv.separator ) );
+						out.push ( dataset.label + this._config.csv.separator + dataset.data.map ( d=>d.y ).join ( this._config.csv.separator ) );
+						out.push ( "" );
+					})
+				}
+
+				out = out.join ( "\n" );
+
+				let downloadLink = document.createElement ( "a" );
+				downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURI( out );
+
+				let fileName = ( this._config.csv.file )
+					? this._config.csv.file+'.csv'
+					: "CSV_"+new Date().toISOString()+".csv";
+
+				downloadLink.download = ( true == this._config.csv.prompt )
+					? prompt ( "nom du fichier ?", fileName )
+					: fileName;
+
+				if ( "null" == downloadLink.download )
+				{
+					return;
+				}
+
+				document.body.appendChild(downloadLink);
+				downloadLink.click();
+				document.body.removeChild(downloadLink);
+			};
+
+			switch ( this._config.csv.export )
+			{
+				case "event":
+				{
+					this._callArgs.push ({
+						event:{
+							target: this._config.csv.eventTarget,
+							src: this._config.csv.eventSrc,
+							cb: exportCSV,
+						}
+					});
+					break;
+				}
+			}
+		}
+
 		this.update ( );
 	}
 

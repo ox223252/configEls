@@ -649,6 +649,15 @@ les  options sont les même pour tous les graphs :
 	debounce:{ // temps minimum entre deux mise a jour des graphiques
 		time:1000, // temps en ms
 		active:true // actif ou non
+	},
+	csv:{
+		exportable: false, // defini si le CSVpeut etre exporté
+		export: "event", // definie la façon d'ont l'esport est declencé (actuellement que le mode event)
+		eventSrc: "exportToCSV", // l'eventment qu'il faut rechercher
+		eventTarget: "exportToCSV", // sur quel objet il faut chercher l'eventement
+		prompt: false, // demande à l'utilisateur le nom du fichier de sortie
+		file: undefined, // le ficher de sortie
+		separator: ";", // le separateur CSV
 	}
 }
 ```
