@@ -3465,7 +3465,9 @@ class Els_button extends Els_Back {
 			{
 				label: "X",
 				text: "Y",
-				cmd: "myCmd"
+				cmd: "myCmd",
+				eventTarget: undefined,
+				eventSrc: undefined,
 			}
 		]
 	}

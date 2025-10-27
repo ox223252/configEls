@@ -695,6 +695,29 @@ L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les do
 }
 ````
 
+
+### button:
+Element qui genère un bouton qui peut au choix, envoyer une commande, ou emetre un evenement global pour la page.
+```javascript
+{
+	type:"button",
+
+		type: "button",
+		options:[
+			{
+				label: "X", // text avant le bouton
+				text: "Y", // text dans le bouton
+				cmd: "myCmd", // la commande renvoyé au serveur
+				eventTarget: undefined, // sur quel objet il faut chercher l'eventement
+				eventSrc: undefined, // l'eventment qu'il faut rechercher
+			}
+		]
+}
+```
+
+si `cmd` n'est pas defini seul l'eventment de page sera fonctionnel et inversement.
+
+
 ## Shared configs:
 ```javascript
 {
