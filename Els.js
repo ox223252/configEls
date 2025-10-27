@@ -3449,9 +3449,30 @@ class Els_button extends Els_Back {
 
 			let cb = {
 				obj: ret.obj.button,
-				cmd: ret.cmd,
-				arg: ret.arg
+				arg: this._config.options[ i ].arg,
 			};
+
+			// event to the page
+			if ( this._config.options[ i ].eventTarget
+				&& this._config.options[ i ].eventSrc )
+			{
+				if ( !document[ this._config.options[ i ].eventTarget ] )
+				{
+					document[ this._config.options[ i ].eventTarget ] = new EventTarget ( );
+				}
+
+				let event = new Event ( this._config.options[ i ].eventSrc );
+				event.value = this._config.options[ i ].arg;
+
+				ret.obj.button.addEventListener ( "click",(ev)=>{
+					document[ this._config.options[ i ].eventTarget ].dispatchEvent ( event );
+				});
+			}
+
+			if ( this._config.options[ i ].cmd )
+			{
+				cb.cmd = this._config.options[ i ].cmd;
+			}
 
 			this._tab[ i ] = ret.obj;
 			this._callArgs.push ( cb );
@@ -3510,7 +3531,7 @@ class Els_button extends Els_Back {
 			padding: "10px",
 		});
 
-		return {obj, cmd:config.cmd, arg:config.arg};
+		return {obj};
 	}
 
 	static canCreateNew ( )
