@@ -63,7 +63,7 @@ export default class Config {
 				}
 				outCmd = "data-set";
 			}
-			else
+			else if ( config.cmd )
 			{
 				outConfig = Object.keys ( config || {} )
 					.filter ( k=>k!="obj" )
@@ -75,7 +75,10 @@ export default class Config {
 				outCmd = "userCmd";
 			}
 
-			if ( undefined != socket.on )
+			if ( "" == outCmd )
+			{ // no output cmd
+			}
+			else if ( undefined != socket.on )
 			{ // if we-re using socket.io
 				socket.emit ( outCmd, outConfig );
 			}
@@ -110,11 +113,22 @@ export default class Config {
 				}
 			}
 
-			if ( c.input )
+			if ( c.event )
 			{
-				c.obj.removeEventListener ( "input", c.obj.fnOnClick );
-				c.obj.addEventListener ( "input", c.obj.fnOnClick = ()=>{
-					console.log ( "config" )
+				if ( !document[ c.event.target ] )
+				{
+					document[ c.event.target ] = new EventTarget ( );
+				}
+
+				document[ c.event.target ].removeEventListener ( c.event.src, c.fnOnEvent );
+				document[ c.event.target ].addEventListener ( c.event.src, c.fnOnEvent = (ev)=>{
+					c.event.cb ( ev.value );
+				});
+			}
+			else if ( c.input )
+			{
+				c.obj.removeEventListener ( "input", c.obj.fnOnInput );
+				c.obj.addEventListener ( "input", c.obj.fnOnInput = ()=>{
 					emitter ( c );
 				});
 			}
