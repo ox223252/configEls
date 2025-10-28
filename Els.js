@@ -323,11 +323,28 @@ class Els_text_id extends Els_text {
 }
 
 class Els_map extends Els_Back {
+	static _domType = "iframe";
+	static _defaultConfig = {
+		type:"map",
+		gps:[
+			{
+				a:0,
+				b:0
+			}
+		],
+		view:{
+			a:-0.01,
+			b:-0.01,
+			c:0.01,
+			d:0.01,
+		}
+	};
+
 	constructor ( config, id )
 	{
 		super( config, id );
 
-		this._elList = document.createElement("iframe");
+		this._elList = document.createElement(this.constructor._domType);
 		this._domEl.appendChild ( this._elList );
 		this._elList.className = "map";
 		this._elList.src = "https://www.openstreetmap.org/export/embed.html"
@@ -369,26 +386,8 @@ class Els_map extends Els_Back {
 		}
 
 		let zoom = 0.01;
-		let json = {
-			type:"map",
-			gps:[
-				{
-					a:0,
-					b:0
-				}
-			],
-			view:{
-				a:-0.01,
-				b:-0.01,
-				c:0.01,
-				d:0.01,
-			}
-		}
-
-		if ( undefined != config )
-		{
-			Object.assign ( json, config );
-		}
+		
+		let json = _objMerge ( Els[ params.class ]._defaultConfig, config );
 
 		try // config
 		{
@@ -454,168 +453,178 @@ class Els_map extends Els_Back {
 }
 
 class Els_io extends Els_Back {
-	#defaultConfig = {
+	static _defaultConfig = {
 		type: "io",
 		channel: "WEBSOCKET CHANNEL",
 		domType: "output", // input
 		periode: 1, // temps de rafraichissement
-	}
+	};
 
 	constructor ( config,  id )
 	{
 		super( config, id );
 
-		this._config = _objMerge ( this.#defaultConfig, this._config );
-
 		// label if neeted
 		this.divLabel = document.createElement ( "div" );
 		this._domEl.appendChild ( this.divLabel );
 		this.divLabel.className = "label";
-		if ( config.label )
+		if ( this._config.label )
 		{
-			this.divLabel.innerHTML = config.label;
+			this.divLabel.innerHTML = this._config.label;
 		}
-		if ( config.labelId )
+		if ( this._config.labelId )
 		{
-			_createTranslateItem ( this.divLabel, config );
+			_createTranslateItem ( this.divLabel, this._config );
 		}
 
-		let domType = "div"
-		if ( "input" == this._config.domType )
+		switch ( this._config.domType )
 		{
-			if ( "string" != config.channel?.constructor.name.toLowerCase ( ) )
+			case "input":
 			{
-				throw "only one chanel for inputs";
+				if ( "string" != this._config.channel?.constructor.name.toLowerCase ( ) )
+				{
+					throw "only one chanel for inputs";
+				}
+
+				break
 			}
-
-			domType = "input";
-		}
-		else if ( "select" == this._config.domType )
-		{
-			domType = "select";
-			this.select = {
-				options: [],
-				value: undefined,
-			};
-
-			if ( "string" != config.channel?.constructor.name.toLowerCase ( ) )
+			case "select":
 			{
-				throw "only one chanel for inputs";
+				this.select = {
+					options: [],
+					value: undefined,
+				};
+
+				if ( "string" != config.channel?.constructor.name.toLowerCase ( ) )
+				{
+					throw "only one chanel for inputs";
+				}
+
+				break;
+			}
+			default:
+			{
+				this._config.domType = "div";
+				break;
 			}
 		}
 
 		// data
-		this.divData = document.createElement ( domType );
+		this.divData = document.createElement ( this._config.domType );
 		this._domEl.appendChild ( this.divData );
 		this.divData.className = "data";
 		this.value = config.default;
 
-		if ( "input" == this._config.domType )
+		switch ( this._config.domType )
 		{
-			this.divData.disabled = true;
-
-			Object.assign ( this.divData, this._config.inputConfig )
-
-			this.divData.addEventListener ( "input", (ev)=>{
-				ev.target.classList.remove ( "err" );
-
-				if ( this._config.inputConfig.min > ev.target.value )
-				{
-					console.log ( "min", this._config.inputConfig.min, ev.target.value )
-					ev.stopImmediatePropagation ( );
-					ev.target.classList.add ( "err" );
-					ev.target.value = this._config.inputConfig.min;
-				}
-
-				if ( this._config.inputConfig.max < ev.target.value )
-				{
-					console.log ( "max" )
-					ev.target.classList.add ( "err" );
-					ev.stopImmediatePropagation ( );
-					ev.target.value = this._config.inputConfig.max;
-				}
-			})
-
-			// used to give min / max or other data;
-			if ( this._config?.inputConfig?.channel )
+			case "input":
 			{
-				let cb = {
-					periode: -1, // send once
-					channel: this._config.inputConfig.channel,
-					f: (msg)=>{
-						this.divData.disabled = false;
+				this.divData.disabled = true;
 
-						if ( undefined != msg.value.step )
-						{
-							let p = Math.pow ( 10, Math.round ( Math.log10 ( msg.value.step ) ) - 1 )
-							msg.value.step = Math.round ( msg.value.step / p ) * p;
-						}
+				Object.assign ( this.divData, this._config.inputConfig )
 
-						Object.assign ( this.divData, msg.value );
-						Object.assign ( this._config.inputConfig, msg.value );
-						this.divData.title = JSON.stringify ( msg.value, null, 4 );
+				this.divData.addEventListener ( "input", (ev)=>{
+					ev.target.classList.remove ( "err" );
+
+					if ( this._config.inputConfig.min > ev.target.value )
+					{
+						console.log ( "min", this._config.inputConfig.min, ev.target.value )
+						ev.stopImmediatePropagation ( );
+						ev.target.classList.add ( "err" );
+						ev.target.value = this._config.inputConfig.min;
 					}
-				}
 
-				this._callArgs.push ( cb );
+					if ( this._config.inputConfig.max < ev.target.value )
+					{
+						console.log ( "max" )
+						ev.target.classList.add ( "err" );
+						ev.stopImmediatePropagation ( );
+						ev.target.value = this._config.inputConfig.max;
+					}
+				})
+
+				// used to give min / max or other data;
+				if ( this._config?.inputConfig?.channel )
+				{
+					let cb = {
+						periode: -1, // send once
+						channel: this._config.inputConfig.channel,
+						f: (msg)=>{
+							this.divData.disabled = false;
+
+							if ( undefined != msg.value.step )
+							{
+								let p = Math.pow ( 10, Math.round ( Math.log10 ( msg.value.step ) ) - 1 )
+								msg.value.step = Math.round ( msg.value.step / p ) * p;
+							}
+
+							Object.assign ( this.divData, msg.value );
+							Object.assign ( this._config.inputConfig, msg.value );
+							this.divData.title = JSON.stringify ( msg.value, null, 4 );
+						}
+					}
+
+					this._callArgs.push ( cb );
+				}
+				break
 			}
-		}
-		else if ( "select" == this._config.domType )
-		{
-			this.divData.disabled = true;
-
-			// used to give min / max or other data;
-			if ( this._config?.inputConfig?.channel )
+			case "select":
 			{
-				let cb = {
-					periode: -1, // send once
-					channel: this._config.inputConfig.channel,
-					f: (msg)=>{
-						if ( "Array" != msg.value?.constructor.name )
-						{
-							return;
-						}
+				this.divData.disabled = true;
 
-						this.divData.disabled = false;
-						while ( this.divData.firstChild )
-						{
-							this.divData.removeChild ( this.divData.firstChild );
-						}
-
-						msg.value.map ( (item,index)=>{
-							let opt = document.createElement ( "option" );
-
-							if ( index == 0 )
+				// used to give min / max or other data;
+				if ( this._config?.inputConfig?.channel )
+				{
+					let cb = {
+						periode: -1, // send once
+						channel: this._config.inputConfig.channel,
+						f: (msg)=>{
+							if ( "Array" != msg.value?.constructor.name )
 							{
-								opt.select = true;
+								return;
 							}
 
-							if ( "Object" == item.constructor.name )
+							this.divData.disabled = false;
+							while ( this.divData.firstChild )
 							{
-								this.select.options.push ({value:item.value,text:item.text});
-
-								opt.value = item.value;
-								opt.innerText = item.text;
-							}
-							else
-							{
-								this.select.options.push ({value:item,text:item});
-
-								opt.value = item;
-								opt.innerText = item;
+								this.divData.removeChild ( this.divData.firstChild );
 							}
 
-							this.divData.appendChild ( opt );
-						})
+							msg.value.map ( (item,index)=>{
+								let opt = document.createElement ( "option" );
 
-						if ( this.select?.value )
-						{
-							this.value = this.select.value;
+								if ( index == 0 )
+								{
+									opt.select = true;
+								}
+
+								if ( "Object" == item.constructor.name )
+								{
+									this.select.options.push ({value:item.value,text:item.text});
+
+									opt.value = item.value;
+									opt.innerText = item.text;
+								}
+								else
+								{
+									this.select.options.push ({value:item,text:item});
+
+									opt.value = item;
+									opt.innerText = item;
+								}
+
+								this.divData.appendChild ( opt );
+							})
+
+							if ( this.select?.value )
+							{
+								this.value = this.select.value;
+							}
 						}
 					}
-				}
 
-				this._callArgs.push ( cb );
+					this._callArgs.push ( cb );
+				}
 			}
 		}
 
@@ -956,7 +965,7 @@ class Els_io extends Els_Back {
 			params.id = Math.random ( );
 		}
 
-		let json = _objMerge ( this.#defaultConfig, config );
+		let json = _objMerge ( this.defaultConfig, config );
 
 		try // config
 		{
