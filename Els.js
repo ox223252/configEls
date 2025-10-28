@@ -1,25 +1,35 @@
 /// \brief base element for HMI display
 class Els_Back {
+	static _defaultConfig = {};
+
 	/// \param [ in ] config : object with configuration
 	///     { type: <className String>, id: <String>, style: { } }
 	/// \param [ ind ] id : new element ID (String)
 	constructor ( config, id )
 	{
+		this._init ( );
+
 		this.data = [];
 		this._callArgs = [];
-		this._config = config;
+		this._config = Object.assign ( config, this.defaultConfig );
 
 		this._domEl = document.createElement ( "div" );
 		this._domEl.className = config.type;
 		this._domEl.style.flexGrow = 1;
 		this._domEl.id = config.id || id;
-		this._update ( config );
+
+		this._update ( this._config );
 	}
 
 	/// \brief need to be surcharged
 	/// \note allow user to update part of config to change display
 	update ( config )
 	{
+	}
+
+	_init ( )
+	{
+
 	}
 
 	/// \brief update style
@@ -31,36 +41,42 @@ class Els_Back {
 			return;
 		}
 
-		Object.keys ( config )
-			.map ( key=>{
-				if ( "style" == key ) try
+		try
+		{
+			switch ( config?.style?.constructor.name )
+			{
+				case 'Object':
 				{
-					switch (config.style.constructor.name)
-					{
-						case 'Object':
-						{
-							Object.assign ( this._domEl.style, config.style );
-							break;
-						}
-						case 'String':
-						{
-							this._domEl.style.cssText = config.style;
-							break;
-						}
-						default:
-						{
-							console.error ( 'Unknown style object prototype' );
-							console.log ( config.style );
-							console.log ( config.style.constructor.name );
-							break;
-						}
-					}
+					Object.assign ( this._domEl.style, config.style );
+					break;
 				}
-				catch ( e )
+				case 'String':
 				{
-					console.log ( e )
+					this._domEl.style.cssText = config.style;
+					break;
 				}
-			});
+				case undefined:
+				{
+					break;
+				}
+				default:
+				{
+					console.error ( 'Unknown style object prototype' );
+					console.log ( config?.style );
+					console.log ( config?.style?.constructor.name );
+					break;
+				}
+			}
+		}
+		catch ( e )
+		{
+			console.log ( e )
+		}
+	}
+
+	get defaultConfig ( )
+	{
+		return this._defaultConfig;
 	}
 
 	/// \brief return callbacks
@@ -172,96 +188,21 @@ class Els_Back {
 	}
 }
 
-class Els_title extends Els_Back {
-	constructor ( config, id )
-	{
-		super( config, id );
-
-		this._elList = document.createElement ( "h3" );
-		this._domEl.appendChild ( this._elList );
-		this._elList.innerHTML = config.text || "";
-	}
-
-	update ( config )
-	{
-		this._update ( config );
-
-		for ( let k of Object.keys ( config ) )
-		{
-			switch ( k )
-			{
-				case "text":
-				{
-					this._elList.innerHTML = config.text;
-					break;
-				}
-			}
-		}
-	}
-
-	static canCreateNew ( )
-	{
-		return true;
-	}
-
-	static new ( params = {}, config = undefined )
-	{
-		if ( undefined == params.id )
-		{
-			params.id = Math.random ( );
-		}
-
-		let json = {
-			type:"title",
-			text:"",
-		}
-
-		if ( undefined != config )
-		{
-			json = JSON.parse ( JSON.stringify ( config ) );
-		}
-
-		try // config
-		{
-			let configDiv = document.createElement ( "div" );
-			let title = document.createElement ( "input" );
-			configDiv.appendChild ( title );
-			title.type = "text";
-			title.placeholder = "title"
-			title.value = json.text || "";
-			title.onchange = (ev)=>{
-				json.text=ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			title.onkeyup = title.onchange;
-
-			let jsonDiv = document.createElement ( "textarea" );
-			jsonDiv.value = JSON.stringify ( json, null, 4 );
-			jsonDiv.onchange = (ev)=>{
-				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
-				title.value = json.text;
-			}
-			jsonDiv.onkeyup = jsonDiv.onchange;
-
-			let outDiv = Els_Back._newOut ( params.id, json );
-
-			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
-		}
-		catch ( e )
-		{
-			return undefined
-		}
-	}
-}
-
 class Els_text extends Els_Back {
+	static _domType = "p";
+	static _defaultConfig = {
+		type:"text",
+		text:"",
+		style:undefined,
+	};
+	
 	constructor ( config, id )
 	{
 		super( config, id );
 
-		this._elList = document.createElement ( "p" );
+		this._elList = document.createElement ( this.constructor._domType );
 		this._domEl.appendChild ( this._elList );
-		this._elList.innerHTML = config.text || "";
+		this.update ( config );
 	}
 
 	update ( config )
@@ -275,6 +216,11 @@ class Els_text extends Els_Back {
 				case "text":
 				{
 					this._elList.innerHTML = config.text;
+					break;
+				}
+				default:
+				{
+					this._elList[ k ] = config[ k ];
 					break;
 				}
 			}
@@ -293,16 +239,8 @@ class Els_text extends Els_Back {
 			params.id = Math.random ( );
 		}
 
-		let json = {
-			type:"text",
-			text:"",
-		}
-
-		if ( undefined != config )
-		{
-			Object.assign ( json, config );
-		}
-
+		let json = _objMerge ( Els[ params.class ]._defaultConfig, config );
+		
 		try // config
 		{
 			let configDiv = document.createElement ( "div" );
@@ -335,86 +273,36 @@ class Els_text extends Els_Back {
 	}
 }
 
-class Els_img extends Els_Back {
+class Els_title extends Els_text {
+	static _domType = "h3";
+	static _defaultConfig = {
+		type:"title",
+		text:"",
+		style:undefined,
+	};
+
+	constructor ( config, id )
+	{
+		super( config, id );
+	}
+}
+
+class Els_img extends Els_text {
+	static _domType = "img";
+	static _defaultConfig = {
+		type:"img",
+		src:"",
+		style:undefined,
+	};
+
 	constructor ( config, id )
 	{
 		super( config, id );
 
-		this._elList = document.createElement ( "img" );
-		this._domEl.appendChild ( this._elList );
-		this._elList.src = config.src;
-		this._elList.style.maxWidth = "100%";
-		this._elList.style.maxHeight = "100%";
-	}
-
-	update ( config )
-	{
-		this._update ( config );
-
-		for ( let k of Object.keys ( config ) )
-		{
-			switch ( k )
-			{
-				case "src":
-				{
-					this._elList.src = config.src;
-					break;
-				}
-			}
-		}
-	}
-
-	static canCreateNew ( )
-	{
-		return true;
-	}
-
-	static new ( params = {}, config = undefined )
-	{
-		if ( undefined == params.id )
-		{
-			params.id = Math.random ( );
-		}
-
-		let json = {
-			type:"img",
-			src:"",
-		}
-
-		if ( undefined != config )
-		{
-			Object.assign ( json, config );
-		}
-
-		try // config
-		{
-			let configDiv = document.createElement ( "div" );
-			let imgSrc = document.createElement ( "input" );
-			configDiv.appendChild ( imgSrc );
-			imgSrc.type = "text";
-			imgSrc.value = json.src || "";
-			imgSrc.onchange = (ev)=>{
-				json.src=ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			imgSrc.onkeyup = imgSrc.onchange;
-
-			let jsonDiv = document.createElement ( "textarea" );
-			jsonDiv.value = JSON.stringify ( json, null, 4 );
-			jsonDiv.onchange = (ev)=>{
-				imgSrc.value = json.src;
-				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
-			}
-			jsonDiv.onkeyup = jsonDiv.onchange;
-
-			let outDiv = Els_Back._newOut ( params.id, json );
-
-			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
-		}
-		catch ( e )
-		{
-			return undefined
-		}
+		Object.assign ( this._elList.style, {
+			maxWidth: "100%",
+			maxHeight: "100%",
+		});
 	}
 }
 
@@ -431,17 +319,6 @@ class Els_text_id extends Els_text {
 	{
 		super( config, id );
 		_createTranslateItem ( this._els, config );
-	}
-}
-
-class Els_unit_id extends Els_Back {
-	constructor ( config, id )
-	{
-		super( config, id );
-
-		this._elList = document.createElement("div");
-		this._domEl.appendChild ( this._elList );
-		this._els.innerHTML = creatSpansFromOptions ( config.text_id, config.prefix );
 	}
 }
 
@@ -3737,7 +3614,6 @@ const Els = {
 	img: Els_img,
 	title_id: Els_title_id,
 	text_id: Els_text_id,
-	unit_id: Els_unit_id,
 	map: Els_map,
 	io: Els_io,
 	bin: Els_bin,
