@@ -874,6 +874,20 @@ class Els_io extends Els_Back {
 					};
 					break;
 				}
+				case "error":
+				{
+					return (msg)=>{
+						this.value = Number ( msg.value );
+						if ( Number ( msg.value ) != 0 )
+						{
+							this.divData.classList.add ( "err" );
+						}
+						else
+						{
+							this.divData.classList.remove ( "err" );
+						}
+					}
+				}
 				default:
 				{
 					return (msg)=>{

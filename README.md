@@ -160,6 +160,7 @@ Créait une `iframe` vers [open street map](https://www.openstreetmap.org/#map=6
 	periode:0, // temps de rafraichissement
 	action: "min", // "min" / "max" / "average" utile uniquement si channel est un tableau (cf section io.action)
 	valueType: <Data>, // cf Chapter valueType or :
+		// - error set class error on data if value != 0
 		// - obj cf section io.obj
 	domType: "output", // output/input/select cf section io.input / io.select
 	unit: <Data> // cf Chapter valueType
