@@ -456,9 +456,21 @@ class Els_io extends Els_Back {
 	static _defaultConfig = {
 		type: "io",
 		channel: "WEBSOCKET CHANNEL",
-		domType: "output", // input
-		periode: 1, // temps de rafraichissement
+		domType: "output",
+		periode: 1,
+		default: "",
+		valueType: undefined,
+		label: undefined,
+		labelId: undefined,
+		prefix: undefined,
+		action: undefined,
+		unit: undefined,
 	};
+
+	static _choices = {
+		domType: ["output", "input", "select"],
+		valueType: ["obj", "volume", "flow", "temperature", "date", "dateMs", "error"],
+	}
 
 	constructor ( config,  id )
 	{
@@ -477,6 +489,8 @@ class Els_io extends Els_Back {
 			_createTranslateItem ( this.divLabel, this._config );
 		}
 
+		let domType = "div";
+
 		switch ( this._config.domType )
 		{
 			case "input":
@@ -486,6 +500,7 @@ class Els_io extends Els_Back {
 					throw "only one chanel for inputs";
 				}
 
+				domType = this._config.domType;
 				break
 			}
 			case "select":
@@ -500,17 +515,17 @@ class Els_io extends Els_Back {
 					throw "only one chanel for inputs";
 				}
 
+				domType = this._config.domType;
 				break;
 			}
 			default:
 			{
-				this._config.domType = "div";
 				break;
 			}
 		}
 
 		// data
-		this.divData = document.createElement ( this._config.domType );
+		this.divData = document.createElement ( domType );
 		this._domEl.appendChild ( this.divData );
 		this.divData.className = "data";
 		this.value = config.default;
@@ -965,7 +980,7 @@ class Els_io extends Els_Back {
 			params.id = Math.random ( );
 		}
 
-		let json = _objMerge ( this.defaultConfig, config );
+		let json = _objMerge ( Els[ params.class ]._defaultConfig, config );
 
 		try // config
 		{
@@ -1007,7 +1022,16 @@ class Els_io extends Els_Back {
 			}
 			inDef.onkeyup = inDef.onchange;
 
-			let [divTyp,inTyp] = _createInput ( "type", [ "volume", "flow", "temperature", "date" ] );
+			let [divDom,inDom] = _createSelect ( Els_io._choices.domType, "dom type" )
+			configDiv.appendChild ( divDom );
+			inDom.value = json.domType || "";
+			inDom.onchange = (ev)=>{
+				json.domType = ev.target.value;
+				Els_Back.newJson ( json, jsonDiv, outDiv );
+			}
+			inDom.onkeyup = inDom.onchange;
+
+			let [divTyp,inTyp] = _createInput ( "data type", Els_io._choices.valueType );
 			configDiv.appendChild ( divTyp );
 			inTyp.value = json.valueType || "";
 			inTyp.placeholder = "nb digit / type";
@@ -3657,13 +3681,13 @@ function _createTranslateItem ( out, config )
 /// \return [div,select]
 ///     div : main object need to be added to the DOM list
 ///     select : DOM element used to add event listener
-function _createSelect ( array = [] )
+function _createSelect ( array = [], inlabel )
 {
 	let div = document.createElement ( "div" );
 	div.style.display = "flex";
 
 	let label = document.createElement ( "label" );
-	label.innerHTML = "Data : ";
+	label.innerHTML = ( inlabel || "Data" ) + " : ";
 
 	let select = document.createElement ( "select" );
 
