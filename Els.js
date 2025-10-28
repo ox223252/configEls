@@ -1087,6 +1087,14 @@ class Els_io extends Els_Back {
 }
 
 class Els_bin extends Els_Back {
+	static _domType = "p";
+	static _defaultConfig = {
+		type:"bin",
+		channel:"WS_DATA_CHANNEL",
+		periode:0,
+		text:""
+	};
+
 	constructor ( config, id )
 	{
 		super( config, id );
@@ -1144,17 +1152,7 @@ class Els_bin extends Els_Back {
 			params.id = Math.random ( );
 		}
 
-		let json = {
-			type:"bin",
-			channel:"WS_DATA_CHANNEL",
-			periode:0,
-			text:""
-		}
-
-		if ( undefined != config )
-		{
-			Object.assign ( json, config );
-		}
+		let json = _objMerge ( Els[ params.class ]._defaultConfig, config );
 
 		try // config
 		{
