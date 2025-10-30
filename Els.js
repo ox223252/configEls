@@ -4111,7 +4111,7 @@ function _objMerge ( obj1, obj2 )
 
 	for ( let s in obj2 )
 	{
-		switch ( obj2[s].constructor.name )
+		switch ( obj2[s]?.constructor.name )
 		{
 			case "Object":
 			{
@@ -4139,6 +4139,10 @@ function _objMerge ( obj1, obj2 )
 			case 'String':
 			{
 				d[s]=obj2[s];
+				break;
+			}
+			case undefined:
+			{
 				break;
 			}
 		}
