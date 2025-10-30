@@ -4007,13 +4007,222 @@ function _createColorClicker ( params = {} )
 	return [div,iColor];
 }
 
+/// \brief Create a table color
+/// \param [ in ] divs :
+///     {
+///         config,
+///         json,
+///         outObj
+///     }
+/// \param [ in ] json :
+///     {
+///         [ arrayId ]: []
+///     }
+function _createColorLimitTable ( divs, json, params = {} )
+{
+	Els_Debug ( json )
+
+	if ( !params.array )
+	{
+		params.array = json.color
+	}
+
+	if ( !params.limit )
+	{
+		params.limit = "right";
+	}
+
+	if ( params.limit == "right" )
+	{
+		params.min = 2;
+		params.calcAdd = (value)=>{
+			value  = value * 2 + 1 -  params.array.length;
+		};
+		params.titles = [ "color", "limit" ];
+		params.tableLength = ()=>{return iNb.value * 2 + 1};
+	}
+	else
+	{
+		params.min = 0;
+		params.calcAdd = (value)=>{
+			value -= params.array.length;
+		}
+		params.titles = [ "limit", "color" ];
+		params.tableLength = ()=>{return iNb.value * 2 - 1};
+	}
+
+	console.log ( params.array )
+	let length = params.array.filter ( v=>!isNaN ( v ) ).length;
+
+	let [divNb,iNb] = _createInput ( "limits nb" );
+	divs.config.appendChild ( divNb );
+	iNb.value = length;
+	iNb.type = "number";
+	iNb.min = params.min;
+	iNb.step = 1;
+	iNb.onchange = (ev)=>{
+		if ( ev.target.value < ev.target.min )
+		{
+			ev.target.value = ev.target.min;
+		}
+
+		let add = params.calcAdd ( ev.target.value );
+
+		if ( add > 0 )
+		{
+			params.array.push ( new Array( add ) );
+		}
+		else
+		{
+			params.array.splice ( -add );
+		}
+
+		feedTable ( );
+	};
+
+	let table = document.createElement ( "table" );
+	divs.config.appendChild ( table );
+	table.style.width = "100%";
+
+	let thead = document.createElement ( "thead" );
+	table.appendChild ( thead );
+
+	thead.appendChild ( createLine ( params.titles ) )
+
+	let tbody = document.createElement ( "tbody" );
+	table.appendChild ( tbody );
+
+	feedTable ( );
+
+	function feedTable ( )
+	{
+		let creatCellLimit = ( index )=>{
+			let td = document.createElement ( "td" );
+			td.rowSpan = 2;
+
+			let input = document.createElement ( "input" );
+			td.appendChild ( input );
+			input.type = "number";
+			input.value = Number ( params.array[ index ] );
+			input.style.height = "40px";
+			input.onchange = (ev)=>{
+				params.array[ index ] = Number ( ev.target.value );
+
+				params.array.map ( (v,i,a)=>{
+					if ( isNaN ( v ) )
+					{
+						return;
+					}
+
+					if ( i < index )
+					{
+						if ( a[ i ] > a[ index ] )
+						{
+							a[ i ] = a[ index ];
+						}
+					}
+					else
+					{
+						if ( a[ i ] < a[ index ] )
+						{
+							a[ i ] = a[ index ];
+						}
+					}
+				} )
+				Els_Back.newJson ( json, divs.json, divs.outObj );
+
+				feedTable ( );
+			};
+
+			return td;
+		};
+
+		let creatColor = ( index )=>{
+			console.log ( params.array[ index ] )
+			let [divColor,iColor] = _createColorClicker ( {
+				callback: (ev,color)=>{
+					params.array[ index ] = "rgba("+color.join(',')+")";
+					Els_Back.newJson ( json, divs.json, divs.outObj );
+				},
+				type: "td",
+				color: params.array[ index ],
+			} );
+			iColor.style.height = "40px";
+
+			divColor.rowSpan = 2;
+
+			return divColor;
+		};
+
+		while ( tbody.firstChild )
+		{
+			tbody.removeChild ( tbody.firstChild );
+		}
+
+		for ( let index = 0; index < params.tableLength ( ); index++ )
+		{
+			let tr = document.createElement ( "tr" );
+			tr.style.height = "20px";
+
+			let colIndex = index % 2;
+
+			switch ( params.titles[ colIndex ] )
+			{
+				case "limit":
+				{
+					tr.appendChild ( creatCellLimit ( index ) );
+
+					break;
+				}
+				case "color":
+				{
+					tr.appendChild ( creatColor ( index ) );
+
+					break;
+				}
+			}
+
+			if ( index == 0 )
+			{
+				tr.appendChild ( document.createElement ( "td" ) );
+			}
+
+			tbody.appendChild ( tr );
+		}
+		
+		let tr = document.createElement ( "tr" );
+		tbody.appendChild ( tr );
+
+		let td = document.createElement ( "td" );
+		tr.appendChild ( td );
+	}
+
+	function createLine ( array )
+	{
+		let tr = document.createElement ( "tr" );
+		for ( let str of array )
+		{
+			let td = createCell ( str );
+			tr.appendChild ( td );
+		}
+		return tr;
+	}
+
+	function createCell ( str )
+	{
+		let td = document.createElement ( "td" );
+		td.appendChild ( document.createTextNode ( str ) );
+		return td;
+	}
+}
+
+
+
 function _calcCoef ( type, baseUnit, currentUnit )
 {
 	let coef = 1;
 	let print = "";
 	let offset = 0;
-
-
 
 	switch ( type )
 	{
