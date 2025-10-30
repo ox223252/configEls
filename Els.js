@@ -401,6 +401,33 @@ class Els_img extends Els_text {
 			maxHeight: "100%",
 		});
 	}
+
+	static new ( params = {}, config = undefined, deep = 0 )
+	{
+		if ( undefined == params.id )
+		{
+			params.id = Math.random ( );
+		}
+
+		let json = undefined;
+		if ( deep )
+		{ // if not first call (deep!=0) then config no need to be check (check previously in child class)
+			json = config;
+		}
+		else
+		{
+			json = _objMerge ( Els[ params.class ]._defaultConfig, config );
+		}
+
+		params.confItem = {
+			src: {
+				fnct: _createInput,
+				args: [ "src" ],
+			},
+		};
+
+		return Els_Back.new ( params, json, deep + 1 );
+	}
 }
 
 class Els_title_id extends Els_title {
