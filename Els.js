@@ -1097,136 +1097,152 @@ class Els_io extends Els_Back {
 		return true;
 	}
 
-	static new ( params = {}, config = undefined )
+	static new ( params = {}, config = undefined, deep = 0 )
 	{
 		if ( undefined == params.id )
 		{
 			params.id = Math.random ( );
 		}
 
-		let json = _objMerge ( Els[ params.class ]._defaultConfig, config );
+		let json = undefined;
+		if ( deep )
+		{ // if not first call (deep!=0) then config no need to be check (check previously in child class)
+			json = config;
+		}
+		else
+		{
+			json = _objMerge ( Els[ params.class ]._defaultConfig, config );
+		}
+
+		params.confItem = {
+			label: {
+				fnct: _createInput,
+				args: [ "label" ],
+			},
+			default: {
+				fnct: _createInput,
+				args: [ "default" ],
+				placeholder: "default value",
+			},
+			domType: {
+				fnct: _createSelect,
+				args: [ Els_io._choices.domType, "dom type" ],
+			},
+			valueType: {
+				fnct: _createInput,
+				args: [ "data type", Els_io._choices.valueType ],
+				placeholder: "nb digit / type",
+			},
+			unit: {
+				fnct: _createInput,
+				args: [ "unit" ],
+			},
+			coef:{
+				fnct: _createInput,
+				args: [ "static Coef" ],
+				type: "number",
+			}
+		};
+
+		let divs = Els_Back.new ( params, json );
 
 		try // config
 		{
-			let configDiv = document.createElement ( "div" );
-			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
-			configDiv.appendChild ( divCha );
-			sCha.value = json.channel || "";
-			sCha.onchange = (ev)=>{
-				json.channel = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv );
+			{
+				// let [divLab,inLab] = _createInput ( "label" );
+				// configDiv.appendChild ( divLab );
+				// inLab.value = json.label || "";
+				// inLab.onchange = (ev)=>{
+				// 	json.label = ev.target.value;
+				// 	Els_Back.newJson ( json, jsonDiv, outDiv );
+				// }
+				// inLab.onkeyup = inLab.onchange;
+
+				// let [divDef,inDef] = _createInput ( "default" );
+				// configDiv.appendChild ( divDef );
+				// inDef.value = json.default || "";
+				// inDef.placeholder = "default value";
+				// inDef.onchange = (ev)=>{
+				// 	json.default = ev.target.value;
+				// 	Els_Back.newJson ( json, jsonDiv, outDiv );
+				// }
+				// inDef.onkeyup = inDef.onchange;
+
+				// let [divDom,inDom] = _createSelect ( Els_io._choices.domType, "dom type" )
+				// configDiv.appendChild ( divDom );
+				// inDom.value = json.domType || "";
+				// inDom.onchange = (ev)=>{
+				// 	json.domType = ev.target.value;
+				// 	Els_Back.newJson ( json, jsonDiv, outDiv );
+				// }
+				// inDom.onkeyup = inDom.onchange;
+
+				// let [divTyp,inTyp] = _createInput ( "data type", Els_io._choices.valueType );
+				// configDiv.appendChild ( divTyp );
+				// inTyp.value = json.valueType || "";
+				// inTyp.placeholder = "nb digit / type";
+				// inTyp.onchange = (ev)=>{
+				// 	json.valueType = ev.target.value;
+				// 	Els_Back.newJson ( json, jsonDiv, outDiv );
+				// }
+				// inTyp.onkeyup = inTyp.onchange;
+				// let [divUni,inUni] = _createInput ( "unit" );
+				// configDiv.appendChild ( divUni );
+				// inUni.value = json.unit || "";
+				// inUni.onchange = (ev)=>{
+				// 	json.unit = ev.target.value;
+				// 	Els_Back.newJson ( json, jsonDiv, outDiv );
+				// }
+				// inUni.onkeyup = inUni.onchange;
+				// let [divCoef,inCoef] = _createInput ( "static Coef" );
+				// configDiv.appendChild ( divCoef );
+				// inCoef.value = json.coef || "";
+				// inCoef.type = "number";
+				// inCoef.onchange = (ev)=>{
+				// 	json.coef = Number ( ev.target.value );
+				// 	Els_Back.newJson ( json, jsonDiv, outDiv );
+				// }
+				// inCoef.onkeyup = inCoef.onchange;
 			}
-			sCha.onkeyup = sCha.onchange;
 
-			let [divPer,sPer] = _createSelectPeriode ( )
-			configDiv.appendChild ( divPer );
-			sPer.value = json.periode;
-			sPer.onchange = (ev)=>{
-				json.periode = parseInt(ev.target.value);
-				Els_Back.newJson ( json, jsonDiv );
-			}
-			sPer.onkeyup = sPer.onchange;
-
-			let [divLab,inLab] = _createInput ( "label" );
-			configDiv.appendChild ( divLab );
-			inLab.value = json.label || "";
-			inLab.onchange = (ev)=>{
-				json.label = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			inLab.onkeyup = inLab.onchange;
-
-			let [divDef,inDef] = _createInput ( "default" );
-			configDiv.appendChild ( divDef );
-			inDef.value = json.default || "";
-			inDef.placeholder = "default value";
-			inDef.onchange = (ev)=>{
-				json.default = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			inDef.onkeyup = inDef.onchange;
-
-			let [divDom,inDom] = _createSelect ( Els_io._choices.domType, "dom type" )
-			configDiv.appendChild ( divDom );
-			inDom.value = json.domType || "";
-			inDom.onchange = (ev)=>{
-				json.domType = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			inDom.onkeyup = inDom.onchange;
-
-			let [divTyp,inTyp] = _createInput ( "data type", Els_io._choices.valueType );
-			configDiv.appendChild ( divTyp );
-			inTyp.value = json.valueType || "";
-			inTyp.placeholder = "nb digit / type";
-			inTyp.onchange = (ev)=>{
-				json.valueType = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			inTyp.onkeyup = inTyp.onchange;
-
-			let [divUni,inUni] = _createInput ( "unit" );
-			configDiv.appendChild ( divUni );
-			inUni.value = json.unit || "";
-			inUni.onchange = (ev)=>{
-				json.unit = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			inUni.onkeyup = inUni.onchange;
-
-			let [divCoef,inCoef] = _createInput ( "static Coef" );
-			configDiv.appendChild ( divCoef );
-			inCoef.value = json.coef || "";
-			inCoef.type = "number";
-			inCoef.onchange = (ev)=>{
-				json.coef = Number ( ev.target.value );
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			inCoef.onkeyup = inCoef.onchange;
-
-
-			let jsonDiv = document.createElement ( "textarea" );
-			jsonDiv.value = JSON.stringify ( json, null, 4 );
-			jsonDiv.onchange = (ev)=>{
+			divs.json.onchange = (ev)=>{
 				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
-				sCha.value = json?.channel || "";
-				sPer.value = json?.periode || "";
-				inLab.value = json?.label || "";
-				inDef.value = json?.default || "";
-				inTyp.value = json?.valueType || "";
-				inUni.value = json?.unit || "";
-				inCoef.value = json?.coef || "";
+				// sCha.value = json?.channel || "";
+				// sPer.value = json?.periode || "";
+				// inLab.value = json?.label || "";
+				// inDef.value = json?.default || "";
+				// inTyp.value = json?.valueType || "";
+				// inUni.value = json?.unit || "";
+				// inCoef.value = json?.coef || "";
 			}
-			jsonDiv.onkeyup = jsonDiv.onchange;
 
-			let outDiv = Els_Back._newOut ( params.id, json );
-
-			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+			return divs;
 		}
 		catch ( e )
 		{
+			Els_Debug ( e )
 			return undefined
 		}
 	}
 }
 
-class Els_bin extends Els_Back {
+class Els_bin extends Els_text {
 	static _domType = "p";
 	static _defaultConfig = {
 		type:"bin",
 		channel:"WS_DATA_CHANNEL",
 		periode:0,
-		text:""
+		text:"",
+		revert: false,
+		mask: undefined,
+		color: undefined,
 	};
 
 	constructor ( config, id )
 	{
 		super( config, id );
 
-		this.div = document.createElement ( "p" );
-		this.div.className = "status"
-		this._domEl.appendChild ( this.div );
-		this.div.innerHTML = this._config.text;
+		this._elList.className = "status"
 
 		if ( undefined == this._config.mask )
 		{
@@ -1236,32 +1252,37 @@ class Els_bin extends Els_Back {
 		let cb = {
 			periode: this._config.periode || 0,
 			channel: this._config.channel,
-			f: (msg)=>{
-				let v = ( this._config.revert )? ~msg.value: msg.value;
-				v &= this._config.mask;
-				v = !!v;
-
-				if ( v )
-				{
-					this.div.classList.add( "active" );
-				}
-				else
-				{
-					this.div.classList.remove( "active" );
-				}
-
-				if ( !this._config?.color )
-				{ // no color defined
-					return;
-				}
-				else
-				{
-					this.div.style="--status-color:"+_getColor ( this._config.color[ v?1:0 ] );
-				}
-			}
+			f: this._callback,
 		};
 
 		this._callArgs.push ( cb );
+	}
+
+	get _callback ( )
+	{
+		return (msg)=>{
+			let v = ( this._config.revert )? ~msg.value: msg.value;
+			v &= this._config.mask;
+			v = !!v;
+
+			if ( v )
+			{
+				this._elList.classList.add( "active" );
+			}
+			else
+			{
+				this._elList.classList.remove( "active" );
+			}
+
+			if ( !this._config?.color )
+			{ // no color defined
+				return;
+			}
+			else
+			{
+				this._elList.style="--status-color:"+_getColor ( this._config.color[ v?1:0 ] );
+			}
+		};
 	}
 
 	static canCreateNew ( )
@@ -1269,63 +1290,31 @@ class Els_bin extends Els_Back {
 		return true;
 	}
 
-	static new ( params = {}, config = undefined )
+	static new ( params = {}, config = undefined, deep = 0 )
 	{
 		if ( undefined == params.id )
 		{
 			params.id = Math.random ( );
 		}
 
-		let json = _objMerge ( Els[ params.class ]._defaultConfig, config );
-
-		try // config
-		{
-			let configDiv = document.createElement ( "div" );
-			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
-			configDiv.appendChild ( divCha );
-			sCha.value = json.channel || "";
-			sCha.onchange = (ev)=>{
-				json.channel = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv );
-			}
-			sCha.onkeyup = sCha.onchange;
-
-			let [divPer,sPer] = _createSelectPeriode ( )
-			configDiv.appendChild ( divPer );
-			sPer.value = json.periode;
-			sPer.onchange = (ev)=>{
-				json.periode = parseInt(ev.target.value);
-				Els_Back.newJson ( json, jsonDiv );
-			}
-			sPer.onkeyup = sPer.onchange;
-
-			let [divLa,iLa] = _createInput ( "label" );
-			configDiv.appendChild ( divLa );
-			iLa.onchange = (ev)=>{
-				json.text = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			iLa.onkeyup = iLa.onchange;
-
-
-			let jsonDiv = document.createElement ( "textarea" );
-			jsonDiv.value = JSON.stringify ( json, null, 4 );
-			jsonDiv.onchange = (ev)=>{
-				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
-				sCha.value = json?.channel || "";
-				sPer.value = json?.periode || "";
-				iLa.value = json?.text || "";
-			}
-			jsonDiv.onkeyup = jsonDiv.onchange;
-
-			let outDiv = Els_Back._newOut ( params.id, json );
-
-			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		let json = undefined;
+		if ( deep )
+		{ // if not first call (deep!=0) then config no need to be check (check previously in child class)
+			json = config;
 		}
-		catch ( e )
+		else
 		{
-			return undefined
+			json = _objMerge ( Els[ params.class ]._defaultConfig, config );
 		}
+
+		params.confItem = {
+			text: {
+				fnct: _createInput,
+				args: [ "label" ],
+			}
+		};
+
+		return Els_Back.new ( params, json );
 	}
 }
 
