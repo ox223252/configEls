@@ -452,15 +452,15 @@ class Els_map extends Els_Back {
 		type:"map",
 		gps:[
 			{
-				a:0,
-				b:0
+				latitude:0,
+				longitude:0
 			}
 		],
 		view:{
-			a:-0.01,
-			b:-0.01,
-			c:0.01,
-			d:0.01,
+			left:-0.01,
+			top:-0.01,
+			right:0.01,
+			bottom:0.01,
 		}
 	};
 
@@ -471,30 +471,24 @@ class Els_map extends Els_Back {
 		this._elList = document.createElement(this.constructor._domType);
 		this._domEl.appendChild ( this._elList );
 		this._elList.className = "map";
-		this._elList.src = "https://www.openstreetmap.org/export/embed.html"
-		this._elList.src += "?bbox="+config.view.a
-		this._elList.src += "%2C"+config.view.b
-		this._elList.src += "%2C"+config.view.c
-		this._elList.src += "%2C"+config.view.d;
-		config.gps.forEach((p)=>{
-			this._elList.src += "&marker="+p.a+"%2C"+p.b;
-		})
-		this._elList.src += "&layers=ND";
+
+		this.update ( config );
 	}
 
 	update ( config )
 	{
 		this._update ( config );
 
-		this._elList.src = "https://www.openstreetmap.org/export/embed.html"
-		this._elList.src += "?bbox="+config.view.a
-		this._elList.src += "%2C"+config.view.b
-		this._elList.src += "%2C"+config.view.c
-		this._elList.src += "%2C"+config.view.d;
+		let src = "https://www.openstreetmap.org/export/embed.html"
+		src += "?bbox="+config.view.left;
+		src += "%2C"+config.view.top;
+		src += "%2C"+config.view.right;
+		src += "%2C"+config.view.bottom;
 		config.gps.forEach((p)=>{
-			this._elList.src += "&marker="+p.a+"%2C"+p.b;
+			src += "&marker="+p.latitude+"%2C"+p.longitude;
 		})
-		this._elList.src += "&layers=ND";
+		src += "&layers=ND";
+		this._elList.src = src
 	}
 
 	static canCreateNew ( )
@@ -502,7 +496,7 @@ class Els_map extends Els_Back {
 		return true;
 	}
 
-	static new ( params = {}, config = undefined )
+	static new ( params = {}, config = undefined, deep = 0 )
 	{
 		if ( undefined == params.id )
 		{
@@ -510,69 +504,75 @@ class Els_map extends Els_Back {
 		}
 
 		let zoom = 0.01;
-		
-		let json = _objMerge ( Els[ params.class ]._defaultConfig, config );
 
-		try // config
-		{
-			let configDiv = document.createElement ( "div" );
-
-			let [divLa,iLa] = _createInput ( "Latitude (N/S)" );
-			configDiv.appendChild ( divLa );
-			iLa.type = "number";
-			iLa.value = json.gps[0].a || "";
-			iLa.onchange = (ev)=>{
-				json.gps[0].a = ev.target.value;
-				json.view.b = Number ( ev.target.value ) - zoom;
-				json.view.d = Number ( ev.target.value ) + zoom;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			iLa.onkeyup = iLa.onchange;
-
-			let [divLo,iLo] = _createInput ( "Longitude (E/W)" );
-			configDiv.appendChild ( divLo );
-			iLo.type = "number";
-			iLo.value = json.gps[0].b || "";
-			iLo.onchange = (ev)=>{
-				json.gps[0].b = ev.target.value;
-				json.view.a = Number ( ev.target.value ) - zoom;
-				json.view.c = Number ( ev.target.value ) + zoom;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			iLo.onkeyup = iLo.onchange;
-
-			let [divZoom,iZoom] = _createInput ( "Zoom" );
-			configDiv.appendChild ( divZoom );
-			iZoom.type = "number";
-			iZoom.value = 0.001;
-			iZoom.step = 0.0001;
-			iZoom.onchange = (ev)=>{
-				zoom = Number ( ev.target.value );
-				json.view.b = Number ( json.gps[0].a ) - zoom;
-				json.view.d = Number ( json.gps[0].a ) + zoom;
-				json.view.a = Number ( json.gps[0].b ) - zoom;
-				json.view.c = Number ( json.gps[0].b ) + zoom;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			iZoom.onkeyup = iZoom.onchange;
-
-
-			let jsonDiv = document.createElement ( "textarea" );
-			jsonDiv.value = JSON.stringify ( json, null, 4 );
-			jsonDiv.onchange = (ev)=>{
-				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
-				iLo.value = json?.gps[0]?.a || "";
-				iLo.value = json?.gps[0]?.b || "";
-			}
-
-			let outDiv = Els_Back._newOut ( params.id, json );
-
-			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		let json = undefined;
+		if ( deep )
+		{ // if not first call (deep!=0) then config no need to be check (check previously in child class)
+			json = config;
 		}
-		catch ( e )
+		else
 		{
-			return undefined
+			json = _objMerge ( Els[ params.class ]._defaultConfig, config );
 		}
+
+		params.confItem = {
+			latitude: {
+				fnct: _createInput,
+				args: [ "Latitude (N/S)" ],
+				type: "number",
+			},
+			longitude: {
+				fnct: _createInput,
+				args: [ "Longitude (E/W)" ],
+				type: "number",
+			},
+			zoom: {
+				fnct: _createInput,
+				args: [ "Longitude (E/W)" ],
+				type: "number",
+			},
+		};
+
+		let divs = Els_Back.new ( params, json, deep + 1 );
+
+		divs.sub.latitude.input.value = isNaN ( json.gps[0].latitude )? "" : json.gps[0].latitude;
+		divs.sub.latitude.input.onchange = (ev)=>{
+			json.gps[0].latitude = Number ( ev.target.value );
+			json.view.top = json.gps[0].latitude - zoom;
+			json.view.bottom = json.gps[0].latitude + zoom;
+			Els_Back.newJson ( json, divs.json, divs.outObj );
+		}
+
+		divs.sub.longitude.input.value = isNaN ( json.gps[0].longitude )? "" : json.gps[0].longitude;
+		divs.sub.longitude.input.onchange = (ev)=>{
+			json.gps[0].longitude = Number ( ev.target.value );
+			json.view.left = json.gps[0].longitude - zoom;
+			json.view.right = json.gps[0].longitude + zoom;
+			Els_Back.newJson ( json, divs.json, divs.outObj );
+		}
+
+		divs.sub.zoom.input.value = 0.001;
+		divs.sub.zoom.input.step = 0.0001;
+		divs.sub.zoom.input.onchange = (ev)=>{
+			zoom = Number ( ev.target.value );
+			json.view.left = Number ( json.gps[0].longitude ) - zoom;
+			json.view.top = Number ( json.gps[0].latitude ) - zoom;
+			json.view.right = Number ( json.gps[0].latitude ) + zoom;
+			json.view.bottom = Number ( json.gps[0].longitude ) + zoom;
+			Els_Back.newJson ( json, divs.json, divs.outObj );
+		}
+
+		divs.json.onchange = (ev)=>{
+			Els_Back.newJson ( json, divs.json, divs.outObj, ev.target.value );
+
+			divs.sub.latitude.input.value = json?.gps[0]?.latitude || "";
+			divs.sub.longitude.input.value = json?.gps[0]?.longitude || "";
+
+			divs.sub.zoom.input.dispatchEvent ( new Event ( "change" ) );
+		}
+
+		return divs;
+
 	}
 }
 
