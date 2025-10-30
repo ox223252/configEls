@@ -342,44 +342,31 @@ class Els_text extends Els_Back {
 		return true;
 	}
 
-	static new ( params = {}, config = undefined )
+	static new ( params = {}, config = undefined, deep = 0 )
 	{
 		if ( undefined == params.id )
 		{
 			params.id = Math.random ( );
 		}
 
-		let json = _objMerge ( Els[ params.class ]._defaultConfig, config );
-		
-		try // config
-		{
-			let configDiv = document.createElement ( "div" );
-			let text = document.createElement ( "input" );
-			configDiv.appendChild ( text );
-			text.type = "text";
-			text.value = json.text || "";
-			text.onchange = (ev)=>{
-				json.text=ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			text.onkeyup = text.onchange;
-
-			let jsonDiv = document.createElement ( "textarea" );
-			jsonDiv.value = JSON.stringify ( json, null, 4 );
-			jsonDiv.onchange = (ev)=>{
-				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
-				text.value = json.text;
-			}
-			jsonDiv.onkeyup = jsonDiv.onchange;
-
-			let outDiv = Els_Back._newOut ( params.id, json );
-
-			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+		let json = undefined;
+		if ( deep )
+		{ // if not first call (deep!=0) then config no need to be check (check previously in child class)
+			json = config;
 		}
-		catch ( e )
+		else
 		{
-			return undefined
+			json = _objMerge ( Els[ params.class ]._defaultConfig, config );
 		}
+
+		params.confItem = {
+			text: {
+				fnct: _createInput,
+				args: [ "text" ],
+			},
+		};
+
+		return Els_Back.new ( params, json, deep + 1 );
 	}
 }
 
