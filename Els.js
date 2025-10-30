@@ -1240,91 +1240,60 @@ class Els_bin extends Els_text {
 	}
 }
 
-class Els_multi extends Els_Back {
-	#defaultConfig = {
+class Els_multi extends Els_bin {
+	static _domType = "p";
+	static _defaultConfig = {
 		type:"multi",
-		text:undefined,
-		periode: 0, // période of data transmission
-		color:[],
+		channel:"WS_DATA_CHANNEL",
+		periode:0,
+		text:"",
+		revert: false,
+		mask: undefined,
+		color: ["red",5,"green",6,"orange",7,"pink"],
 		defaultColor: "red", // default color if no color available
-	}
+	};
 
 	constructor ( config, id )
 	{
 		super( config, id );
-
-		this._config = _objMerge ( this.#defaultConfig, this._config );
-
-		this.div = document.createElement ( "p" );
-		this.div.className = "status"
-		this._domEl.appendChild ( this.div );
-
-		if ( this._config.text )
-		{
-			this.div.innerHTML = this._config.text;
-		}
-
-		let cb = {
-			periode: config.periode || 0,
-			channel: config.channel,
-			f: (msg)=>{
-				if ( !this._config?.color )
-				{ // no color defined
-					return;
-				}
-
-				if ( undefined == this._config.text )
-				{
-					this.div.innerHTML = msg.value;
-				}
-
-				let upValue = this._config.color
-					.filter ( c=>!isNaN ( c ) )
-					.filter ( c=>c>msg.value )
-					.sort ( (a,b)=>a-b )?.[ 0 ];
-
-				let color = undefined;
-				if ( undefined == upValue )
-				{
-					color = this._config?.color[ this._config?.color.length - 1 ];
-				}
-				else
-				{
-					color = this._config.color[ this._config?.color?.indexOf ( upValue ) - 1 ];
-				}
-
-				if ( ( undefined == color )
-					|| ( "String" != color.constructor.name ) )
-				{
-					color = this._config.defaultColor || "red";
-				}
-
-				this.div.style="--status-color:"+_getColor ( color );
-			}
-		};
-
-		this._callArgs.push ( cb );
 	}
 
-	update ( config )
+	get _callback ( )
 	{
-		this._update ( config );
-
-		for ( let k of Object.keys ( config ) )
-		{
-			switch ( k )
-			{
-				case "text":
-				{
-					this.div.innerHTML = config.text;
-					break;
-				}
-				case "channel":
-				{
-					break;
-				}
+		return (msg)=>{
+			if ( !this._config?.color )
+			{ // no color defined
+				return;
 			}
-		}
+
+			if ( undefined == this._config.text )
+			{
+				this.div.innerHTML = msg.value;
+			}
+
+			let upValue = this._config.color
+				.filter ( c=>!isNaN ( c ) )
+				.filter ( c=>c>msg.value )
+				.sort ( (a,b)=>a-b )?.[ 0 ];
+
+			let color = undefined;
+			if ( undefined == upValue )
+			{
+				color = this._config?.color[ this._config?.color.length - 1 ];
+			}
+			else
+			{
+				color = this._config.color[ this._config?.color?.indexOf ( upValue ) - 1 ];
+			}
+
+			if ( ( undefined == color )
+				|| ( "String" != color.constructor.name ) )
+			{
+				color = this._config.defaultColor || "red";
+			}
+
+			this.div.style="--status-color:"+_getColor ( color );
+		};
 	}
 
 	static canCreateNew ( )
@@ -1332,194 +1301,37 @@ class Els_multi extends Els_Back {
 		return true;
 	}
 
-	static new ( params = {}, config = undefined )
+	static new ( params = {}, config = undefined, deep = 0 )
 	{
 		if ( undefined == params.id )
 		{
 			params.id = Math.random ( );
 		}
 
-		let json = {
-			type:"multi",
-			channel:"WS_DATA_CHANNEL",
-			periode:0,
-			text:"",
-			threshold:[],
-			color:[]
+		let json = undefined;
+		if ( deep )
+		{ // if not first call (deep!=0) then config no need to be check (check previously in child class)
+			json = config;
+		}
+		else
+		{
+			json = _objMerge ( Els[ params.class ]._defaultConfig, config );
 		}
 
-		let domEls = {
-			threshold: [],
-			color: []
+		params.confItem = {
+			text: {
+				fnct: _createInput,
+				args: [ "label" ],
+			},
 		};
 
-		if ( undefined != config )
-		{
-			Object.assign ( json, config );
-		}
+		let divs = Els_Back.new ( params, json, deep + 1 );
 
 		try // config
 		{
-			let drowThreshold = (input)=>{
-				let index = 0;
-				switch ( input?.constructor.name )
-				{
-					case "Event":
-					{
-						index = Number ( input.target.value );
-						if ( index < 0 )
-						{
-							input.target.value = 0;
-						}
-						break;
-					}
-					case "Number":
-					{
-						index = input;
-						break;
-					}
-				}
+			_createColorLimitTable ( divs, json );
 
-				if ( index < 0 )
-				{
-					index = 0;
-				}
-
-				for ( let thIndex = Math.min ( json.threshold.length, domEls.threshold.length ); thIndex < index; thIndex++ )
-				{
-					// threshold
-					tr = document.createElement ( "tr" );
-					tbody.appendChild ( tr );
-					domEls.threshold[ thIndex ] = tr;
-
-					let td = document.createElement ( "td" );
-					tr.appendChild ( td );
-					td.rowSpan = 2;
-					td.style.minWidth = "100px" ;
-
-					let threshold = document.createElement ( "input" );
-					td.appendChild ( threshold );
-					threshold.type = "number" ;
-					threshold.value = json.threshold[ thIndex ] || json.threshold.at( -1 ) + 1 || 1;
-					threshold.style.height = "100%" ;
-					json.threshold[ thIndex ] = Number ( threshold.value );
-	
-					let colorIndex = thIndex + 1;
-
-					// color
-					tr = document.createElement ( "tr" );
-					tbody.appendChild ( tr );
-					domEls.color[ colorIndex ] = tr;
-
-					let [noUsed,iColor] = _createColorClicker ( {
-						callback: (ev,color)=>{
-							json.color[ colorIndex ] = "rgba("+color.join(',')+")";
-							Els_Back.newJson ( json, jsonDiv, outDiv );
-						},
-						type: "td",
-						color: json.color[ colorIndex ],
-					} );
-					tr.appendChild ( iColor );
-					iColor.rowSpan = 2;
-				}
-
-				if ( index < json.threshold.length )
-				{
-					let divs = domEls.threshold.splice ( index );
-					divs.map ( d=> tbody.removeChild ( d ) );
-
-					divs = domEls.color.splice ( index + 1 );
-					divs.map ( d=> tbody.removeChild ( d ) );
-
-					json.threshold.splice ( index );
-				}				
-
-				jsonDiv.value = JSON.stringify ( json, null, 4 );
-			}
-
-			let configDiv = document.createElement ( "div" );
-			let [divCha,sCha] = _createInputArray ( "Data", params.channels );
-			configDiv.appendChild ( divCha );
-			sCha.value = json.channel || "";
-			sCha.onchange = (ev)=>{
-				json.channel = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv );
-			}
-			sCha.onkeyup = sCha.onchange;
-
-			let [divPer,sPer] = _createSelectPeriode ( )
-			configDiv.appendChild ( divPer );
-			sPer.value = json.periode;
-			sPer.onchange = (ev)=>{
-				json.periode = parseInt(ev.target.value);
-				Els_Back.newJson ( json, jsonDiv );
-			}
-			sPer.onkeyup = sPer.onchange;
-
-			let [divLa,iLa] = _createInput ( "label" );
-			configDiv.appendChild ( divLa );
-			iLa.onchange = (ev)=>{
-				json.text = ev.target.value;
-				Els_Back.newJson ( json, jsonDiv, outDiv );
-			}
-			iLa.onkeyup = iLa.onchange;
-
-			let [divNb,iNb] = _createInput ( "limits nb" );
-			configDiv.appendChild ( divNb );
-			iNb.value = json.threshold.length;
-			iNb.type = "number";
-			iNb.min = 0;
-			iNb.onchange = drowThreshold;
-			iNb.onkeyup = iNb.onchange;
-
-			let table = document.createElement ( "table" );
-			configDiv.appendChild ( table );
-			table.style.width = "100%";
-			let thead = document.createElement ( "thead" );
-			table.appendChild ( thead );
-			let tr = document.createElement ( "tr" );
-			thead.appendChild ( tr );
-			let th = document.createElement ( "th" );
-			tr.appendChild ( th );
-			th.appendChild ( document.createTextNode ( "Color" ) );
-			th = document.createElement ( "th" );
-			tr.appendChild ( th );
-			th.appendChild ( document.createTextNode ( "limit" ) );
-
-			let tbody = document.createElement ( "tbody" );
-			table.appendChild ( tbody );
-
-			tr = document.createElement ( "tr" );
-			tbody.appendChild ( tr );
-			domEls.color[ 0 ] = tr;
-
-			let [noUsed,iColor] = _createColorClicker ( {
-				callback: (ev,color)=>{
-					json.color[ 0 ] = "rgba("+color.join(',')+")";
-					Els_Back.newJson ( json, jsonDiv, outDiv );
-				},
-				type: "td",
-				color: json.color[ 0 ],
-			} );
-			tr.appendChild ( iColor );
-			iColor.rowSpan = 2;
-
-			let jsonDiv = document.createElement ( "textarea" );
-			jsonDiv.value = JSON.stringify ( json, null, 4 );
-			jsonDiv.onchange = (ev)=>{
-				sCha.value = json.channel;
-				sPer.value = json.periode;
-				iLa.value = json.text;
-				iNb.value = json.threshold.length;
-				iNb.dispatchEvent ( new Event ( "change" ) );
-				Els_Back.newJson ( json, jsonDiv, outDiv, ev.target.value );
-			}
-
-			let outDiv = Els_Back._newOut ( params.id, json );
-			
-			drowThreshold ( json.threshold.length );
-
-			return { config:configDiv, json:jsonDiv, out:outDiv._domEl };
+			return divs;
 		}
 		catch ( e )
 		{
