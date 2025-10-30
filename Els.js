@@ -9,8 +9,6 @@ class Els_Back {
 	/// \param [ ind ] id : new element ID (String)
 	constructor ( config, id )
 	{
-		this._init ( );
-
 		this.data = [];
 		this._callArgs = [];
 		this._config = Object.assign ( config, this.defaultConfig );
@@ -29,11 +27,6 @@ class Els_Back {
 	{
 	}
 
-	_init ( )
-	{
-
-	}
-
 	/// \brief update style
 	/// \aram [ in ] config : object with the input element need to be updated
 	_update ( config )
@@ -45,6 +38,7 @@ class Els_Back {
 
 		try
 		{
+			// allow all object to have style config (object or string)
 			switch ( config?.style?.constructor.name )
 			{
 				case 'Object':
@@ -76,6 +70,7 @@ class Els_Back {
 		}
 	}
 
+	// return default config for this element
 	get defaultConfig ( )
 	{
 		return this._defaultConfig;
@@ -115,55 +110,108 @@ class Els_Back {
 	/// \params [ in ] params : object with the id of the new element
 	///     { id : "xxx" }
 	/// \params [ in ] config : base config for the new element
+	/// \params [ in ] deep : use to know level in call stack, if != 0 then config should be correct
 	static new ( params = {}, config = undefined, deep = 0 )
 	{
+		if ( !params.confItem )
+		{
+			params.confItem = {};
+		}
+
+		// if config.channel exit then it's an entry with data from server
+		// theses datas need to be configured
+		if ( config?.channel )
+		{
+			params.confItem = Object.assign ({
+				channel: {
+					fnct: _createInput,
+					args: [ "channel", params.channels ],
+				},
+				periode: {
+					fnct: _createSelectPeriode ,
+					args: [],
+				}
+			},
+			params.confItem );
+		}
+
 		try
 		{
+			// obj that display output
+			let outDiv = Els_Back._newOut ( params.id, config );
+
+			// obj that contain config flieds
 			let configDiv = document.createElement ( "div" );
-			let sub = {};
 			
-			if ( config?.channel )
-			{
-				let [divCha,sCha] = _createInputArray ( "Data", params.channels );
-				configDiv.appendChild ( divCha );
-				sCha.value = config.channel || "";
-				sCha.onchange = (ev)=>{
-					config.channel = ev.target.value;
-					Els_Back.newJson ( config, jsonDiv );
-				}
-				sCha.onkeyup = ()=>{sCha.onchange};
-
-				sub.channel = {
-					div: divCha,
-					input: sCha,
-				};
-			}
-
-			if ( config?.periode )
-			{
-				let [divPer,sPer] = _createSelectPeriode ( )
-				configDiv.appendChild ( divPer );
-				sPer.value = config.periode;
-				sPer.onchange = (ev)=>{
-					config.periode = parseInt(ev.target.value);
-					Els_Back.newJson ( config, jsonDiv );
-				}
-				sPer.onkeyup = ()=>{sPer.onchange};
-
-				sub.periode = {
-					div: divPer,
-					input: sPer,
-				};
-			}
-
+			// object that contain the json config in text mode
 			let jsonDiv = document.createElement ( "textarea" );
 			jsonDiv.value = JSON.stringify ( config, null, 4 );
 			jsonDiv.onchange = (ev)=>{
+				// here we parse json text, so we read changes from user input
 				Els_Back.newJson ( config, jsonDiv, outDiv, ev.target.value );
+
+				// now for each entry we're updating value followinf json entry
+				for ( let key in params.confItem )
+				{
+					try
+					{
+						sub[ key ].input.value = config?.[ key ] || "";
+					}
+					catch ( e )
+					{ // probable error in params.confItem[ key ], that avaoid creation of sub[ key ]
+						Els_Debug ( "can't init "+key, e );
+					}
+				}
 			}
 			jsonDiv.onkeyup = ()=>{jsonDiv.onchange};
 
-			let outDiv = Els_Back._newOut ( params.id, config );
+			// config filed
+			let sub = {};
+			for ( let key in params.confItem )
+			{
+				try
+				{
+					let item = params.confItem[ key ];
+
+					let [d,i] = item.fnct( ...item.args )
+					sub[ key ] = {
+						div: d,
+						input: i,
+					};
+
+					sub[ key ].input.value = config[ item ] || "";
+
+					for ( let k in item )
+					{
+						if ( [ "value", "fnct", "args", "onchange", "onkeyup" ].includes ( k ) )
+						{ // specials key
+							continue;
+						}
+
+						sub[ key ].input[ k ] = item[ k ];
+					}
+
+					sub[ key ].input.onchange = (ev)=>{
+						if ( "number" == item.type  )
+						{
+							config[ key ] = Number ( ev.target.value );
+						}
+						else
+						{
+							config[ key ] = ev.target.value;
+						}
+						Els_Back.newJson ( config, jsonDiv, outDiv );
+					}
+
+					sub[ key ].input.onkeyup = ()=>{sub[ key ].input.onchange};
+					configDiv.appendChild ( sub[ key ].div );
+				}
+				catch ( e )
+				{
+					Els_Debug ( "config invalid for "+ key, params.confItem[ key ] );
+					Els_Debug ( e )
+				}
+			}
 
 			return {
 				config:configDiv,
