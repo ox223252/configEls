@@ -3977,7 +3977,10 @@ function _createColorClicker ( params = {} )
 	}, params );
 
 	let div = document.createElement ( params.type );
-	div.style.display = "flex";
+	if ( params.type != "td" )
+	{
+		div.style.display = "flex";
+	}
 
 	if ( params.label )
 	{
@@ -3987,7 +3990,7 @@ function _createColorClicker ( params = {} )
 		label.style.flexGrow = 1;
 	}
 
-	let iColor = document.createElement ( params.type );
+	let iColor = document.createElement ( "div" );
 	div.appendChild ( iColor );
 	iColor.style.height = "1em";
 	iColor.style.borderColor = "var( --main-border )";
