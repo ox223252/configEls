@@ -1,3 +1,5 @@
+let Els_Debug = console.error
+
 /// \brief base element for HMI display
 class Els_Back {
 	static _defaultConfig = {};
@@ -70,7 +72,7 @@ class Els_Back {
 		}
 		catch ( e )
 		{
-			console.log ( e )
+			Els_Debug ( e );
 		}
 	}
 
@@ -113,9 +115,69 @@ class Els_Back {
 	/// \params [ in ] params : object with the id of the new element
 	///     { id : "xxx" }
 	/// \params [ in ] config : base config for the new element
-	static new ( params = {}, config = undefined )
+	static new ( params = {}, config = undefined, deep = 0 )
 	{
-		return new Promise((ok,ko)=>{ko("not available for this type")});
+		try
+		{
+			let configDiv = document.createElement ( "div" );
+			let sub = {};
+			
+			if ( config?.channel )
+			{
+				let [divCha,sCha] = _createInputArray ( "Data", params.channels );
+				configDiv.appendChild ( divCha );
+				sCha.value = config.channel || "";
+				sCha.onchange = (ev)=>{
+					config.channel = ev.target.value;
+					Els_Back.newJson ( config, jsonDiv );
+				}
+				sCha.onkeyup = ()=>{sCha.onchange};
+
+				sub.channel = {
+					div: divCha,
+					input: sCha,
+				};
+			}
+
+			if ( config?.periode )
+			{
+				let [divPer,sPer] = _createSelectPeriode ( )
+				configDiv.appendChild ( divPer );
+				sPer.value = config.periode;
+				sPer.onchange = (ev)=>{
+					config.periode = parseInt(ev.target.value);
+					Els_Back.newJson ( config, jsonDiv );
+				}
+				sPer.onkeyup = ()=>{sPer.onchange};
+
+				sub.periode = {
+					div: divPer,
+					input: sPer,
+				};
+			}
+
+			let jsonDiv = document.createElement ( "textarea" );
+			jsonDiv.value = JSON.stringify ( config, null, 4 );
+			jsonDiv.onchange = (ev)=>{
+				Els_Back.newJson ( config, jsonDiv, outDiv, ev.target.value );
+			}
+			jsonDiv.onkeyup = ()=>{jsonDiv.onchange};
+
+			let outDiv = Els_Back._newOut ( params.id, config );
+
+			return {
+				config:configDiv,
+				json:jsonDiv,
+				out:outDiv._domEl,
+				sub:sub,
+				outObj:outDiv, // needed for Els_Back._newOut
+			};
+		}
+		catch ( e )
+		{
+			Els_Debug ( e );
+			return undefined;
+		}
 	}
 
 	/// \brief create an element width input config
@@ -140,7 +202,7 @@ class Els_Back {
 	/// \param [ in ] jsonDiv : div with the red coloration in case of error
 	/// \param [ in ] outDiv : div with the element need to be update if all right
 	/// \param [ in ] jsonText : string with data need to be checked
-	static newJson ( json, jsonDiv, outDiv, jsonText )
+	static newJson ( json, jsonDiv, outObj, jsonText )
 	{
 		try
 		{
@@ -175,10 +237,10 @@ class Els_Back {
 		}
 
 		try {
-			// outDiv contain the new element configured followin json
-			if ( outDiv )
+			// outObj contain the new element configured followin json
+			if ( outObj )
 			{
-				outDiv.update ( json );
+				outObj.update ( json );
 			}
 		}
 		catch ( e )
