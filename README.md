@@ -226,7 +226,7 @@ Il est possible de définir l'io comme une input. auquel cas des données de con
 {
 	type:"io",
 	...
-	valueType: "input",
+	domType: "input",
 	inputConfig:{
 		channel:"channelConfig"
 		type: "number", // number, string, checkbox
@@ -245,7 +245,7 @@ Il est possible de definir l'io comme un select, auquel cas des données supreme
 {
 	type:"io",
 	...
-	valueType: "select",
+	domType: "select",
 	inputConfig:{
 		channel:"channelOptions"
 	}

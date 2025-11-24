@@ -592,7 +592,11 @@ class Els_io extends Els_Back {
 	};
 
 	static _choices = {
-		domType: ["output", "input", "select"],
+		domType: [
+			"output", // creat a div to display data (server -> client)
+			"input", // create an input to change information (client -> server)
+			"select" // create a select with limited choices (client -> server)
+		],
 		valueType: ["obj", "volume", "flow", "temperature", "date", "dateMs", "error"],
 	}
 
