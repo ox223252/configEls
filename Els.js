@@ -2834,7 +2834,7 @@ class Els_csv extends Els_Back {
 		this.cellLimits.innerText = keys.length + "L / " + p.value.toFixed ( 2 ) + p.label + "o" + "\nH:M:S ";
 		let time = this.lastIndex - Number ( keys[ 0 ] );
 
-		this.cellLimits.innerText += pad ( Math.floor ( time / 3600 ) ) +":"+pad ( Math.floor ( time / 60 ) )+":"+pad ( time%60 )
+		this.cellLimits.innerText += pad ( Math.floor ( time / 3600 ) ) +":"+pad ( Math.floor ( time / 60 % 60 ) )+":"+pad ( time % 60 )
 	}
 
 	#saveData ( callPrompt = this._config.prompt )
