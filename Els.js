@@ -2758,17 +2758,10 @@ class Els_csv extends Els_Back {
 		{
 			case "time":
 			{
-				let toOld = [];
+				let dateThresold = new Date ( new Date ( ).getTime ( ) - this._config.max.time * 60 * 60 * 1000 );
 
-				for ( let index = 0; index < keys.length; index++ )
-				{
-					if ( ( this.lastIndex - Number ( keys[ index ] ) ) < this._config.max.time * 60 * 60 )
-					{
-						break;
-					}
-
-					toOld.push ( keys[ index ] );
-				}
+				let toOld = this.entryDate.filter ( e=>e.date < dateThresold )
+					.map ( e=>e.index );
 
 				if ( !toOld.length )
 				{
@@ -2828,6 +2821,9 @@ class Els_csv extends Els_Back {
 				break;
 			}
 		}
+
+		// clear entryDate, keep only exiting entry from csv
+		this.entryDate = this.entryDate.filter ( e=>this.csv[ e.index ] != undefined );
 
 		let p = getSIPrefix ( size );
 
