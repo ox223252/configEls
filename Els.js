@@ -2832,9 +2832,17 @@ class Els_csv extends Els_Back {
 		}
 
 		this.cellLimits.innerText = keys.length + "L / " + p.value.toFixed ( 2 ) + p.label + "o" + "\nH:M:S ";
-		let time = this.lastIndex - Number ( keys[ 0 ] );
 
-		this.cellLimits.innerText += pad ( Math.floor ( time / 3600 ) ) +":"+pad ( Math.floor ( time / 60 % 60 ) )+":"+pad ( time % 60 )
+		// time limit
+		let time = new Date ( ).getTime ( ) - this.entryDate[ 0 ].date.getTime ( );
+		time = Math.floor ( time / 1000 );
+		let str = pad ( time % 60 ); // seconds
+		time = Math.floor ( time / 60 );
+		str = pad ( time % 60 ) + ":" + str; // minutes
+		time = Math.floor ( time / 60 );
+		str = pad ( time ) + ":" + str; // hours
+
+		this.cellLimits.innerText += str
 	}
 
 	#saveData ( callPrompt = this._config.prompt )
