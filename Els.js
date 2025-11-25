@@ -2698,7 +2698,15 @@ class Els_csv extends Els_Back {
 			periode: this._config.periode,
 			channel: this._config.channel.synchro,
 			f: (msg)=>{
-				this.lastIndex = msg.value;
+				if ( this.config.coef )
+				{
+					this.lastIndex = msg.value * this.config.coef;
+				}
+				else
+				{
+					this.lastIndex = msg.value;
+				}
+
 				this.csv[ this.lastIndex ] = [];
 
 				this.entryDate.push ( {date:new Date ( ), index:this.lastIndex} );
