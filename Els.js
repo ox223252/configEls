@@ -666,7 +666,7 @@ class Els_io extends Els_Back {
 
 				Object.assign ( this.divData, this._config.inputConfig )
 
-				this.divData.addEventListener ( "input", (ev)=>{
+				this.divData.addEventListener ( "change", (ev)=>{
 					ev.target.classList.remove ( "err" );
 
 					if ( this._config.inputConfig.min > ev.target.value )
@@ -679,7 +679,7 @@ class Els_io extends Els_Back {
 
 					if ( this._config.inputConfig.max < ev.target.value )
 					{
-						console.log ( "max" )
+						console.log ( "min", this._config.inputConfig.max, ev.target.value )
 						ev.target.classList.add ( "err" );
 						ev.stopImmediatePropagation ( );
 						ev.target.value = this._config.inputConfig.max;
@@ -1005,8 +1005,11 @@ class Els_io extends Els_Back {
 
 			if ( "input" == this._config.domType )
 			{
-				cb.input = true;
-				cb.obj = this.divData;
+				cb.eventType = "input";
+				cb.args = {
+					domEl: this.divData,
+					event: this._config.inputConfig?.event,
+				}
 			}
 
 			this._callArgs.push ( cb );
@@ -2355,12 +2358,17 @@ class Els_graph extends Els_Back {
 				case "event":
 				{
 					this._callArgs.push ({
-						event:{
-							target: this._config.csv.eventTarget,
-							src: this._config.csv.eventSrc,
+						eventType: "in",
+						args: {
+							event: this._config.csv.event,
 							cb: exportCSV,
 						}
 					});
+					break;
+				}
+				case "button":
+				{
+					// todo
 					break;
 				}
 			}
@@ -3049,8 +3057,7 @@ class Els_button extends Els_Back {
 				label: "X",
 				text: "Y",
 				cmd: "myCmd",
-				eventTarget: undefined,
-				eventSrc: undefined,
+				event: undefined,
 			}
 		]
 	}
@@ -3094,31 +3101,14 @@ class Els_button extends Els_Back {
 			let ret = this.#createButton ( this._config.options[ i ] );
 
 			let cb = {
-				obj: ret.obj.button,
-				arg: this._config.options[ i ].arg,
-			};
-
-			// event to the page
-			if ( this._config.options[ i ].eventTarget
-				&& this._config.options[ i ].eventSrc )
-			{
-				if ( !document[ this._config.options[ i ].eventTarget ] )
-				{
-					document[ this._config.options[ i ].eventTarget ] = new EventTarget ( );
+				eventType: "out",
+				args: {
+					domEl: ret.obj.button,
+					args: this._config.options[ i ]?.arg,
+					event: this._config.options[ i ]?.event,
+					cmd: this._config.options[ i ]?.cmd,
 				}
-
-				let event = new Event ( this._config.options[ i ].eventSrc );
-				event.value = this._config.options[ i ].arg;
-
-				ret.obj.button.addEventListener ( "click",(ev)=>{
-					document[ this._config.options[ i ].eventTarget ].dispatchEvent ( event );
-				});
-			}
-
-			if ( this._config.options[ i ].cmd )
-			{
-				cb.cmd = this._config.options[ i ].cmd;
-			}
+			};
 
 			this._tab[ i ] = ret.obj;
 			this._callArgs.push ( cb );

@@ -228,7 +228,8 @@ Il est possible de définir l'io comme une input. auquel cas des données de con
 	...
 	domType: "input",
 	inputConfig:{
-		channel:"channelConfig"
+		channel:"channelConfig",
+		event: undefined, // si c'est defini, attent un evenement global a la page pour emettre les données, peut etre generé par un bouton
 		type: "number", // number, string, checkbox
 		min: 0, // pour les number
 		max: 12, // pour les number
@@ -238,8 +239,8 @@ Il est possible de définir l'io comme une input. auquel cas des données de con
 }
 ```
 
-### io.select:
-Il est possible de definir l'io comme un select, auquel cas des données suprementaires de configuration suplémentaire sont disponiibles.
+#### io.select:
+Il est possible de définir l'io comme un select, auquel cas des données de configuration supplémentaire sont disponibles.
 
 ```javascript
 {
@@ -248,6 +249,7 @@ Il est possible de definir l'io comme un select, auquel cas des données supreme
 	domType: "select",
 	inputConfig:{
 		channel:"channelOptions"
+		event: undefined, // si c'est defini, attent un evenement global a la page pour emettre les données, peut etre generé par un bouton
 	}
 }
 ```
@@ -654,8 +656,7 @@ les  options sont les même pour tous les graphs :
 	csv:{
 		exportable: false, // defini si le CSVpeut etre exporté
 		export: "event", // definie la façon d'ont l'esport est declencé (actuellement que le mode event)
-		eventSrc: "exportToCSV", // l'eventment qu'il faut rechercher
-		eventTarget: "exportToCSV", // sur quel objet il faut chercher l'eventement
+		event: "exportToCSV", // l'eventment qu'on attend pour exporter (sur le "document")
 		prompt: false, // demande à l'utilisateur le nom du fichier de sortie
 		file: undefined, // le ficher de sortie
 		separator: ";", // le separateur CSV
@@ -701,18 +702,15 @@ L'element CSV n'affiche rien mais permet de créer un objet qui va loguer les do
 Element qui genère un bouton qui peut au choix, envoyer une commande, ou emetre un evenement global pour la page.
 ```javascript
 {
-	type:"button",
-
-		type: "button",
-		options:[
-			{
-				label: "X", // text avant le bouton
-				text: "Y", // text dans le bouton
-				cmd: "myCmd", // la commande renvoyé au serveur
-				eventTarget: undefined, // sur quel objet il faut chercher l'eventement
-				eventSrc: undefined, // l'eventment qu'il faut rechercher
-			}
-		]
+	type: "button",
+	options:[
+		{
+			label: "X", // text avant le bouton
+			text: "Y", // text dans le bouton
+			cmd: "myCmd", // la commande renvoyé au serveur
+			event: undefined, // l'event qui sera emis sur la globalité de la page
+		}
+	]
 }
 ```
 

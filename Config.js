@@ -45,48 +45,48 @@ export default class Config {
 		return conf;
 	}
 
+	#eventData = {
+		// contient les données a envoyer sur evenement
+	};
+
+	#eventEmitter = {
+		// contient les fonctions d'envoie sur evenement
+	};
+
 	/// \brief add event listener on channel (fromm callback) to get data from a socket
 	/// \param [ in ] socket : input socket
 	///     can be a basic websocket or an IO socket from socket.io
+	/// \param [ in ] clean : define if clean or not previously defined event and data
 	/// \return the list of listenned data
-	setIO ( socket )
+	setIO ( socket, clean = true )
 	{
-		function emitter ( config )
+		if ( clean )
 		{
-			let outConfig = {};
-			let outCmd = "";
-
-			if ( config.input )
+			// remove all previously define event listener
+			// and clean remaining data
+			for ( let eventName in this.#eventEmitter )
 			{
-				outConfig = {
-					[ config.channel ]: config.obj.value
-				}
-				outCmd = "data-set";
-			}
-			else if ( config.cmd )
-			{
-				outConfig = Object.keys ( config || {} )
-					.filter ( k=>k!="obj" )
-					.filter ( k=>config[ k ]!=undefined )
-					.reduce ( (a,k)=>{
-						a[ k ] = config[ k ];
-						return a;
-					}, {});
-				outCmd = "userCmd";
+				document.removeEventListener ( c.args?.event, this.#eventEmitter[ c.args?.event ] );
 			}
 
-			if ( "" == outCmd )
+			this.#eventData = {};
+			this.#eventEmitter = {};
+		}
+
+		function socketEmiter ( src, data )
+		{
+			if ( "" == src )
 			{ // no output cmd
 			}
 			else if ( undefined != socket.on )
 			{ // if we-re using socket.io
-				socket.emit ( outCmd, outConfig );
+				socket.emit ( src, data );
 			}
 			else
 			{ // if we're using basics websockets
-				let event = new Event ( outCmd );
+				let event = new Event ( src );
 
-				event.data = outConfig;
+				event.data = data;
 
 				socket.dispatchEvent ( event );
 			}
@@ -113,31 +113,72 @@ export default class Config {
 				}
 			}
 
-			if ( c.event )
+			// if this object should manage to some event in/out
+			switch ( c.eventType )
 			{
-				if ( !document[ c.event.target ] )
+				case undefined:
 				{
-					document[ c.event.target ] = new EventTarget ( );
+					break;
 				}
+				case "input":
+				{
+					if ( c.args?.event )
+					{
+						c.args.domEl.removeEventListener ( "change", c.fnOnInput );
+						c.args.domEl.addEventListener ( "change", c.fnOnInput = ()=>{
+							if ( !this.#eventData[ c.args.event ] )
+							{
+								this.#eventData[ c.args.event ] = {};
+							}
 
-				document[ c.event.target ].removeEventListener ( c.event.src, c.fnOnEvent );
-				document[ c.event.target ].addEventListener ( c.event.src, c.fnOnEvent = (ev)=>{
-					c.event.cb ( ev.value );
-				});
-			}
-			else if ( c.input )
-			{
-				c.obj.removeEventListener ( "input", c.obj.fnOnInput );
-				c.obj.addEventListener ( "input", c.obj.fnOnInput = ()=>{
-					emitter ( c );
-				});
-			}
-			else if ( c.obj )
-			{
-				c.obj.removeEventListener ( "click", c.obj.fnOnClick );
-				c.obj.addEventListener ( "click", c.obj.fnOnClick = ()=>{
-					emitter ( c );
-				});
+							this.#eventData[ c.args.event ][ c.channel ] = c.args.domEl.value;
+
+							if ( !this.#eventEmitter[ c.args.event ] )
+							{
+								this.#eventEmitter[ c.args.event ] = ()=>{
+									socketEmiter ( "data-set", this.#eventData[ c.args?.event ]);
+								};
+								document.addEventListener ( c.args?.event, this.#eventEmitter[ c.args?.event ] );
+							}
+						});
+					}
+					else
+					{
+						c.args.domEl.removeEventListener ( "change", c.fnOnInput );
+						c.args.domEl.addEventListener ( "change", c.fnOnInput = ()=>{
+							socketEmiter ( "data-set", {
+								[ c.channel ]: c.args?.domEl?.value,
+							});
+						});
+					}
+					break;
+				}
+				case "in":
+				{
+					document.removeEventListener ( c.args.event, c.fnOnEvent );
+					document.addEventListener ( c.args.event, c.fnOnEvent = (ev)=>{
+						c.args.cb ( ev.value );
+					});
+					break;
+				}
+				case "out":
+				{
+					c.args.domEl.removeEventListener ( "click", c.fnOnClick );
+					c.args.domEl.addEventListener ( "click", c.fnOnClick = ()=>{
+						if ( c.args.cmd )
+						{
+							socketEmiter ( "userCmd", c.args.args );
+						}
+
+						if ( c.args.event )
+						{
+							let ev = new Event ( c.args.event );
+							ev.value = c.args.args;
+							document.dispatchEvent ( ev );
+						}
+					});
+					break;
+				}
 			}
 		}
 
