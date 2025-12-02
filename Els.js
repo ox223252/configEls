@@ -191,16 +191,23 @@ class Els_Back {
 						sub[ key ].input[ k ] = item[ k ];
 					}
 
-					sub[ key ].input.onchange = (ev)=>{
-						if ( "number" == item.type  )
-						{
-							config[ key ] = Number ( ev.target.value );
+					if ( "Function" == item.onchange?.constructor.name )
+					{
+						sub[ key ].input.onchange = item.onchange;
+					}
+					else
+					{
+						sub[ key ].input.onchange = (ev)=>{
+							if ( "number" == item.type  )
+							{
+								config[ key ] = Number ( ev.target.value );
+							}
+							else
+							{
+								config[ key ] = ev.target.value;
+							}
+							Els_Back.newJson ( config, jsonDiv, outDiv );
 						}
-						else
-						{
-							config[ key ] = ev.target.value;
-						}
-						Els_Back.newJson ( config, jsonDiv, outDiv );
 					}
 
 					sub[ key ].input.onkeyup = ()=>{sub[ key ].input.onchange};
