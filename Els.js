@@ -4051,3 +4051,101 @@ function _getSize ( object )
 
 	return bytes;
 }
+
+
+
+/// params [ in ] outDivs :
+/// params [ in ] params :
+function _createTable ( outDivs = {}, params )
+{
+	try
+	{
+		let tab = document.createElement ( "table" );
+		outDivs.config.appendChild ( tab );
+		tab.style.width = "100%";
+		tab.style.tableLayout = "fixed";
+
+		let thead = document.createElement ( "thead" );
+		tab.appendChild ( thead );
+
+		let tr = document.createElement ( "tr" );
+		thead.appendChild ( tr );
+
+		for ( let item of params.labels )
+		{
+			let cell = document.createElement ( "th" );
+			tr.appendChild ( cell );
+
+			cell.innerText = item;
+		}
+
+		let tbody = document.createElement ( "tbody" );
+		tab.appendChild ( tbody );
+
+		if ( ( !params.input )
+			|| ( !outDivs.sub?.[ params.input ]?.input ) )
+		{
+			return;
+		}
+
+		outDivs.sub[ params.input ].input.onchange = (ev)=>{
+			if ( ev.target.value < 0 )
+			{
+				ev.target.value = 0;
+			}
+
+			// manage output json
+			if ( ev.target.value < params.json.options.length )
+			{
+				params.json.options = params.json.options.slice ( 0, ev.target.value );
+			}
+			else if ( ev.target.value > params.json.options.length )
+			{
+				for ( let i = params.json.options.length; i < ev.target.value; i++ )
+				{
+					params.json.options[ i ] = {};
+				}
+			}
+
+			// draw table
+			while ( tbody.childElementCount >= params.json?.options?.length )
+			{
+				tbody.removeChild ( tbody.lastChild );
+			}
+
+			for ( let i = tbody.childElementCount; i < params.json.options.length; i++ )
+			{
+				let line = document.createElement ( "tr" );
+				tbody.appendChild ( line );
+
+				for ( let item of params.labels )
+				{
+					let cell = document.createElement ( "td" );
+					line.appendChild ( cell );
+
+					if ( !params.json.options[ i ] )
+					{
+						params.json.options[ i ] = {};
+					}
+
+					let iVal = document.createElement ( "input" );
+					cell.appendChild ( iVal );
+					iVal.value = params.json.options[ i ][ item ] || "";
+					iVal.onchange = (ev)=>{
+						params.json.options[ i ][ item ] = ev.target.value.trim ( );
+						Els_Back.newJson ( params.json, outDivs.json, outDivs.outObj );
+					}
+				}
+			}
+
+			Els_Back.newJson ( params.json, outDivs.json, outDivs.outObj );
+		};
+
+		outDivs.sub[ params.input ].input.value = params.json.options.length;
+		outDivs.sub[ params.input ].input.dispatchEvent ( new Event ( "change" ) );
+	}
+	catch ( e )
+	{
+		console.log ( e );
+	}
+}
