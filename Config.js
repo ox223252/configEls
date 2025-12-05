@@ -133,13 +133,22 @@ export default class Config {
 
 							this.#eventData[ c.args.event ][ c.channel ] = c.args.domEl.value;
 
-							if ( !this.#eventEmitter[ c.args.event ] )
+							if ( this.#eventEmitter[ c.args.event ] )
 							{
-								this.#eventEmitter[ c.args.event ] = ()=>{
-									socketEmiter ( "data-set", this.#eventData[ c.args?.event ]);
-								};
-								document.addEventListener ( c.args?.event, this.#eventEmitter[ c.args?.event ] );
+								return;
 							}
+
+							this.#eventEmitter[ c.args.event ] = ()=>{
+								if ( 0 == Object.keys ( this.#eventData[ c.args?.event ] ).length )
+								{
+									return;
+								}
+
+								socketEmiter ( "data-set", this.#eventData[ c.args?.event ]);
+								this.#eventData[ c.args?.event ] = {};
+							};
+
+							document.addEventListener ( c.args?.event, this.#eventEmitter[ c.args?.event ] );
 						});
 					}
 					else
