@@ -176,7 +176,7 @@ export default class Config {
 					c.args.domEl.addEventListener ( "click", c.fnOnClick = ()=>{
 						if ( c.args.cmd )
 						{
-							socketEmiter ( "userCmd", c.args.args );
+							socketEmiter ( "userCmd", {cmd:c.args.cmd, args:c.args.args} );
 						}
 
 						if ( c.args.event )
