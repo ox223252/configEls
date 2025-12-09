@@ -1010,7 +1010,7 @@ class Els_io extends Els_Back {
 				f: getCallback ( config )
 			};
 
-			if ( "input" == this._config.domType )
+			if ( [ "input", "select" ].includes ( this._config.domType ) )
 			{
 				cb.eventType = "input";
 				cb.args = {
