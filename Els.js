@@ -2312,9 +2312,16 @@ class Curve {
 		this.config = Object.assign ( defaultC, config );
 
 		this.domEl = document.createElement ( "div" );
+		this.domEl.style.position  = "relative";
+		this.domEl.style.minHeight = "150px"; // fallback height when the parent is sized by its content
 
 		this._canvas = document.createElement ( "canvas" );
 		this.domEl.appendChild ( this._canvas );
+
+		// canvas out of the flow: it can never push its parent (no infinite growth)
+		this._canvas.style.position = "absolute";
+		this._canvas.style.left     = "0";
+		this._canvas.style.top      = "0";
 		
 		this._chart = undefined;
 		this._zoom = {
@@ -2379,31 +2386,14 @@ class Curve {
 
 		if ( !this._chart )
 		{
-			// this line pah inifnie grow, but not the best solution, need to revork it
-			this.domEl.style.maxHeight = this.domEl.clientHeight+"px";
-
 			this._chart = new Chart ( this._canvas.getContext('2d'), this.config );
-			this.height = undefined;
 			return;
-		}
-		else if ( this._chart.width == 0 )
-		{
-			this._chart.destroy ( );
-			this._chart = undefined;
 		}
 		else
 		{
+			// no destroy on size change: Chart.js (responsive) resizes the canvas
+			// itself, a destroyed chart stays empty until the next data update
 			this._chart.update ( );
-
-			if ( !this.height )
-			{
-				this.height = this._canvas.attributes.height.value;
-			}
-			else if ( this.height != this._canvas.attributes.height.value )
-			{
-				this._chart.destroy ( );
-				this._chart = undefined;
-			}
 
 			if ( this.params.debounce.active )
 			{
@@ -2685,6 +2675,10 @@ class Els_graph extends Els_Back {
 		}
 
 		super( config, id );
+
+		// graph size comes from its parent, never from the canvas (avoids infinite growth)
+		this._domEl.style.minHeight = "0";
+		this._domEl.style.overflow  = "hidden";
 
 		if ( !window.Chart )
 		{
